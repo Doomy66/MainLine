@@ -12,6 +12,19 @@ declare const __APP_VERSION__: string;
 
 const root = document.getElementById("app")!;
 
+/**
+ * A new issue on the project, with the version filled in: a report that says
+ * which version it was is one that can be followed up. The rest is the
+ * player's to write.
+ */
+function suggestionUrl(): string {
+  const body = `
+
+---
+Mainline ${__APP_VERSION__}`;
+  return `https://github.com/Doomy66/MainLine/issues/new?body=${encodeURIComponent(body)}`;
+}
+
 function title(message = ""): void {
   const saved = autosaveSummary();
   const error = h("div", { class: "error" }, message);
@@ -66,6 +79,12 @@ function title(message = ""): void {
             h("span", {}, "Open a .game file."),
           ),
           h("button", { onclick: () => window.open("./help.html", "_blank", "noopener") }, "How to play", h("span", {}, "The rules, and a walk through your first game.")),
+          h(
+            "button",
+            { onclick: () => window.open(suggestionUrl(), "_blank", "noopener") },
+            "Suggestions",
+            h("span", {}, "Found something wrong, or want something it does not do? Open an issue on GitHub."),
+          ),
         ),
         error,
         h(
