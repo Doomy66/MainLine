@@ -149,6 +149,11 @@ design engine and reports anything that breaks the rules.
   skills and traits that change how it fights and how soon it breaks.
 - **Shipyard slips.** A yard builds only so many ships at once: three at a
   class A starport, two at class B. Further orders queue until a slip is free.
+- **Planetary defences, reviewed.** A world on its own barely scratches an
+  attacker: small worlds have no guns, mid-tech batteries are lasers that bounce
+  off armour, and high-tech bays miss anything small. Candidates: a floor of
+  batteries on every peopled world, bay-sized ground weapons, no small-target
+  penalty for ground fire control, missile silos, and defences firing first.
 - **Losing a capital.** Disorder: for some weeks the faction's income falls
   hard and its yards stop work. Breakaways: each of its worlds may declare
   itself independent, likelier the further it is from the new capital and the
