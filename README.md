@@ -147,6 +147,8 @@ design engine and reports anything that breaks the rules.
 
 - **Admirals.** A commander for every fleet, with Tactics, morale and other
   skills and traits that change how it fights and how soon it breaks.
+- **Shipyard slips.** A yard builds only so many ships at once: three at a
+  class A starport, two at class B. Further orders queue until a slip is free.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
   carrier's own guns do.
 - A cleverer computer opponent. It has time to think. A turn is a day, and
