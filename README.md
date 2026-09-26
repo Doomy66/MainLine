@@ -161,6 +161,9 @@ design engine and reports anything that breaks the rules.
   hard and its yards stop work. Breakaways: each of its worlds may declare
   itself independent, likelier the further it is from the new capital and the
   lower its law level.
+- **Wait for news waits for your news.** It should stop only for reports about
+  your own fleets or systems. Today any world changing hands anywhere, or any
+  faction being wiped out, wakes everybody.
 - **Tell the player when a ship is built.** A report is written today, but it
   is easy to miss among the rest. Make it stand out, with a notice at the start
   of the turn, and point to the new ship's fleet.
