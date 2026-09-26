@@ -1,0 +1,103 @@
+{
+  "name": "Flare Gunboat",
+  "notes": "A small, hard-hitting jump-1 gunboat for policing a cluster of neighbouring systems: plasma, laser and missile turrets on an armoured cone. It is a picket and raider-hunter, not a line ship. Source: https://wiki.travellerrpg.com/Flare_class_Gunboat (fan design, Classic Traveller High Guard; built at TL12 because Thrust 6 and plasma guns need it under High Guard 2022).",
+  "tl": 12,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 300,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 8
+  },
+  "manoeuvre": 6,
+  "jump": 1,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 19,
+    "weeks": 8
+  },
+  "extraFuelTons": 50,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 20
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "plasmaGun",
+        "plasmaGun"
+      ]
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "missileRack"
+      ]
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser",
+        "pulseLaser"
+      ]
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 72
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 3
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "flat": "armoury"
+    }
+  ],
+  "staterooms": 7,
+  "doubleOccupancy": true,
+  "commonAreaTons": 7,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 1
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

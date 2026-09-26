@@ -1,0 +1,155 @@
+{
+  "name": "Shibash Light Cruiser",
+  "notes": "A ten-thousand-ton Terran light cruiser from the Interstellar Wars: jump-2, four gees and heavy armour, with missile bays as its main battery. It is the best a TL11 navy can put in the line. Source: https://wiki.travellerrpg.com/Shibash_class_Light_Cruiser (GURPS Traveller: Interstellar Wars; re-built to High Guard 2022 at TL11, with weapons swapped for ones available at that TL).",
+  "tl": 11,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 10000,
+    "configuration": "closeStructure"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 8
+  },
+  "manoeuvre": 4,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 635,
+    "weeks": 8
+  },
+  "extraFuelTons": 2000,
+  "bridge": {
+    "kind": "standard",
+    "command": true
+  },
+  "computer": {
+    "processing": 15,
+    "fib": true
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "bay",
+      "size": "medium",
+      "weapon": "missile",
+      "quantity": 5
+    },
+    {
+      "kind": "bay",
+      "size": "small",
+      "weapon": "particleBeam",
+      "quantity": 2
+    },
+    {
+      "kind": "barbette",
+      "weapon": "plasma",
+      "quantity": 2
+    },
+    {
+      "kind": "pointDefence",
+      "battery": "laser",
+      "type": "typeI"
+    },
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser"
+      ],
+      "quantity": 10
+    },
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 10
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 1440
+    },
+    {
+      "canister": "sand",
+      "count": 400
+    }
+  ],
+  "craft": [
+    {
+      "label": "Ship's Boat",
+      "tons": 30,
+      "cost": 10.43,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Ship's Boat",
+      "tons": 30,
+      "cost": 10.43,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Ship's Boat",
+      "tons": 30,
+      "cost": 10.43,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 100
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "perTon": "barracks",
+      "tons": 42
+    },
+    {
+      "flat": "armoury",
+      "quantity": 14
+    },
+    {
+      "flat": "medicalBay",
+      "quantity": 2
+    }
+  ],
+  "staterooms": 60,
+  "doubleOccupancy": true,
+  "commonAreaTons": 60,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

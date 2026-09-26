@@ -1,0 +1,74 @@
+{
+  "name": "Subsidised Liner",
+  "notes": "A six-hundred-ton jump-3 passenger liner linking the important worlds of a subsector on a regular schedule. Thirty staterooms and twenty low berths, with a launch for surface transfers; it carries no guns. Source: https://wiki.travellerrpg.com/Type_M_class_Subsidized_Liner (Classic Traveller / T5; re-built to High Guard 2022).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 600,
+    "configuration": "standard"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 1
+  },
+  "manoeuvre": 1,
+  "jump": 3,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 13,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 10,
+    "bis": true
+  },
+  "sensors": "civilian",
+  "craft": [
+    {
+      "label": "Launch",
+      "tons": 20,
+      "cost": 3.6,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "perTon": "fuelProcessor",
+      "tons": 5
+    },
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "cargoCrane"
+    }
+  ],
+  "staterooms": 30,
+  "lowBerths": 20,
+  "commonAreaTons": 30,
+  "passengers": {
+    "high": 11,
+    "middle": 10,
+    "low": 20
+  },
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 3
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,119 @@
+{
+  "name": "Mercenary Cruiser",
+  "notes": "The Type C: an eight-hundred-ton jump-3 sphere built to carry a mercenary company and its two modular cutters to wherever the ticket is. Delivered with fire control and bare hardpoints; this fit arms four of the eight. Source: https://wiki.travellerrpg.com/Type_C_class_Mercenary_Cruiser (Classic Traveller; weapons are this catalogue's light fit, re-built to High Guard 2022).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 800,
+    "configuration": "sphere"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "manoeuvre": 3,
+  "jump": 3,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 29,
+    "weeks": 8
+  },
+  "extraFuelTons": 24,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 15,
+    "bis": true
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "beamLaser",
+        "sandcaster"
+      ],
+      "quantity": 4
+    }
+  ],
+  "craft": [
+    {
+      "label": "Modular Cutter",
+      "tons": 50,
+      "cost": 16.37,
+      "kind": "smallCraft",
+      "berth": "dockingSpace",
+      "driveAndPlantTons": 4.5
+    },
+    {
+      "label": "Modular Cutter",
+      "tons": 50,
+      "cost": 16.37,
+      "kind": "smallCraft",
+      "berth": "dockingSpace",
+      "driveAndPlantTons": 4.5
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 6
+    },
+    {
+      "flat": "armoury",
+      "quantity": 12
+    },
+    {
+      "flat": "medicalBay"
+    },
+    {
+      "perTon": "barracks",
+      "tons": 16
+    }
+  ],
+  "staterooms": 25,
+  "doubleOccupancy": true,
+  "commonAreaTons": 25,
+  "ordnance": [
+    {
+      "canister": "sand",
+      "count": 80
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 3
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 1
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

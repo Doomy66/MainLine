@@ -1,0 +1,106 @@
+{
+  "name": "Donosev Survey Scout",
+  "notes": "The Scout Service's four-hundred-ton jump-3 survey ship, built on an open frame and packed with sensors, a small laboratory, a modular cutter and air/rafts for mapping new systems. Unarmed and unarmoured. Source: https://wiki.travellerrpg.com/Donosev_class_Survey_Scout (Fighting Ships, Classic Traveller; re-built to High Guard 2022).",
+  "tl": 15,
+  "standardDesign": true,
+  "hull": {
+    "tons": 400,
+    "configuration": "dispersedStructure"
+  },
+  "manoeuvre": 2,
+  "jump": 3,
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 9,
+    "weeks": 12
+  },
+  "extraFuelTons": 5,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 25
+  },
+  "sensors": "advanced",
+  "craft": [
+    {
+      "label": "Modular Cutter",
+      "tons": 50,
+      "cost": 16.37,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "custom": {
+        "label": "Spare cutter module",
+        "tons": 30,
+        "cost": 0.75
+      }
+    },
+    {
+      "flat": "shallowPenetrationSuite"
+    },
+    {
+      "flat": "mineralDetectionSuite"
+    },
+    {
+      "flat": "lifeScanner"
+    },
+    {
+      "flat": "advancedProbeDrones",
+      "quantity": 2
+    },
+    {
+      "perTon": "laboratory",
+      "tons": 4
+    }
+  ],
+  "staterooms": 12,
+  "commonAreaTons": 12,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 3
+    },
+    {
+      "software": "evade",
+      "level": 1
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

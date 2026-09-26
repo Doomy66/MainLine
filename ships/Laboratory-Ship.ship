@@ -1,0 +1,75 @@
+{
+  "name": "Laboratory Ship",
+  "notes": "A jump-2 research platform on an open, unstreamlined frame: eighty-five tons of laboratories and twenty staterooms for the scientists, with a pinnace to reach anywhere the ship itself cannot land. Unarmed. Source: https://wiki.travellerrpg.com/Type_L_class_Laboratory_Ship (Classic Traveller; re-built to High Guard 2022).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 400,
+    "configuration": "dispersedStructure"
+  },
+  "manoeuvre": 1,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 9,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 10,
+    "bis": true
+  },
+  "sensors": "improved",
+  "craft": [
+    {
+      "label": "Pinnace",
+      "tons": 40,
+      "cost": 14.09,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "laboratory",
+      "tons": 85
+    }
+  ],
+  "staterooms": 20,
+  "commonAreaTons": 20,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

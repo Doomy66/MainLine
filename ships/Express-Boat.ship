@@ -1,0 +1,52 @@
+{
+  "name": "Express Boat",
+  "notes": "The Imperial X-boat: a jump-4 message courier with no manoeuvre drive at all, relying on tenders at each end of its route to refuel and recover it. Cheap to run, useless in a fight, and the fastest mail there is. Source: https://wiki.travellerrpg.com/Type_X_class_Express_Boat (Traders and Gunboats, Classic Traveller; re-built to High Guard 2022).",
+  "tl": 13,
+  "standardDesign": true,
+  "hull": {
+    "tons": 100,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "jump": 4,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 3,
+    "weeks": 4
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 15,
+    "bis": true
+  },
+  "sensors": "civilian",
+  "systems": [
+    {
+      "custom": {
+        "label": "Message storage and transmission",
+        "tons": 2,
+        "cost": 1
+      }
+    }
+  ],
+  "staterooms": 3,
+  "commonAreaTons": 3,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 4
+    }
+  ],
+  "version": 1
+}

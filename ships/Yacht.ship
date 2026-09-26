@@ -1,0 +1,77 @@
+{
+  "name": "Yacht",
+  "notes": "A private jump-1 pleasure craft for a wealthy owner and guests: an owner's suite, a dozen staterooms and a ship's boat, all-terrain vehicle and air/raft for excursions. Unarmed; a low-tech yard can build it. Source: https://wiki.travellerrpg.com/Type_Y_class_Yacht (FASA Adventure Class Ships vol. 2, Classic Traveller; re-built to High Guard 2022 at the source's TL9).",
+  "tl": 9,
+  "standardDesign": true,
+  "hull": {
+    "tons": 200,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "titaniumSteel",
+    "protection": 1
+  },
+  "manoeuvre": 1,
+  "jump": 1,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 7,
+    "weeks": 8
+  },
+  "extraFuelTons": 20,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 5
+  },
+  "sensors": "civilian",
+  "craft": [
+    {
+      "label": "Ship's Boat",
+      "tons": 30,
+      "cost": 10.43,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "ATV",
+      "tons": 6,
+      "cost": 0.155,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "flat": "luxuryStateroom"
+    }
+  ],
+  "staterooms": 11,
+  "commonAreaTons": 14,
+  "passengers": {
+    "high": 6,
+    "middle": 0,
+    "low": 0
+  },
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

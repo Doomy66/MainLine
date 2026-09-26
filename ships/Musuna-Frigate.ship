@@ -1,0 +1,128 @@
+{
+  "name": "Musuna Frigate",
+  "notes": "A two-thousand-ton jump-2 frigate from a lower-tech navy, carrying a full marine company for boarding and planetary raids. A missile bay does the heavy work; plasma, laser and sandcaster turrets cover it. Source: https://wiki.travellerrpg.com/Musuna_class_Frigate (fan design by Ronald B. Kline Jr., Distant Fringe; re-built to High Guard 2022 with internal fuel for two jumps instead of drop tanks).",
+  "tl": 11,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 2000,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "manoeuvre": 2,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 92,
+    "weeks": 8
+  },
+  "extraFuelTons": 400,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 15,
+    "fib": true
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "bay",
+      "size": "medium",
+      "weapon": "missile"
+    },
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "plasmaGun",
+        "plasmaGun"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 4
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 4
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 288
+    },
+    {
+      "canister": "sand",
+      "count": 240
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 20
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "perTon": "barracks",
+      "tons": 162
+    },
+    {
+      "flat": "armoury",
+      "quantity": 35
+    },
+    {
+      "flat": "medicalBay",
+      "quantity": 2
+    },
+    {
+      "flat": "briefingRoom"
+    }
+  ],
+  "staterooms": 23,
+  "doubleOccupancy": true,
+  "commonAreaTons": 30,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

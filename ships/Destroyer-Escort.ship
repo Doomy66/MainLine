@@ -1,0 +1,134 @@
+{
+  "name": "Destroyer Escort",
+  "notes": "Fleet and squadron escort: small, fast, old, and still in service everywhere. Three barbettes and seven turrets on a thousand tons, with the magazines to keep them fed.",
+  "tl": 15,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 1000,
+    "configuration": "closeStructure",
+    "specialised": [
+      "reinforced"
+    ]
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 2
+  },
+  "manoeuvre": 6,
+  "jump": 4,
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 64,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard",
+    "holographic": true
+  },
+  "computer": {
+    "processing": 35,
+    "fib": true
+  },
+  "sensors": "advanced",
+  "weapons": [
+    {
+      "kind": "barbette",
+      "weapon": "fusion"
+    },
+    {
+      "kind": "barbette",
+      "weapon": "particle",
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "missileRack"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 5
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 384
+    },
+    {
+      "canister": "sand",
+      "count": 640
+    }
+  ],
+  "craft": [
+    {
+      "label": "Pinnace",
+      "tons": 40,
+      "cost": 9.68,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "perTon": "fuelProcessor",
+      "tons": 10
+    },
+    {
+      "fuelScoops": true
+    },
+    {
+      "flat": "armoury",
+      "quantity": 2
+    },
+    {
+      "flat": "medicalBay"
+    },
+    {
+      "perTon": "repairDrones"
+    }
+  ],
+  "staterooms": 24,
+  "doubleOccupancy": true,
+  "commonAreaTons": 24,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "intellect"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 4
+    },
+    {
+      "software": "autoRepair",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 2
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    }
+  ],
+  "version": 1
+}

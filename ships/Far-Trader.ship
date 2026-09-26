@@ -1,0 +1,91 @@
+{
+  "name": "Far Trader",
+  "notes": "The jump-2 cousin of the Free Trader, giving up some hold space for the reach to serve worlds a free trader cannot. Ten staterooms, four low berths and one defensive turret. Source: https://wiki.travellerrpg.com/Type_A2_class_Far_Trader (Traders and Gunboats / Mongoose Traveller; the source leaves its hardpoints empty, this catalogue fits one double turret).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 200,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 2
+  },
+  "manoeuvre": 1,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 5,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 10,
+    "bis": true
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "pulseLaser",
+        "sandcaster"
+      ]
+    }
+  ],
+  "craft": [
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "perTon": "fuelProcessor",
+      "tons": 2
+    },
+    {
+      "fuelScoops": true
+    }
+  ],
+  "staterooms": 10,
+  "lowBerths": 4,
+  "commonAreaTons": 10,
+  "passengers": {
+    "high": 0,
+    "middle": 5,
+    "low": 4
+  },
+  "ordnance": [
+    {
+      "canister": "sand",
+      "count": 20
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

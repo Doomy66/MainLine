@@ -1,0 +1,409 @@
+# Spandrel Verge, exported from PlanetHex
+# Seed: SPANDREL
+# Density: sparse
+# 403 systems across sixteen subsectors, 399 of them inhabited
+# Allegiance is Na throughout: nothing here has claimed anything.
+Hex	Name	UWP	Bases	Remarks	Zone	PBG	Allegiance	Stars
+0104	Cinderdale	D5818C9-2	S	Lt		611	Na	G8 III
+0112	Voscombe	A523123-A		Lo Po		405	Na	M8 V
+0126	Selwold	D575612-1		Ag Lt NI		503	Na	K8 V
+0128	Peldale	B326797-B	S			711	Na	K8 V K7 V
+0136	Andian Post	C874224-9		Lo		700	Na	K0 V M4 V
+0140	Gurung's Post	D490100-6	S	De Lo		110	Na	K0 V
+0204	Odari	E330559-A		De NI Po		524	Na	G9 V
+0205	Halthorpe	B100330-F		Ht Lo Va		310	Na	A9 IV M1 V
+0207	Marspire	D583699-4		Lt NI Ri		820	Na	K8 V
+0209	Garthvale	C450AA9-A		De Hi Po		500	Na	A8 V
+0210	Westerford	X442564-0		Lt NI Po		811	Na	K4 V M7 V
+0211	Glenford	D234259-6		Lo		500	Na	M8 V M0 V
+0215	Lassamar Depot	C896755-8		Ag		904	Na	G4 V M6 V
+0219	Corbarrow	D557389-7		Lo		414	Na	F6 III F5 V
+0221	Lindqvist Down	D876365-2		Lo Lt		833	Na	G5 V M6 V
+0227	Ashbarrow	X262622-0		Lt NI		905	Na	G3 V
+0230	Magtii	D220234-8		De Lo Po		324	Na	G7 V M1 V
+0231	Zaidavek Sector	B230314-A	N	De Lo Po		614	Na	M5 V
+0239	Quelatu Sector	B694598-6		Ag NI		530	Na	F5 V
+0240	Borishi Works	D100100-B	S	Lo Va		624	Na	G5 V
+0302	Halford	B000100-B	A	As Lo Va	A	711	Na	G9 V
+0306	Kedrise	B423663-C		Ht Na NI Po		303	Na	K0 V
+0307	Barport	B100985-E	N	Hi Ht In Na Va		102	Na	G2 V
+0308	Adeyemi's Crossing	A471599-9		NI		203	Na	M8 V
+0310	Halport	C765647-6		Ag Ga NI Ri		614	Na	K6 V K5 V
+0321	Thorwatch	C4979B7-6		Hi In		323	Na	K6 V
+0324	Garthdeep	B746468-9	A	NI		531	Na	M8 V
+0325	Cinderspire	B452200-C	N	Ht Lo Po		905	Na	K5 V
+0327	Gorraez	E472215-3		Lo Lt		923	Na	M5 V
+0329	Voswold	E266587-6		Ag NI		425	Na	G0 V
+0330	Mbeki's Yard	D9B2598-3		Fl Lt NI		425	Na	F9 V
+0332	Ubrioru Works	D777488-6		NI		510	Na	A8 V M0 V
+0336	Lomeai Post	E777584-2		Ag Lt NI		513	Na	K6 V
+0337	Surapor Depot	E736586-5		Lt NI		332	Na	M0 V
+0338	Amriri Works	D666A86-5		Ga Hi Lt		905	Na	K3 V K1 V
+0339	Vashaan Camp	C543367-6	S	Lo Po		732	Na	M0 V
+0405	Ashari	D473531-7	S	NI		930	Na	F2 V
+0408	Storvale	A748869-B	S			313	Na	G2 V
+0409	Gorraash	A9B4640-D	A	Fl Ht NI	A	821	Na	G2 V
+0410	Barwick	C363498-8	S	NI		705	Na	G1 V
+0415	Aylspire	C747414-7		NI		921	Na	M6 V
+0419	Cindercross	E5638A9-6				634	Na	G6 V
+0421	Karvale	D96A568-8	S	NI Wa		230	Na	G6 V M2 V
+0424	Glenwick	X866410-3		Ga Lt NI		704	Na	K0 V
+0426	Kirkbarrow	B798457-7		NI		431	Na	M7 V
+0427	Fosshold	A665976-F		Ga Hi Ht		224	Na	G7 V D
+0430	Linthorpe	C255756-A		Ag		410	Na	F6 V
+0431	Emivek Sector	D110976-8	S	Hi In Na		135	Na	F2 V D
+0435	Dumith Sector	D844100-5	S	Lo Lt		603	Na	M0 V M1 V
+0438	Verakai Station	E100200-8		Lo Va		534	Na	K6 V
+0439	Rovivek Depot	D200684-9		Na NI Va		532	Na	G6 V
+0440	Ubriora Sector	E98A7B9-8		Wa		710	Na	K5 V
+0501	Voswold	D96A521-4	S	Lt NI Wa		605	Na	F0 V
+0504	Aylreach	B7A6435-8		Fl NI		230	Na	K6 V M3 V
+0505	Brandale	A675344-B	S	Lo		120	Na	F6 V M6 V
+0512	Kedshaw	D547999-5	S	Hi In Lt		432	Na	G9 III M3 V
+0526	Halshaw	B474213-7		Lo		605	Na	K3 V
+0529	Linford	D3548A9-6	S		A	920	Na	K1 V M6 V
+0530	Valdeep	E613999-4		Hi IC In Lt Na		431	Na	K2 V
+0531	Muridra	D581320-3		Lo Lt	A	535	Na	G9 V
+0532	Orsaan Site	E4625A5-8		NI		710	Na	G3 V
+0533	Kedreach	D989599-4		Lt NI		220	Na	G1 V
+0534	Gorraora Site	C8A2773-7		Fl		301	Na	G1 V
+0535	Umbrax Post	B6529A8-7	S	Hi Po		204	Na	F9 V
+0536	Yaninil Site	D521201-6		Lo Po		715	Na	M5 V D
+0537	Ennoan Camp	D000640-5	S	As Lt Na NI Va		813	Na	G1 V
+0602	Talwick	B4008B9-C	A	Ht Na Va		402	Na	A2 V
+0603	Beludor	B411100-D	A	Ht IC Lo		123	Na	M4 V
+0606	Aylfell	B53A113-C		Ht Lo Wa		700	Na	G9 V
+0613	Vashamar Sector	B314AB9-D	A	Hi Ht IC In		604	Na	G8 V
+0615	Linthorpe	D201887-6		IC Na Va		813	Na	G9 V
+0618	Grimford	D836467-6	S	NI		715	Na	G8 V
+0620	Rhenbarrow	D543457-7		NI Po		513	Na	K7 V
+0621	Ferrwatch	C5257B6-9	S			405	Na	G6 V M2 V
+0627	Karmere	D130369-B		De Lo Po		805	Na	M2 V
+0637	Bergman's Landing	EA8A7B9-6		Wa		713	Na	F5 V
+0638	Surath Site	A200579-E	N	Ht NI Va		911	Na	K7 V
+0705	Ennotu Post	C8C8734-5		Fl Lt		220	Na	G0 V
+0710	Storthorpe	E879576-9		NI		505	Na	K0 V
+0721	Ordford	D405157-8		IC Lo Va		101	Na	K4 V M9 V
+0722	Gammrii	E9C7737-5		Fl Lt		330	Na	F1 V
+0729	Orsari	C528384-5		Lo Lt		413	Na	G8 V
+0734	Achebe Wharf	B455403-D	N	Ht NI		120	Na	M8 V
+0802	Marstead	E255642-2		Ag Lt NI		830	Na	F5 V K8 V
+0809	Girrzhii	E410523-9		NI		501	Na	F6 V
+0810	Wenspire	C685796-3		Ag Ga Lt Ri		320	Na	G4 V D
+0811	Netherburn	D100775-C		Ht Na Va		132	Na	K3 V M5 V
+0821	Longdale	C659467-7	S	NI		934	Na	G6 V M8 V
+0822	Longstead	B200799-A	N	Na Va		135	Na	A2 V
+0823	Voss Reach	C7576A9-6		Ag Ga NI		204	Na	A9 V
+0824	Fossbarrow	B255213-8	S	Lo		321	Na	M2 V M6 VI
+0832	Xolala Depot	C110775-D		Ht Na		220	Na	F4 V
+0833	Alanil Sector	B000784-D		As Ht Na Va		432	Na	M0 V
+0835	Verawei Depot	E202356-9		IC Lo Va		403	Na	G1 V G6 V
+0904	Galais	D748798-5	S	Ag Lt		621	Na	F9 V
+0907	Beluvek	B584487-7	S	NI		612	Na	M7 V
+0909	Andiarn	D5638C9-1	S	Lt		323	Na	G5 IV
+0910	Andith	B474559-9		Ag NI		702	Na	B4 V
+0911	Zerukai	C692567-5	S	Lt NI		431	Na	M9 V M8 V
+0912	Odashi	B739200-D		Ht Lo		831	Na	A8 V M3 V
+0915	Vashari	C401610-6		IC Na NI Va		310	Na	K5 V
+0923	Haddad's Crossing	D6999C9-6	S	Hi In		211	Na	G8 V
+0933	Ashknuu	D4007A9-5		Lt Na Va	A	123	Na	K3 V
+0934	Valwick	B1206A9-C	S	De Ht Na NI Po	A	312	Na	F2 V
+0938	Kishpuur	B5426B9-6	S	NI Po		605	Na	G1 V
+0939	Ikkmesh	B559254-A	S	Lo		722	Na	K6 V
+1006	Surash	D537321-5		Lo Lt		421	Na	M6 V M3 VI
+1008	Nurishi	C371546-A		NI		103	Na	F2 IV
+1010	Corsasen	A356254-A	N	Lo		723	Na	F7 V
+1011	Herimar	B744688-7	N	Ag NI		504	Na	G8 V M3 V
+1012	Jarrett's Bend	E449A98-6		Hi In		720	Na	G0 V M5 V
+1014	Praxivek	A504536-A	S	IC NI Va		734	Na	M3 V M4 V
+1015	Ulanne	C453256-A		Lo Po		705	Na	K4 V K4 V
+1023	Bergman Landing	D647200-3	S	Lo Lt		833	Na	G8 V
+1024	Tuknuu	C75A576-C		Ht NI Wa		132	Na	M6 V M6 V
+1028	Voss's Reach	C200876-8		Na Va		803	Na	G8 V M8 V
+1031	Urdnam	C748644-8		Ag NI		913	Na	F8 V
+1035	Dushkhii	X465444-3		Lt NI		610	Na	K0 V M3 V
+1039	Rukhzaa	B684A85-7		Hi		734	Na	K6 V M0 V
+1040	Meshdagg	EAA56B8-6		Fl NI		230	Na	G7 V
+1102	Orsawei	D321445-4		Lt NI Po		534	Na	G6 V
+1103	Wynnetan	B527666-A	S	NI		515	Na	A7 V
+1107	Veraai	B344776-B	S	Ag		224	Na	G1 V M4 V
+1108	Umbrapor	C746379-7		Lo		933	Na	D D
+1111	Orsath	D200620-7		Na NI Va		125	Na	K6 V
+1112	Talapor	D310443-A		NI		400	Na	G1 V
+1113	Caspiarn	B865899-9	S	Ga Ri		303	Na	B3 V K1 V
+1117	Ulanla	X847553-3		Ag Lt NI		212	Na	F0 V
+1121	Ortiz's Bend	E6B6522-8		Fl NI		705	Na	M4 V
+1122	Haddad Hollow	C775595-6		Ag NI		635	Na	K0 V
+1123	Amrila	A400AA9-F	N	Hi Ht In Na Va	A	431	Na	K4 V
+1125	Larsen's Bluff	X303000-0		Ba IC Va		022	Na	M0 VI
+1126	Halloran's Bend	C734420-5	S	Lt NI		110	Na	M1 V
+1128	Pradhan Point	D675469-7		NI		820	Na	G3 V M2 V
+1202	Lomean	E776743-6		Ag		724	Na	F3 V D
+1207	Rhodawei	D430589-5	S	De Lt NI Po		431	Na	F3 V G7 V
+1221	Talmere	C451447-5		Lt NI Po		535	Na	G1 V
+1223	Novak Point	C88A799-7	S	Ri Wa		833	Na	A3 V
+1224	Weir's Crossing	C558333-4		Lo Lt		700	Na	G9 V
+1226	Blanchard's Point	E3788C9-6			A	824	Na	K5 V
+1230	Novak Station	CA7A422-6		NI Wa		725	Na	F0 V
+1239	Berrkar	A656200-D	N	Ga Ht Lo		815	Na	M3 V
+1303	Rasmussen Reach	D000216-7		As Lo Va		431	Na	K3 V
+1305	Galapor	D579862-2		Lt		931	Na	K1 V
+1308	Yaninth	A848679-A		Ag NI		914	Na	G2 V M6 V
+1310	Junnva	A438777-E		Ht		634	Na	K5 V
+1317	Halyai	A775752-9		Ag		633	Na	A1 V K4 V
+1318	Ashkirru	D273362-7		Lo		800	Na	M9 V D
+1320	Junnkai	X677201-3		Lo Lt		325	Na	G2 V
+1321	Delacroix's Station	C9B3555-A	S	Fl NI		820	Na	M3 V M9 V
+1322	Eriksen's Camp	C626753-7				121	Na	K9 V
+1323	Restrepo's Crossing	B566000-0	A	Ba		013	Na	K4 V
+1324	Longshaw	B876597-B	N	Ag NI		415	Na	G7 V K0 V
+1325	Rasmussen's Hollow	X783426-3		Lt NI		433	Na	D
+1326	Blanchard's Rest	D9B7545-3		Fl Lt NI		514	Na	G6 VI
+1329	Cheng Landing	C693979-6		Hi In		813	Na	K3 V M5 V
+1332	Tirrawei	A000958-D	N	As Hi Ht In Na Va		822	Na	G5 V M1 V
+1333	Khankha	C1206A9-C	S	De Ht Na NI Po		732	Na	G7 V
+1334	Hurrzaa	B100336-F	S	Ht Lo Va		823	Na	M3 V
+1335	Pashzhii	D430889-7	S	De Na Po		331	Na	K5 V
+1336	Amrith	E380401-9		De NI		334	Na	F0 V M6 V
+1340	Pashgii	C799346-9	S	Lo		835	Na	M7 V M3 V
+1402	Wynneash	C694420-8	S	NI		221	Na	A1 V
+1403	Ashari	B536645-6	N	NI		901	Na	F2 V
+1405	Tirrath	C200798-8	S	Na Va		420	Na	G6 V
+1411	Felinil	E468761-5		Ag Lt Ri		205	Na	G1 V
+1412	Belux	C000332-C		As Ht Lo Va		824	Na	K3 V
+1413	Galaum	C000455-A	S	As NI Va		115	Na	K2 V
+1415	Nydiaoru	B885754-7		Ag Ga Ri		630	Na	A9 V M1 V
+1418	Ennoum	D225459-6	S	NI		520	Na	M4 V D
+1420	Ostraash	B454223-C		Ht Lo		733	Na	M9 V M7 V
+1425	Ortiz Landing	D570100-7		De Lo		914	Na	M7 V
+1426	Naidu Landing	C7778B9-4	S	Lt		224	Na	F6 V
+1433	Nirgshii	B486564-C	S	Ag Ht NI		701	Na	F7 V
+1435	Dushnesh	A433698-B		Na NI Po		330	Na	G5 V K9 V
+1505	Jorashi	C530886-7	S	De Na Po		133	Na	K7 V M0 V
+1508	Nurioru	C140669-6		De NI Po		913	Na	G1 V M1 V
+1513	Nydiaash	A543A99-B		Hi In Po		711	Na	F5 V
+1516	Imutan	C532553-8	S	NI Po		433	Na	A0 V
+1520	Ostranth	C200567-9		NI Va		424	Na	D
+1521	Duvall's Rest	A662100-9	N	Lo		904	Na	K4 V
+1524	Ortiz's Crossing	E5699B7-6		Hi		914	Na	A3 V
+1528	Kishmesh	C100433-9		NI Va		601	Na	A1 V M6 V
+1530	Pradhan Post	C433243-8		Lo Po		631	Na	F8 II A0 V
+1531	Surari Site	C423401-7		NI Po		225	Na	F7 V
+1533	Luurmakh	D201445-7		IC NI Va		912	Na	A5 V
+1540	Shudzhii	C470585-6		De NI		415	Na	K1 V
+1602	Umbratu	A410410-F		Ht NI		510	Na	D
+1605	Caspish	D458200-7		Lo		412	Na	D D
+1614	Zeruai	C433652-8		Na NI Po		220	Na	G0 V
+1619	Savford	B536877-8	S			314	Na	G6 V M5 V
+1620	Tovidra	D684864-6		Ri		232	Na	G0 V
+1624	Blanchard Yard	D483400-4		Lt NI		101	Na	F6 V
+1631	Gammushi	B324555-A	S	NI		122	Na	G7 IV M2 V
+1632	Caspitan	B783547-9	N	NI		731	Na	F7 V K1 V
+1638	Dushkha	D433200-6	S	Lo Po		825	Na	M7 V
+1709	Grimrise	E8A5442-5		Fl Lt NI		425	Na	K8 V
+1710	Westerclose	D458200-8	S	Lo		903	Na	G7 V M6 V
+1714	Orsala Post	D581388-4		Lo Lt		715	Na	M7 V M3 V
+1717	Ketuwei	E87A795-7		Wa		401	Na	A3 V
+1720	Selkane	B645455-B	N	NI		323	Na	A7 V
+1722	Beluoru Sector	A565879-9	A	Ri		222	Na	M9 VI
+1723	Ashkshii	C562764-8		Ri		833	Na	F4 V K0 V
+1726	Tovitu Hub	C7A3449-6	S	Fl NI		522	Na	F1 V M1 V
+1727	Alax Works	D510677-6		Na NI		510	Na	K7 V
+1728	Westerdeep	D668346-6	S	Lo		424	Na	M4 V M0 V
+1730	Praxikai Works	C6B5779-A	S	Fl	A	630	Na	M6 V
+1736	Saggtii	C8A0200-8		Lo		221	Na	M8 V
+1738	Jorais	B759530-C		Ht NI		220	Na	G8 V M2 V
+1801	Lakhkha	E422610-5		Lt Na NI Po		100	Na	K8 V
+1803	Ramburn	B978110-8		Lo		805	Na	K2 V
+1809	Linhollow	C2218A9-8		Na Po		822	Na	G2 V
+1810	Wenport	C585641-5		Ag Lt NI Ri		133	Na	K0 V
+1814	Wynneash	C6B0799-9				410	Na	F0 V M6 V
+1817	Muriwei	X673743-0		Lt		124	Na	F1 V
+1818	Galakai	A697589-B	S	Ag NI		935	Na	M2 V
+1822	Surador Camp	D324498-4		Lt NI		524	Na	M4 V
+1823	Dumipor Post	C595999-7	S	Hi In		522	Na	G5 V
+1830	Feliash Camp	C8A1448-6	S	Fl NI		910	Na	F1 V M5 V
+1831	Ikkzhii	A5449D9-6	N	Hi In		100	Na	K2 V
+1835	Dakkmakh	D656AD9-6		Ga Hi		513	Na	G6 V
+1837	Ankiimmi	B403986-B	N	Hi IC In Na Va		823	Na	G0 V K9 V
+1902	Fosscross	D561343-4		Lo Lt		535	Na	G6 V
+1905	Thorridge	B64A324-B		Lo Wa		713	Na	K4 V K9 V
+1907	Corhollow	B66A369-9		Lo Wa		924	Na	D D
+1908	Mordale	A674213-9	N	Lo		725	Na	O0 V
+1909	Nethershaw	C311520-B		IC NI		615	Na	F6 V
+1917	Ostramar	C460678-A		De NI Ri		421	Na	K0 V M1 V
+1918	Ilvaai	C638989-A		Hi		421	Na	F6 V
+1922	Faneshi Post	D98A687-3	S	Lt NI Ri Wa		625	Na	G3 V M2 V
+1932	Pelford	D68A489-7		NI Wa		702	Na	G7 V
+1933	Surawei	C76A356-7	S	Lo Wa		434	Na	M3 V M8 V
+1935	Amriva	C545411-5	S	Lt NI		204	Na	K2 V
+1936	Boriarn	C262452-9		NI		731	Na	G2 V
+1937	Zhenushi	B779743-8	N			213	Na	M1 V M5 V
+1939	Nagshii	E8B3997-7		Fl Hi		822	Na	G3 IV
+1940	Dakkuur	D351666-7	S	NI Po		115	Na	F5 V
+2001	Fossbarrow	D6A3675-6	S	Fl NI		414	Na	M6 V
+2002	Brackclose	C300588-7		NI Va		532	Na	F9 V
+2007	Ubrioru	B582477-C	N	Ht NI		522	Na	M6 V D
+2008	Hartmarch	B383457-B	N	NI		412	Na	G2 V
+2011	Lassasen	C564777-8		Ag Ri		611	Na	K8 V M1 V
+2016	Koramar	D434877-A	S			734	Na	K9 V K7 V
+2021	Zaidaoru Sector	B422543-A	N	NI Po		402	Na	M2 V M6 V
+2024	Orsais	D462312-4	S	Lo Lt		624	Na	M4 V M1 V
+2026	Rhodaum Site	C655579-8		Ag Ga NI		315	Na	K5 V
+2028	Sokolov Field	C446546-5	S	Ag Lt NI		335	Na	K8 V
+2030	Andiwei Works	C444766-9	S	Ag		203	Na	G3 V D
+2031	Wynnedra	A54A320-F	N	Ht Lo Wa		501	Na	M5 V
+2034	Amkhdur	B433236-A	S	Lo Po		300	Na	K7 V
+2036	Ilvadra	B334412-D		Ht NI		800	Na	A1 V M6 V
+2038	Mikkshur	D311756-9	S	IC Na		331	Na	F2 V
+2108	Morwatch	C323757-8	S	Na Po		332	Na	G1 V
+2113	Wynnenil	D510376-A		Lo		915	Na	M1 VI D
+2115	Abara's Down	D2258C9-6	S			311	Na	K8 V M0 V
+2118	Halyoru	D766254-8	S	Ga Lo		522	Na	M6 V
+2120	Corsatu	C100676-C		Ht Na NI Va		930	Na	G8 V
+2124	Andian Works	B100889-C	N	Ht Na Va		132	Na	G1 V M5 V
+2126	Gorrari Sector	C302100-A		IC Lo Va		731	Na	D
+2127	Calawei	C9A4799-8		Fl	A	434	Na	G0 V M7 V
+2129	Beruis Site	C678799-3		Ag Lt		812	Na	G3 V
+2130	Tirrax	C5885A9-9		Ag NI		423	Na	M8 V
+2131	Ishpuur	C638202-9		Lo		102	Na	M1 V M9 V
+2133	Ziraan	B342568-8	S	NI Po		801	Na	G5 V D
+2134	Saggmesh	C334699-7	S	NI		532	Na	G2 V
+2136	Alador	C9A4433-8	S	Fl NI		831	Na	G8 V
+2137	Nagnuu	E776200-3		Lo Lt		321	Na	M0 V
+2208	Rukhenni	C335556-8	S	NI		630	Na	G0 V
+2209	Kaggtii	B496778-8	N	Ag		724	Na	K9 V
+2216	Tirraash	D565569-2		Ag Lt NI		920	Na	K6 V
+2220	Rhodari	E000311-B		As Lo Va		214	Na	K6 V
+2223	Ennoash Post	A320A79-F	S	De Hi Ht In Na Po	A	603	Na	F2 V
+2225	Zerutan Hub	D240222-7		De Lo Po		400	Na	G6 IV
+2227	Daradra Site	C4566A7-4	S	Ag Lt NI		514	Na	K8 V M0 V
+2228	Nakamura's Hollow	D666112-3		Ga Lo Lt		402	Na	M6 V
+2230	Belulok	B634674-B	S	NI		233	Na	G8 V
+2234	Garraan	X420320-3		De Lo Lt Po		920	Na	F6 V
+2239	Kaliai	C200AD9-B		Hi In Na Va		805	Na	M0 V
+2302	Rhenclose	C554667-4		Ag Lt NI		621	Na	F8 V
+2306	Brackhollow	D4107B9-9		Na		523	Na	G0 V D
+2311	Praxisen	D230467-5		De Lt NI Po		613	Na	K9 V
+2312	Herimar	B648967-B	A	Hi In		901	Na	K7 V
+2317	Quelakai	A786358-A		Ga Lo		902	Na	F5 V M0 V
+2319	Nydiawei	C5A09B9-9		Hi	A	221	Na	K5 V
+2323	Dumiri Works	D1208D9-7		De Na Po		120	Na	K0 V K1 V
+2324	Savwick	E776222-5		Lo Lt		222	Na	K1 V
+2325	Umbratu	C100443-D		Ht NI Va		633	Na	G0 IV
+2326	Suramar Hub	D575687-4		Ag Lt NI		705	Na	G9 V
+2333	Shudkar	E794755-2		Ag Lt		125	Na	K5 V K1 V
+2335	Ashkmesh	C340547-6	S	De NI Po		524	Na	F7 V
+2337	Hurrkha	D733473-5		Lt NI Po		412	Na	K0 V
+2340	Nagnam	B240799-C	A	De Ht Po		630	Na	F4 V
+2402	Savmarch	C557200-7		Lo		224	Na	K5 V D
+2406	Halburn	D6A1663-4	S	Fl Lt NI		324	Na	G1 V
+2407	Iromarch	C328000-0		Ba		004	Na	K2 VI
+2409	Nakamura's Bluff	D785231-4	S	Ga Lo Lt		824	Na	F6 V M5 VI
+2413	Pradhan's Rest	C300000-0		Ba Va		013	Na	K6 V
+2425	Wynnemar Post	C344598-9		Ag NI		912	Na	K3 V M0 V
+2435	Hurrnesh	D76A665-5		Lt NI Ri Wa		834	Na	F5 V
+2436	Hurrlum	B551126-B	N	Lo Po		701	Na	K4 V
+2437	Barshshii	C686741-7	S	Ag Ga Ri		630	Na	G1 V M4 V
+2503	Haddad Post	D633452-8	S	NI Po		733	Na	G6 V M9 V
+2509	Abara Yard	D8738A8-3		Lt		310	Na	K9 V
+2514	Ashkushi	D321412-4	S	Lt NI Po		920	Na	M8 V M9 V
+2515	Dumidra Site	C8C3689-7	S	Fl NI		525	Na	F6 V
+2517	Joraai	B4587C9-6	S	Ag		113	Na	K7 V
+2519	Tukshur	D756540-4	S	Ag Ga Lt NI		333	Na	M1 V
+2520	Zeruri	B3806A9-A		De NI		425	Na	G0 IV
+2522	Yanix	C350265-A		De Lo Po		412	Na	G6 V K3 V
+2528	Corsawei	C976456-5	S	Lt NI		411	Na	D
+2530	Surash	D6488A9-2	S	Lt		200	Na	K4 V
+2532	Quelawei	A63A438-B	S	NI Wa		925	Na	M9 V
+2533	Odapor	E100100-7		Lo Va		522	Na	M5 V M4 V
+2534	Devavek	B677465-B	S	NI		605	Na	M1 V M2 V
+2536	Miraarn	C689666-7		NI Ri		223	Na	M0 V
+2540	Emiarn	D210467-A	S	NI		922	Na	K0 V
+2602	Weir's Down	D696100-8	S	Lo		301	Na	M5 V D
+2604	Bergman's Down	D232565-5		Lt NI Po		232	Na	K0 V
+2605	Blanchard Reach	E9699A5-8		Hi		531	Na	K4 V M2 V
+2611	Saggnuu	B100744-D		Ht Na Va		933	Na	F5 V F2 V
+2619	Gammtii	E886698-2		Ag Ga Lt NI Ri		713	Na	A4 V
+2621	Lomekai	E74A850-5		Lt Wa		400	Na	D D
+2623	Ilvaan	E889494-6		NI		532	Na	G3 V
+2625	Beludor	B434440-D	S	Ht NI		725	Na	G7 V
+2626	Zeruan	D448434-6		NI		820	Na	M8 V
+2627	Morvale	C8589D9-2		Hi Lt	A	530	Na	G7 V
+2629	Yorrotan Depot	A675402-C	N	Ht NI		514	Na	A6 V
+2630	Lassapor	C444337-8	S	Lo		801	Na	K3 V
+2631	Ubriva	B583455-9		NI		600	Na	M2 V
+2637	Andila	C666645-6		Ag Ga NI Ri		911	Na	M6 V M7 V
+2640	Rhodalok	C524345-7	S	Lo		121	Na	M7 V
+2703	Rasmussen Field	D220659-7		De Na NI Po		334	Na	G0 V
+2704	Haddad Crossing	E000774-C		As Ht Na Va		912	Na	K8 V
+2705	Pradhan's Camp	C210333-9	S	Lo		833	Na	K9 V M0 V
+2713	Garrkha	D347666-2		Ag Lt NI		532	Na	F6 V M2 V
+2722	Alanil	E9A29C9-5		Fl Hi Lt		313	Na	F6 V
+2725	Gorranth	A100444-F	N	Ht NI Va		804	Na	F2 V
+2729	Ilvakai	C657437-7		Ga NI		705	Na	G5 V
+2732	Halytan	B100502-D	S	Ht NI Va		131	Na	F9 V
+2738	Talamar	C463536-6	S	NI		515	Na	F1 V M7 V
+2801	Abara's Down	A344779-E	S	Ag Ht		522	Na	G0 V
+2803	Halloran Hollow	D55A775-9		Wa	A	813	Na	G8 V D
+2807	Sokolov's Down	E000544-9		As NI Va		711	Na	M3 V
+2813	Tengnuu	C655254-5	S	Ga Lo Lt		605	Na	K5 V
+2815	Okonkwo Post	C000110-B	S	As Lo Va		313	Na	D
+2818	Rasmussen Down	C67A999-A		Hi In Wa		531	Na	F1 V K5 V
+2821	Ostraez	C639231-B		Lo		432	Na	M3 V
+2822	Ostraai	C85A989-B		Hi Wa		105	Na	G1 V
+2823	Yaniwei	B99A956-D	S	Hi Ht In Wa		333	Na	G1 V K1 V
+2824	Orsaarn	D120540-6	S	De NI Po		825	Na	K9 V
+2832	Ketuis	C58A744-5	S	Lt Ri Wa		124	Na	A9 V
+2837	Welaez	C769367-6		Lo		830	Na	M3 V M7 V
+2840	Veranth	C884431-4		Lt NI		631	Na	B6 V G7 V
+2902	Ashkdagg	C789777-9		Ri		530	Na	G8 V
+2903	Ordgate	C5309C9-7		De Hi Na Po		105	Na	M4 V M9 V
+2905	Cheng Reach	C85A799-A		Wa		903	Na	M9 V
+2906	Mbeki Reach	E676120-4		Lo Lt		813	Na	M9 V D
+2914	Ennoarn	A555654-8	A	Ag NI		900	Na	G5 V
+2918	Khanaan	C413899-8	S	IC Na		920	Na	K2 V
+2921	Lomeis	A69A8A9-A		Wa	A	232	Na	M7 V
+2923	Veraez	D6768A9-1	S	Lt		202	Na	A8 V
+2924	Vashador	D8569B9-4	S	Ga Hi Lt		302	Na	K7 V
+2927	Feliai	D6A0310-4		Lo Lt		434	Na	M0 V
+2928	Halyx	D100300-8		Lo Va		213	Na	A5 V
+2930	Ennoez	B633334-C	S	Ht Lo Po		712	Na	G3 V M7 V
+2937	Caspidor	DA8AA87-8		Hi Wa		624	Na	F2 V
+3006	Ferrwold	D797476-8	S	NI		921	Na	F2 V M2 V
+3007	Oyelaran Camp	E336AC9-5		Hi Lt		121	Na	G4 V M9 V
+3008	Ivanova Point	D221303-7		Lo Po		921	Na	M2 V
+3009	Quelapor	B226101-D		Ht Lo		834	Na	M6 V M9 V
+3011	Nagmesh	E8A6510-5		Fl Lt NI		425	Na	A0 V
+3016	Nirgkha	C9C9621-5	S	Fl Lt NI		522	Na	A3 V
+3020	Ankishak	A561246-A		Lo		402	Na	G9 V
+3025	Vashatu	B000966-D	N	As Hi Ht In Na Va		924	Na	G9 V M1 V
+3034	Devaoru	B6A2431-8	S	Fl NI		313	Na	M0 V
+3035	Xolawei	C548689-7	S	Ag NI		615	Na	M9 V
+3038	Nuriva	D667759-3		Ag Ga Lt Ri		711	Na	F5 V
+3040	Nuriai	A8A4256-B		Fl Lo		213	Na	M6 V
+3101	Abara's Station	B989310-7	S	Lo		632	Na	M7 V M3 V
+3105	Nimath	AA87573-E	N	Ag Ht NI		910	Na	G9 V
+3111	Ankinesh	C201112-7	S	IC Lo Va		304	Na	M9 V
+3112	Meshlugg	E421551-9		NI Po		130	Na	G2 V M3 V
+3114	Digirru	X5556A9-1		Ag Lt NI		112	Na	K7 V
+3117	Umbralok	B9A3665-8		Fl NI		234	Na	F1 V
+3118	Netherstrand	C887167-9		Ga Lo		705	Na	F3 V
+3119	Ushkmesh	EA76210-5		Lo Lt		312	Na	M4 V M2 V
+3122	Kowalski's Post	A654999-8		Hi		912	Na	M8 V
+3125	Caspiri	D200556-6	S	NI Va		314	Na	G9 V M4 V
+3126	Tirravek	D6B2763-6	S	Fl		610	Na	F2 V
+3129	Fanevek	C79A888-A		Wa		430	Na	G3 V M8 V
+3134	Beruora	A210402-D		Ht NI		502	Na	M7 V
+3202	Gurung's Crossing	C100579-D	S	Ht NI Va		901	Na	G9 V M1 V
+3208	Bergman's Camp	B8798C9-7	S			620	Na	B8 V K7 V
+3211	Salazar Field	B530436-A		De NI Po		431	Na	K8 V
+3212	Calatan	A345122-D	N	Ht Lo		210	Na	D
+3213	Tukkhan	DAA5543-5	S	Fl Lt NI		730	Na	G4 V
+3214	Amkhkhii	C879200-6		Lo		102	Na	M3 V M8 V
+3216	Dushuur	C768467-8		NI		115	Na	M1 V
+3222	Weir Rest	C9598A9-4	S	Lt	A	523	Na	K4 V
+3227	Odasen	C451454-A	S	NI Po		421	Na	M9 V M6 V
+3231	Amriri	B692544-B		NI		510	Na	K9 V M8 V
+3236	Halydra	D449542-7		NI		811	Na	G0 V
+3240	Ashari	B361AD9-B	S	Hi		312	Na	G5 V

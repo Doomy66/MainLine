@@ -1,0 +1,96 @@
+{
+  "name": "Dragon System Defence Boat",
+  "notes": "A jumpless four-hundred-ton defender that spends its drive-and-fuel budget on armour and bay weapons instead, hiding in gas giants and oceans until raiders arrive. Built for in-system work only. Source: https://wiki.travellerrpg.com/Dragon_class_System_Defense_Boat (JTAS 9, Classic Traveller; the source leaves the weapon fit blank, so the bays are this catalogue's choice; re-built to High Guard 2022).",
+  "tl": 12,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 400,
+    "configuration": "streamlined",
+    "specialised": [
+      "reinforced"
+    ]
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 12
+  },
+  "manoeuvre": 6,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 30,
+    "weeks": 16
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 20,
+    "fib": true
+  },
+  "sensors": "improved",
+  "weapons": [
+    {
+      "kind": "bay",
+      "size": "small",
+      "weapon": "particleBeam",
+      "quantity": 2
+    },
+    {
+      "kind": "bay",
+      "size": "small",
+      "weapon": "missile"
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "sandcaster"
+      ]
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 144
+    },
+    {
+      "canister": "sand",
+      "count": 40
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 2
+    },
+    {
+      "perTon": "repairDrones"
+    }
+  ],
+  "staterooms": 8,
+  "doubleOccupancy": true,
+  "commonAreaTons": 8,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

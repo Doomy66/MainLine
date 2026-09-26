@@ -1,0 +1,55 @@
+{
+  "name": "Pinnace",
+  "notes": "A forty-ton utility craft, larger and a little slower than the ship's boat, that carries eight passengers or twenty tons of cargo. It mounts one laser for self-defence and serves as a lifeboat, lighter and boarding craft. Source: https://wiki.travellerrpg.com/Pinnace (Classic Traveller; re-built to High Guard 2022 at TL11, the lowest TL that gives Thrust 5).",
+  "tl": 11,
+  "standardDesign": true,
+  "hull": {
+    "tons": 40,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 2
+  },
+  "manoeuvre": 5,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 3.5,
+    "weeks": 4
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 5
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "single",
+      "weapons": [
+        "pulseLaser"
+      ]
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    }
+  ],
+  "systems": [
+    {
+      "flat": "accelerationSeat",
+      "quantity": 10
+    }
+  ],
+  "version": 1
+}

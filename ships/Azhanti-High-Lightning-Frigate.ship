@@ -1,0 +1,619 @@
+{
+  "name": "Azhanti High Lightning Frigate",
+  "notes": "A sixty-thousand-ton jump-5 frontier cruiser, old but still valued for its reach. It carries a meson spinal mount, particle bays, hundreds of turrets, sixty light fighters and a marine battalion, and its own fuel shuttles to refuel far from support. Source: https://wiki.travellerrpg.com/Lightning_class_Frontier_Cruiser (Azhanti High Lightning / Supplement 5, Classic Traveller; re-built to High Guard 2022 at TL14, so no black globe).",
+  "tl": 14,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 60000,
+    "configuration": "standard",
+    "specialised": [
+      "military"
+    ]
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 5
+  },
+  "manoeuvre": 2,
+  "jump": 5,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 1990,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard",
+    "command": true
+  },
+  "computer": {
+    "processing": 90,
+    "core": true,
+    "fib": true
+  },
+  "sensors": "improved",
+  "weapons": [
+    {
+      "kind": "spinal",
+      "weapon": "meson",
+      "multiple": 1,
+      "levelsAboveBase": 2
+    },
+    {
+      "kind": "bay",
+      "size": "small",
+      "weapon": "particleBeam",
+      "quantity": 24
+    },
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "fusionGun",
+        "fusionGun"
+      ],
+      "quantity": 40
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 100
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "missileRack"
+      ],
+      "quantity": 120
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 100
+    },
+    {
+      "kind": "screen",
+      "screen": "nuclearDamper"
+    },
+    {
+      "kind": "screen",
+      "screen": "mesonScreen"
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 4320
+    },
+    {
+      "canister": "sand",
+      "count": 4000
+    }
+  ],
+  "craft": [
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Rampart Light Fighter",
+      "tons": 10,
+      "cost": 12.7,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Fuel Shuttle (400t)",
+      "tons": 400,
+      "cost": 90,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Fuel Shuttle (400t)",
+      "tons": 400,
+      "cost": 90,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Fuel Shuttle (400t)",
+      "tons": 400,
+      "cost": 90,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Fuel Shuttle (400t)",
+      "tons": 400,
+      "cost": 90,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 300
+    },
+    {
+      "perTon": "launchTube",
+      "tons": 100
+    },
+    {
+      "perTon": "launchTube",
+      "tons": 100
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "perTon": "barracks",
+      "tons": 700
+    },
+    {
+      "flat": "armoury",
+      "quantity": 60
+    },
+    {
+      "flat": "medicalBay",
+      "quantity": 8
+    }
+  ],
+  "staterooms": 130,
+  "doubleOccupancy": true,
+  "commonAreaTons": 150,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 5
+    },
+    {
+      "software": "evade",
+      "level": 3
+    },
+    {
+      "software": "autoRepair",
+      "level": 2
+    },
+    {
+      "software": "battleSystem",
+      "level": 2
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

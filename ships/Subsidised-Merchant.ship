@@ -1,0 +1,94 @@
+{
+  "name": "Subsidised Merchant",
+  "notes": "The 'fat trader': a four-hundred-ton jump-1 freighter run on a government subsidy to keep backwater mains supplied. Two hundred tons of hold, a launch for landing cargo at worlds without a starport, and two light turrets. Source: https://wiki.travellerrpg.com/Type_R_class_Subsidized_Merchant (Classic Traveller / T5; source lists two empty hardpoints, this catalogue arms them lightly).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 400,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 1
+  },
+  "manoeuvre": 1,
+  "jump": 1,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 10,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 10
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "pulseLaser",
+        "sandcaster"
+      ],
+      "quantity": 2
+    }
+  ],
+  "craft": [
+    {
+      "label": "Launch",
+      "tons": 20,
+      "cost": 3.6,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "perTon": "fuelProcessor",
+      "tons": 2
+    },
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "cargoCrane"
+    }
+  ],
+  "staterooms": 13,
+  "lowBerths": 9,
+  "commonAreaTons": 13,
+  "passengers": {
+    "high": 2,
+    "middle": 3,
+    "low": 9
+  },
+  "ordnance": [
+    {
+      "canister": "sand",
+      "count": 40
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 1
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

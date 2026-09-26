@@ -1,0 +1,13 @@
+{
+  "level": "sector",
+  "version": 1,
+  "name": "Driftwater Reach",
+  "seed": "DRIFTING",
+  "date": "001-1105",
+  "density": "sparse",
+  "shifts": {
+    "population": 0,
+    "tech": 0
+  },
+  "subsectors": []
+}

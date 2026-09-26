@@ -1,0 +1,77 @@
+{
+  "name": "Scout/Courier",
+  "notes": "Exploration, survey and courier work, in about the smallest hull that will carry a jump drive. Four staterooms, a workshop and a fuel processor make it self-sufficient a long way from a starport.",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 100,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "manoeuvre": 2,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 4,
+    "weeks": 12
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 5,
+    "bis": true
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double"
+    }
+  ],
+  "craft": [
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "perTon": "fuelProcessor",
+      "tons": 2
+    },
+    {
+      "fuelScoops": true
+    },
+    {
+      "flat": "probeDrones",
+      "quantity": 2
+    },
+    {
+      "flat": "workshop"
+    }
+  ],
+  "staterooms": 4,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

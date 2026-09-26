@@ -1,0 +1,866 @@
+{
+  "name": "Arakoine Strike Cruiser",
+  "notes": "A fifty-thousand-ton jump-3 strike cruiser that is half battleship and half carrier: a meson spinal mount and forty missile bays, plus a hundred heavy fighters launched through two tubes. It leads raids deep into enemy territory. Source: https://wiki.travellerrpg.com/Arakoine_class_Strike_Cruiser (Fighting Ships, Classic Traveller; re-built to High Guard 2022).",
+  "tl": 15,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 50000,
+    "configuration": "dispersedStructure",
+    "specialised": [
+      "military"
+    ]
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 6
+  },
+  "manoeuvre": 4,
+  "jump": 3,
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 1670,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard",
+    "command": true
+  },
+  "computer": {
+    "processing": 100,
+    "core": true,
+    "fib": true
+  },
+  "sensors": "advanced",
+  "weapons": [
+    {
+      "kind": "spinal",
+      "weapon": "meson",
+      "multiple": 1,
+      "levelsAboveBase": 3
+    },
+    {
+      "kind": "bay",
+      "size": "medium",
+      "weapon": "particleBeam"
+    },
+    {
+      "kind": "bay",
+      "size": "small",
+      "weapon": "missile",
+      "quantity": 40
+    },
+    {
+      "kind": "bay",
+      "size": "medium",
+      "weapon": "repulsor"
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 40
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 20
+    },
+    {
+      "kind": "screen",
+      "screen": "nuclearDamper"
+    },
+    {
+      "kind": "screen",
+      "screen": "mesonScreen"
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 4800
+    },
+    {
+      "canister": "sand",
+      "count": 1200
+    }
+  ],
+  "craft": [
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Heavy Fighter",
+      "tons": 50,
+      "cost": 32.66,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 300
+    },
+    {
+      "perTon": "launchTube",
+      "tons": 500
+    },
+    {
+      "perTon": "launchTube",
+      "tons": 500
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "perTon": "barracks",
+      "tons": 500
+    },
+    {
+      "flat": "armoury",
+      "quantity": 40
+    },
+    {
+      "flat": "medicalBay",
+      "quantity": 6
+    },
+    {
+      "flat": "briefingRoom",
+      "quantity": 4
+    }
+  ],
+  "staterooms": 80,
+  "doubleOccupancy": true,
+  "commonAreaTons": 160,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 5
+    },
+    {
+      "software": "evade",
+      "level": 3
+    },
+    {
+      "software": "autoRepair",
+      "level": 2
+    },
+    {
+      "software": "battleSystem",
+      "level": 3
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

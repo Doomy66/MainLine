@@ -1,0 +1,56 @@
+{
+  "name": "Modular Cutter",
+  "notes": "A fifty-ton workhorse whose thirty-ton mid-section swaps out for fuel, cargo, troop or vehicle modules. Mercenary cruisers and survey ships carry them as landing craft and general-purpose tenders. Source: https://wiki.travellerrpg.com/Modular_Cutter (Classic Traveller; re-built to High Guard 2022).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 50,
+    "configuration": "streamlined",
+    "modularFraction": 0.6
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 2
+  },
+  "manoeuvre": 4,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 2.5,
+    "weeks": 4
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 5
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "single",
+      "weapons": [
+        "beamLaser"
+      ]
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    }
+  ],
+  "systems": [
+    {
+      "flat": "accelerationSeat",
+      "quantity": 2
+    }
+  ],
+  "version": 1
+}

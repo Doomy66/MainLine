@@ -1,0 +1,85 @@
+{
+  "name": "Hydrogen Fleet Tanker",
+  "notes": "A slow four-thousand-ton sphere that is little more than a jump-1 fuel bladder, following fleets to refuel them away from gas giants and starports. A thick screen of sandcaster turrets is its only protection. Source: https://wiki.travellerrpg.com/Hydrogen_class_Fleet_Fuel_Tanker (fan design by Ronald B. Kline Jr., Classic Traveller High Guard; re-built to High Guard 2022 at TL9).",
+  "tl": 9,
+  "standardDesign": true,
+  "hull": {
+    "tons": 4000,
+    "configuration": "sphere"
+  },
+  "manoeuvre": 1,
+  "jump": 1,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 150,
+    "weeks": 8
+  },
+  "extraFuelTons": 2888,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 10,
+    "fib": true
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 40
+    }
+  ],
+  "ordnance": [
+    {
+      "canister": "sand",
+      "count": 1200
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 40
+    },
+    {
+      "perTon": "unrepSystem",
+      "tons": 20
+    },
+    {
+      "flat": "armoury",
+      "quantity": 4
+    },
+    {
+      "perTon": "barracks",
+      "tons": 12
+    }
+  ],
+  "staterooms": 30,
+  "doubleOccupancy": true,
+  "commonAreaTons": 30,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

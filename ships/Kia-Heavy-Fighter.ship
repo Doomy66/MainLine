@@ -1,0 +1,73 @@
+{
+  "name": "Kia Heavy Fighter",
+  "notes": "A two-seat Zhodani heavy fighter that trades some agility for a fusion gun, a missile rack and a thick hull. It operates in squadrons of ten and is cheap enough to lose. Source: https://wiki.travellerrpg.com/Kia_class_Heavy_Fighter (FASA Adventure Class Ships, Classic Traveller; re-built to High Guard 2022).",
+  "tl": 14,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 50,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 12
+  },
+  "manoeuvre": 6,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 4,
+    "weeks": 4
+  },
+  "bridge": {
+    "kind": "dualCockpit"
+  },
+  "computer": {
+    "processing": 20
+  },
+  "sensors": "improved",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "single",
+      "weapons": [
+        "fusionGun"
+      ]
+    },
+    {
+      "kind": "turret",
+      "mount": "single",
+      "weapons": [
+        "missileRack"
+      ]
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 24
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "systems": [
+    {
+      "flat": "accelerationSeat",
+      "quantity": 2
+    }
+  ],
+  "version": 1
+}

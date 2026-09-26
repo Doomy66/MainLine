@@ -1,0 +1,59 @@
+{
+  "name": "Rampart Light Fighter",
+  "notes": "A ten-ton single-seat interceptor flown off carriers, stations and planetary bases, fast enough to run down anything its size. It carries one fixed laser and relies on numbers and agility rather than armour. Source: https://wiki.travellerrpg.com/Rampart_class_Light_Fighter (Classic Traveller, re-built to High Guard 2022).",
+  "tl": 15,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 10,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 4
+  },
+  "manoeuvre": 6,
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 0.65,
+    "weeks": 1
+  },
+  "bridge": {
+    "kind": "cockpit"
+  },
+  "computer": {
+    "processing": 15
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "fixed",
+      "weapons": [
+        "pulseLaser"
+      ]
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "systems": [
+    {
+      "flat": "accelerationSeat"
+    }
+  ],
+  "version": 1
+}

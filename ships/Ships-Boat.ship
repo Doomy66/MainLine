@@ -1,0 +1,42 @@
+{
+  "name": "Ship's Boat",
+  "notes": "The standard thirty-ton interface boat: fast, streamlined and able to shuttle crew, passengers or a few tons of freight between ship and surface. It is unarmed, though its single firmpoint will take a turret. Source: https://wiki.travellerrpg.com/Ship%27s_Boat (Classic Traveller; re-built to High Guard 2022 at TL12, the lowest TL that gives Thrust 6).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 30,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 2
+  },
+  "manoeuvre": 6,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 2,
+    "weeks": 4
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 5
+  },
+  "sensors": "civilian",
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    }
+  ],
+  "systems": [
+    {
+      "flat": "accelerationSeat",
+      "quantity": 10
+    }
+  ],
+  "version": 1
+}

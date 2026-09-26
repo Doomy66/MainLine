@@ -1,0 +1,202 @@
+{
+  "name": "Hyperion Escort Carrier",
+  "notes": "A thousand-ton jump-1 carrier that a TL9 world can build: ten twenty-ton fighters, a pinnace, and turrets for close defence on an armoured cone. It gives a low-tech navy a strike arm it could not otherwise afford. Source: https://wiki.travellerrpg.com/Hyperion_class_Escort_Carrier (fan design by Ronald B. Kline Jr., Distant Fringe; pulse lasers replace the source's beam lasers, which High Guard 2022 puts at TL10).",
+  "tl": 9,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 1000,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "titaniumSteel",
+    "protection": 4
+  },
+  "manoeuvre": 1,
+  "jump": 1,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 35,
+    "weeks": 8
+  },
+  "extraFuelTons": 100,
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 10,
+    "fib": true
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser",
+        "pulseLaser"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "missileRack"
+      ],
+      "quantity": 6
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 2
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 144
+    },
+    {
+      "canister": "sand",
+      "count": 120
+    }
+  ],
+  "craft": [
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Snub Fighter (20t)",
+      "tons": 20,
+      "cost": 8,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Pinnace",
+      "tons": 40,
+      "cost": 14.09,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "ATV",
+      "tons": 10,
+      "cost": 0.155,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 10
+    },
+    {
+      "flat": "armoury",
+      "quantity": 7
+    },
+    {
+      "flat": "medicalBay"
+    }
+  ],
+  "staterooms": 35,
+  "doubleOccupancy": true,
+  "commonAreaTons": 35,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 1
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

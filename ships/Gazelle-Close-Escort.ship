@@ -1,0 +1,114 @@
+{
+  "name": "Gazelle Close Escort",
+  "notes": "A fast four-hundred-ton escort with a jump-5 drive, normally fuelled for jump-3 and topped up from a hundred-ton drop tank when it needs to keep pace with couriers or run far ahead. Two particle barbettes give it a real sting for its size. Source: https://wiki.travellerrpg.com/Gazelle_class_Close_Escort (Classic Traveller / High Guard 2022 Close Escort; drive sizing follows the High Guard 2022 layout).",
+  "tl": 14,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 400,
+    "configuration": "closeStructure"
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 5
+  },
+  "manoeuvre": {
+    "thrust": 5,
+    "sizedForTons": 420,
+    "customisation": {
+      "grade": "budget",
+      "traits": [
+        "manoeuvreIncreasedSize"
+      ]
+    }
+  },
+  "jump": 5,
+  "fuelForJump": 3,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 38,
+    "weeks": 8,
+    "customisation": {
+      "grade": "budget",
+      "traits": [
+        "plantIncreasedSize"
+      ]
+    }
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 30
+  },
+  "sensors": "improved",
+  "weapons": [
+    {
+      "kind": "barbette",
+      "weapon": "particle",
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 2
+    }
+  ],
+  "craft": [
+    {
+      "label": "Gig",
+      "tons": 20,
+      "cost": 5.5,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 4
+    },
+    {
+      "perTon": "dropTankMount",
+      "tons": 0.4
+    },
+    {
+      "custom": {
+        "label": "Drop tank, 100 tons (external)",
+        "cost": 2.5
+      }
+    }
+  ],
+  "staterooms": 10,
+  "doubleOccupancy": true,
+  "commonAreaTons": 10,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 5
+    },
+    {
+      "software": "fireControl",
+      "level": 3
+    },
+    {
+      "software": "evade",
+      "level": 2
+    }
+  ],
+  "version": 1
+}

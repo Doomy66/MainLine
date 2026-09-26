@@ -1,0 +1,130 @@
+{
+  "name": "Kinunir Battle Cruiser",
+  "notes": "A twelve-hundred-and-fifty-ton jump-4 vanguard cruiser that patrols the frontier alone, carrying a marine detachment and a pinnace for boarding and landing work. Laser, particle and missile turrets, a nuclear damper and a black globe make it far tougher than its size suggests. Source: https://wiki.travellerrpg.com/Kinunir_class_Battle_Cruiser (Classic Traveller Adventure 1 / Fighting Ships; re-built to High Guard 2022).",
+  "tl": 15,
+  "standardDesign": true,
+  "military": true,
+  "hull": {
+    "tons": 1250,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "bondedSuperdense",
+    "protection": 6
+  },
+  "manoeuvre": 4,
+  "jump": 4,
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 47,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 35,
+    "fib": true
+  },
+  "sensors": "advanced",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 8
+    },
+    {
+      "kind": "turret",
+      "mount": "single",
+      "weapons": [
+        "particleBeam"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "missileRack"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "screen",
+      "screen": "nuclearDamper"
+    },
+    {
+      "kind": "blackGlobe"
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 144
+    }
+  ],
+  "craft": [
+    {
+      "label": "Pinnace",
+      "tons": 40,
+      "cost": 14.09,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 10
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "flat": "armoury",
+      "quantity": 9
+    },
+    {
+      "flat": "brig"
+    },
+    {
+      "flat": "medicalBay"
+    }
+  ],
+  "staterooms": 40,
+  "doubleOccupancy": true,
+  "commonAreaTons": 40,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 4
+    },
+    {
+      "software": "fireControl",
+      "level": 4
+    },
+    {
+      "software": "evade",
+      "level": 2
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}

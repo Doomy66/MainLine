@@ -1,0 +1,99 @@
+{
+  "name": "Corsair",
+  "notes": "The Type P: a four-hundred-ton pirate and privateer built to run down merchants, board them and carry off the cargo. Four laser turrets, a breaching tube, a boarding pinnace and a big hold. Source: https://wiki.travellerrpg.com/Type_P_class_Corsair (Classic Traveller; re-built to High Guard 2022 on the original 400-ton hull).",
+  "tl": 12,
+  "standardDesign": true,
+  "hull": {
+    "tons": 400,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "manoeuvre": 3,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 16,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 15,
+    "bis": true
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "beamLaser",
+        "sandcaster"
+      ],
+      "quantity": 4
+    }
+  ],
+  "craft": [
+    {
+      "label": "Pinnace",
+      "tons": 40,
+      "cost": 14.09,
+      "kind": "smallCraft",
+      "berth": "dockingSpace",
+      "driveAndPlantTons": 5.5
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 4
+    },
+    {
+      "flat": "breachingTube"
+    },
+    {
+      "flat": "brig"
+    },
+    {
+      "flat": "armoury"
+    }
+  ],
+  "staterooms": 8,
+  "doubleOccupancy": true,
+  "emergencyLowBerths": 5,
+  "commonAreaTons": 8,
+  "ordnance": [
+    {
+      "canister": "sand",
+      "count": 80
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1
+}

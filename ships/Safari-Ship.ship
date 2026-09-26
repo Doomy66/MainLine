@@ -1,0 +1,96 @@
+{
+  "name": "Safari Ship",
+  "notes": "A jump-2 hunting ship for well-off sportsmen, with capture tanks, a trophy lounge, a launch and an air/raft for getting to the game. Its single turret is there to discourage anything that hunts back. Source: https://wiki.travellerrpg.com/Type_K_class_Safari_Ship (Classic Traveller; source mounts an empty double turret, this catalogue arms it; built at TL11).",
+  "tl": 11,
+  "standardDesign": true,
+  "hull": {
+    "tons": 200,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 2
+  },
+  "manoeuvre": 1,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 7,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 5,
+    "bis": true
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "double",
+      "weapons": [
+        "pulseLaser",
+        "sandcaster"
+      ]
+    }
+  ],
+  "craft": [
+    {
+      "label": "Launch",
+      "tons": 20,
+      "cost": 3.6,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    },
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "custom": {
+        "label": "Capture tanks x2",
+        "tons": 14,
+        "cost": 0.7
+      }
+    }
+  ],
+  "staterooms": 11,
+  "commonAreaTons": 14,
+  "passengers": {
+    "high": 5,
+    "middle": 0,
+    "low": 0
+  },
+  "ordnance": [
+    {
+      "canister": "sand",
+      "count": 20
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "intellect"
+    }
+  ],
+  "version": 1
+}
