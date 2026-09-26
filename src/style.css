@@ -266,3 +266,11 @@ dl.props dd { margin: 0; }
 .notice-card { background: rgba(28, 31, 37, 0.97); border: 1px solid var(--good); border-radius: 6px; padding: 8px 10px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
 .notice-line { flex-wrap: nowrap; align-items: flex-start; margin-top: 6px; font-size: 12.5px; }
 .notice-line span { flex: 1; }
+
+/* Faction emblems and report icons. */
+.emblem { vertical-align: -2px; flex: none; }
+.faction-name { white-space: nowrap; }
+.faction-name .emblem { margin-right: 3px; }
+.log-line { display: flex; gap: 7px; align-items: flex-start; }
+.log-line .kind-icon { flex: none; margin-top: 2px; }
+.fleet-head .emblem { align-self: center; }

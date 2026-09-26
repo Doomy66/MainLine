@@ -2,6 +2,7 @@
  * The panes down the side of the game screen.
  */
 
+import { ships } from "../game/game";
 import { idFor, parseDesign } from "../catalogue/catalogue";
 import type { Attack, ShipClass } from "../catalogue/shipclass";
 import { locExists } from "../game/day";
@@ -39,7 +40,8 @@ import {
 import { distanceBetween } from "../sector/hex";
 import { starportRank } from "../sector/mains";
 import type { World } from "../sector/sec";
-import { chip, h, mcr, meter, pct, tons } from "./dom";
+import { h, mcr, meter, pct, tons } from "./dom";
+import { emblem, kindIcon, withEmblems } from "./emblems";
 import { planning, whereIs, type Ctx } from "./gameview";
 
 const LOCS: Loc[] = ["main", "gg", "belt", "deep"];
@@ -80,7 +82,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
         h(
           "div",
           { class: f.owner === me.id ? "card pick" : "card", onclick: f.owner === me.id ? () => ctx.selectFleet(f.id) : undefined },
-          h("div", { class: "fleet-head" }, chip(who.colour), h("span", { class: "name" }, f.owner === me.id ? f.name : who.name), h("span", { class: "spacer" }), h("span", { class: "muted num" }, `${f.ships.length} ships, ${tons(game.fleetTons(f))}`)),
+          h("div", { class: "fleet-head" }, emblem(who, game.state.factions), h("span", { class: "name" }, f.owner === me.id ? f.name : who.name), h("span", { class: "spacer" }), h("span", { class: "muted num" }, `${f.ships.length} ships, ${tons(game.fleetTons(f))}`)),
           f.owner === me.id ? null : h("div", { class: "hint" }, summariseClasses(game, f)),
           since === undefined ? null : h("div", { class: "hint" }, since === game.state.day ? "Arrived today." : `Here since day ${since}.`),
           age > 0 ? h("div", { class: "hint warn" }, `As reported ${age} days ago.`) : null,
@@ -93,7 +95,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
         h(
           "div",
           { class: "card" },
-          h("div", { class: "fleet-head" }, chip(who.colour), h("span", {}, who.name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${s.ships} ships, ${tons(s.tons)}`)),
+          h("div", { class: "fleet-head" }, emblem(who, game.state.factions), h("span", {}, who.name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${ships(s.ships)}, ${tons(s.tons)}`)),
           h("div", { class: "hint" }, `Here since day ${s.since}; last reported on day ${s.day}, ${game.state.day - s.day} days ago.`),
         ),
       );
@@ -119,7 +121,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
     h(
       "p",
       {},
-      owner === null ? h("span", { class: "muted" }, "Independent") : h("span", {}, chip(owner.colour), owner.name, owner.capital === at ? ", capital" : ""),
+      owner === null ? h("span", { class: "muted" }, "Independent") : h("span", {}, emblem(owner, game.state.factions), " ", owner.name, owner.capital === at ? ", capital" : ""),
       lag > 0 && ws.owner !== me.id ? h("span", { class: "hint" }, ` · news from here takes ${lag} days`) : null,
     ),
     h(
@@ -160,7 +162,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
             h(
               "div",
               { class: "card" },
-              h("div", { class: "fleet-head" }, chip(game.faction(s.owner).colour), h("span", {}, game.faction(s.owner).name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${s.ships} ships, ${tons(s.tons)}`)),
+              h("div", { class: "fleet-head" }, emblem(game.faction(s.owner), game.state.factions), h("span", {}, game.faction(s.owner).name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${ships(s.ships)}, ${tons(s.tons)}`)),
               h("div", { class: "hint" }, `Here from day ${s.since}, last seen on day ${s.day}, gone by day ${s.left}.`),
             ),
           ),
@@ -690,7 +692,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
       {},
       h("tr", {}, h("th", {}, "Faction"), h("th", { class: "r" }, "Peopled worlds"), h("th", {})),
       standings.slice(0, 40).map(({ f, worlds: n }) =>
-        h("tr", {}, h("td", { style: f.alive ? "" : "text-decoration:line-through;opacity:.5" }, chip(f.colour), f.name, f.human ? h("span", { class: "muted" }, ` (${f.playerName})`) : null), h("td", { class: "r num" }, n), h("td", {}, h("button", { class: "small", onclick: () => ctx.selectSystem(f.capital, true) }, "Capital"))),
+        h("tr", {}, h("td", { style: f.alive ? "" : "text-decoration:line-through;opacity:.5" }, emblem(f, game.state.factions), " ", f.name, f.human ? h("span", { class: "muted" }, ` (${f.playerName})`) : null), h("td", { class: "r num" }, n), h("td", {}, h("button", { class: "small", onclick: () => ctx.selectSystem(f.capital, true) }, "Capital"))),
       ),
     ),
     h("h2", {}, `Your worlds (${worlds.length})`),
@@ -790,7 +792,12 @@ export function reportsPane(ctx: Ctx, goto: (at: string) => void): HTMLElement {
           return h(
             "div",
             { class: `log-entry ${e.kind}${isNew ? " new" : ""}` },
-            h("div", {}, e.at !== undefined ? h("span", { class: "goto", onclick: () => goto(e.at!) }, e.text) : e.text),
+            h(
+              "div",
+              { class: "log-line" },
+              kindIcon(e.kind),
+              h("span", {}, e.at !== undefined ? h("span", { class: "goto", onclick: () => goto(e.at!) }, withEmblems(e.text, game.state.factions)) : withEmblems(e.text, game.state.factions)),
+            ),
             e.happened !== undefined ? h("div", { class: "hint" }, `News of day ${e.happened}, ${e.day - e.happened} days on the way.`) : null,
             e.detail !== undefined && e.detail.length > 0 ? h("details", {}, h("summary", { class: "hint" }, "Details"), h("pre", {}, e.detail.join("\n"))) : null,
           );

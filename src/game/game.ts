@@ -514,6 +514,11 @@ export class Game {
   }
 }
 
+/** "1 ship", "3 ships". */
+export function ships(n: number): string {
+  return `${n} ship${n === 1 ? "" : "s"}`;
+}
+
 export function round(n: number, places = 1): string {
   const f = Math.pow(10, places);
   return String(Math.round(n * f) / f);

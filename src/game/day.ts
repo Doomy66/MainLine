@@ -19,7 +19,7 @@ import { distanceBetween } from "../sector/hex";
 import { planAi } from "./ai";
 import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
-import { round } from "./game";
+import { round, ships } from "./game";
 import { canRefuelAt } from "./nav";
 import {
   CAPTURED_DEFENCE,
@@ -406,7 +406,7 @@ function intel(game: Game, lost: ReadonlyMap<string, { owner: string; system: st
         game.log({
           to: [faction.id],
           kind: "sighting",
-          text: `${game.faction(fleet.owner).name} ships arrive at ${game.world(fleet.system).name}: ${fleet.ships.length} ships, ${Math.round(game.fleetTons(fleet)).toLocaleString()} tons, at the ${LOC_NAMES[fleet.loc].toLowerCase()}.`,
+          text: `${game.faction(fleet.owner).name} ${fleet.ships.length === 1 ? "ship arrives" : "ships arrive"} at ${game.world(fleet.system).name}: ${ships(fleet.ships.length)}, ${Math.round(game.fleetTons(fleet)).toLocaleString()} tons, at the ${LOC_NAMES[fleet.loc].toLowerCase()}.`,
           at: fleet.system,
           wake: true,
           firsthand: [faction.id],
@@ -430,7 +430,7 @@ function intel(game: Game, lost: ReadonlyMap<string, { owner: string; system: st
           game.log({
             to: [faction.id],
             kind: "sighting",
-            text: `The ${game.faction(s.owner).name} ships at ${game.world(s.system).name} have gone: ${s.ships} ships, there from day ${s.since} and last seen on day ${s.day}.`,
+            text: `The ${game.faction(s.owner).name} ships at ${game.world(s.system).name} ${s.ships === 1 ? "has" : "have"} gone: ${ships(s.ships)}, there from day ${s.since} and last seen on day ${s.day}.`,
             at: s.system,
             firsthand: [faction.id],
           });
@@ -594,7 +594,14 @@ export function advanceDay(game: Game): void {
       fleet.tender = false;
       notice(game, fleet.owner, `The jump tenders carrying ${fleet.name}'s ships set them down at ${game.world(fleet.system).name} and leave.`, fleet.system, false);
     }
-    notice(game, fleet.owner, `${fleet.name} arrives at ${game.world(fleet.system).name}${done ? "" : " and prepares for the next jump"}.`, fleet.system, done);
+    game.log({
+      to: [fleet.owner],
+      kind: "arrival",
+      text: `${fleet.name} arrives at ${game.world(fleet.system).name}${done ? "" : " and prepares for the next jump"}.`,
+      at: fleet.system,
+      wake: done,
+      firsthand: [fleet.owner],
+    });
   }
 
   intercepts(game);

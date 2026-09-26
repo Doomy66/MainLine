@@ -7,6 +7,7 @@
  * shows only what that player's faction could know.
  */
 
+import { ships } from "../game/game";
 import type { Game } from "../game/game";
 import { jumpMap, pathIn, inRange } from "../game/nav";
 import { imperialDate } from "../game/rules";
@@ -15,6 +16,7 @@ import { endTurn, waitForEvents } from "../game/turn";
 import type { Faction, Fleet } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import { h, kids, mcr } from "./dom";
+import { emblem } from "./emblems";
 import { createMap, type FleetMark, type TransitMark } from "./map";
 import { empirePane, fleetPane, reportsPane, setupPane, shipyardPane, systemPane } from "./panes";
 
@@ -202,7 +204,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       if (!lagged && sees.has(s.system)) continue;
       const owner = game.faction(s.owner);
       const fresh = lagged && s.day >= game.state.day;
-      fleets.push({ id: s.fleetId, at: s.system, colour: owner.colour, kind: fresh ? "enemy" : "ghost", ships: s.ships, title: `${owner.name}: ${s.ships} ships, ${fresh ? "seen today" : `seen day ${s.day}`}` });
+      fleets.push({ id: s.fleetId, at: s.system, colour: owner.colour, kind: fresh ? "enemy" : "ghost", ships: s.ships, title: `${owner.name}: ${ships(s.ships)}, ${fresh ? "seen today" : `seen day ${s.day}`}` });
     }
     let range = new Set<string>();
     let reach = new Set<string>();
@@ -246,7 +248,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       h("span", { class: "brand" }, h("img", { src: "./icon.svg", alt: "", width: 20, height: 20 }), h("span", {}, "MAINLINE")),
       h("span", { class: "muted sector-name" }, s.sector.name),
       h("span", { class: "date" }, setup ? "Commissioning" : `Day ${s.day} · ${imperialDate(s.day)}`),
-      h("span", { class: "who" }, h("span", { class: "chip", style: `background:${me.colour}` }), `${me.playerName} · ${me.name}`),
+      h("span", { class: "who" }, emblem(me, game.state.factions, 16), ` ${me.playerName} · ${me.name}`),
       h("span", { class: "credits" }, mcr(me.credits)),
       h("span", { class: statusBad ? "bad" : "muted", style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1" }, status),
       h("button", { class: "small", onclick: () => download(game), title: "Save the whole game as one .game file" }, "Save"),
@@ -370,7 +372,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         { class: "title-card" },
         h("p", {}, game.state.phase === "setup" ? "Commissioning the first fleets" : `Day ${game.state.day}`),
         h("h1", { style: "font-size:30px" }, next.playerName),
-        h("p", {}, h("span", { class: "chip", style: `background:${next.colour}` }), next.name),
+        h("p", {}, emblem(next, game.state.factions, 18), " ", next.name),
         h("p", { class: "hint" }, "Hand the screen over. Nobody else should see your orders."),
         h("button", { class: "primary", onclick: () => { box.remove(); then(); } }, `I am ${next.playerName}`),
       ),
