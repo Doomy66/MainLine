@@ -110,8 +110,9 @@ ships.
 None builds above its world's tech level. Independent class A yards build for
 anybody, at a markup.
 
-**News travels by ship.** By default a report reaches your capital a week for
-every jump an express boat would need to carry it. This covers enemy fleets
+**News can travel by ship.** News arrives instantly unless you choose
+otherwise. Set it to travel by express boat, courier or trader and a report
+reaches your capital a week for every jump it takes to carry it. This covers enemy fleets
 arriving and leaving, other factions' battles, and who holds which world. News
 of your own fleets comes at once, and they act on their standing orders the
 moment they meet the enemy. Turn on **full fog of war** and your own fleets

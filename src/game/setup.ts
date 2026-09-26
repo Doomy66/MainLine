@@ -19,7 +19,7 @@ export const DEFAULT_OPTIONS: GameOptions = {
   startingWealth: 1,
   buildSpeed: 0.25,
   factionMinWorlds: 4,
-  newsLag: 4,
+  newsLag: 0,
   fullFog: false,
 };
 
