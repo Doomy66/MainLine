@@ -274,3 +274,7 @@ dl.props dd { margin: 0; }
 .log-line { display: flex; gap: 7px; align-items: flex-start; }
 .log-line .kind-icon { flex: none; margin-top: 2px; }
 .fleet-head .emblem { align-self: center; }
+
+/* News of other factions' affairs: there, but not shouting. */
+.log-entry.others { opacity: 0.55; border-left-color: var(--line); }
+.log-entry.others:hover { opacity: 0.9; }

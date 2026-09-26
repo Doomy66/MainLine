@@ -235,6 +235,8 @@ export interface LogEntry {
   readonly text: string;
   readonly at?: string;
   readonly detail?: readonly string[];
+  /** Factions whose own ships, worlds or treasury it concerns. Others merely heard of it. */
+  readonly about?: readonly string[];
   /** Something a human sleeping until something happens should be woken for. */
   readonly wake?: boolean;
 }

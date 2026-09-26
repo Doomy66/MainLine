@@ -507,13 +507,14 @@ function endings(game: Game): void {
         kind: "info",
         text: `${f.name} holds ${held} of the ${populated.length} peopled worlds and has won.`,
         wake: true,
+        firsthand: s.factions.map((x) => x.id),
       });
       return;
     }
   }
   if (game.humans().length > 0 && game.humans().every((h) => !h.alive)) {
     s.phase = "over";
-    game.log({ to: s.factions.map((x) => x.id), kind: "info", text: "Every player has been defeated.", wake: true });
+    game.log({ to: s.factions.map((x) => x.id), kind: "info", text: "Every player has been defeated.", wake: true, firsthand: s.factions.map((x) => x.id) });
   }
 }
 

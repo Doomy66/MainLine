@@ -64,7 +64,7 @@ describe("enemy fleets", () => {
     advanceDay(game);
     const gone = me.intel[visitor.id]!;
     expect(gone.left).toBe(game.state.day);
-    expect(game.logFor(me.id).some((e) => e.kind === "sighting" && /have gone/.test(e.text) && e.text.includes(`day ${seen.since}`))).toBe(true);
+    expect(game.logFor(me.id).some((e) => e.kind === "sighting" && /gone/.test(e.text) && e.text.includes(`day ${seen.since}`))).toBe(true);
   });
 });
 

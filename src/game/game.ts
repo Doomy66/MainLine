@@ -361,8 +361,11 @@ export class Game {
       const lag = entry.at === undefined || direct ? 0 : this.lag(id, entry.at);
       byLag.set(lag, [...(byLag.get(lag) ?? []), id]);
     }
+    // A report to one faction alone is about that faction.
+    const about = firsthand.length > 0 ? [...firsthand] : entry.to.length === 1 ? [...entry.to] : [];
     for (const [lag, to] of byLag) {
-      this.state.log.push(lag === 0 ? { ...rest, to, day: today } : { ...rest, to, day: today + lag, happened: today });
+      const e = { ...rest, to, about };
+      this.state.log.push(lag === 0 ? { ...e, day: today } : { ...e, day: today + lag, happened: today });
     }
   }
 
@@ -503,6 +506,12 @@ export class Game {
       if (e.day <= today && e.to.includes(factionId)) out.push(e);
     }
     return out.sort((a, b) => b.day - a.day).slice(0, limit);
+  }
+
+  /** Whether a report concerns a faction's own ships, worlds or treasury, rather than just news. */
+  concerns(e: LogEntry, factionId: string): boolean {
+    if (e.about !== undefined) return e.about.includes(factionId);
+    return e.wake === true || e.to.length === 1;
   }
 
   /** Who a faction believes holds a world. Its own worlds it always knows. */

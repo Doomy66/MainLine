@@ -791,7 +791,7 @@ export function reportsPane(ctx: Ctx, goto: (at: string) => void): HTMLElement {
           const isNew = e.day > newIndex;
           return h(
             "div",
-            { class: `log-entry ${e.kind}${isNew ? " new" : ""}` },
+            { class: `log-entry ${e.kind}${isNew ? " new" : ""}${game.concerns(e, me.id) ? "" : " others"}` },
             h(
               "div",
               { class: "log-line" },
