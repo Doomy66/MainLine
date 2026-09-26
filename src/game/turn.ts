@@ -114,9 +114,10 @@ export function waitForEvents(game: Game): boolean {
 function sleep(game: Game, limit = 30): void {
   const players = game.humans().filter((f) => f.alive).map((f) => f.id);
   for (let i = 0; i < limit && game.state.phase === "play"; i++) {
-    const from = game.state.log.length;
     advanceDay(game);
-    const woke = game.state.log.slice(from).some((e) => e.wake === true && e.to.some((id) => players.includes(id)));
+    // News that reached a sleeping player today, whenever it happened.
+    const today = game.state.day;
+    const woke = game.state.log.some((e) => e.day === today && e.wake === true && e.to.some((id) => players.includes(id)));
     if (woke) break;
   }
   for (const f of game.humans()) f.waiting = false;

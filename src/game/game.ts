@@ -24,6 +24,14 @@ export class Game {
   readonly rng: Rng;
 
   constructor(readonly state: GameState) {
+    // Games saved before news took time to travel.
+    const opts = state.options as { newsLag?: number };
+    if (opts.newsLag === undefined) opts.newsLag = 0;
+    for (const f of state.factions) {
+      f.news ??= { ...f.intel };
+      f.inbox ??= [];
+      f.known ??= Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
+    }
     this.catalogue = new Catalogue(new Map(Object.entries(state.designs)));
     this.worlds = new Map(state.sector.worlds.map((w) => [w.at, w]));
     this.rng = new Rng(state.rng);
@@ -281,18 +289,48 @@ export class Game {
 
   /* The log --------------------------------------------------------------- */
 
-  log(entry: Omit<LogEntry, "day">): void {
-    this.state.log.push({ day: this.state.day, ...entry });
+  /**
+   * Days for news from a system to reach a faction's capital: a week for every
+   * jump a courier makes. None where news travels instantly.
+   */
+  lag(factionId: string, at: string): number {
+    const rating = this.state.options.newsLag;
+    if (rating <= 0) return 0;
+    const capital = this.state.factions.find((f) => f.id === factionId)?.capital;
+    if (capital === undefined) return 0;
+    return 7 * Math.ceil(distanceBetween(at, capital) / rating);
   }
 
-  /** What a faction has heard, newest first. */
-  logFor(factionId: string, limit = 400): LogEntry[] {
-    const out: LogEntry[] = [];
-    for (let i = this.state.log.length - 1; i >= 0 && out.length < limit; i--) {
-      const e = this.state.log[i]!;
-      if (e.to.includes(factionId)) out.push(e);
+  /** News of something at a place, reaching each faction when a courier would bring it. */
+  log(entry: Omit<LogEntry, "day" | "happened">): void {
+    const today = this.state.day;
+    const byLag = new Map<number, string[]>();
+    for (const id of entry.to) {
+      const lag = entry.at === undefined ? 0 : this.lag(id, entry.at);
+      byLag.set(lag, [...(byLag.get(lag) ?? []), id]);
     }
-    return out;
+    for (const [lag, to] of byLag) {
+      this.state.log.push(lag === 0 ? { ...entry, to, day: today } : { ...entry, to, day: today + lag, happened: today });
+    }
+  }
+
+  /** What a faction has heard by now, newest first. */
+  logFor(factionId: string, limit = 400): LogEntry[] {
+    const today = this.state.day;
+    const out: LogEntry[] = [];
+    for (let i = this.state.log.length - 1; i >= 0; i--) {
+      const e = this.state.log[i]!;
+      if (e.day <= today && e.to.includes(factionId)) out.push(e);
+    }
+    return out.sort((a, b) => b.day - a.day).slice(0, limit);
+  }
+
+  /** Who a faction believes holds a world. Its own worlds it always knows. */
+  knownOwner(factionId: string, at: string): string | null {
+    const actual = this.state.worlds[at]?.owner ?? null;
+    if (actual === factionId || this.state.options.newsLag <= 0) return actual;
+    const f = this.state.factions.find((x) => x.id === factionId);
+    return f?.known[at] ?? actual;
   }
 }
 

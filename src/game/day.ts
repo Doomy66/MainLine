@@ -192,6 +192,12 @@ function capture(game: Game, at: string, by: string): void {
   ws.defence = Math.round(defenceMax(world) * CAPTURED_DEFENCE);
   const taker = game.faction(by);
   const alive = game.state.factions.filter((f) => f.alive).map((f) => f.id);
+  // Each capital hears of it when a courier gets there.
+  for (const f of game.state.factions) {
+    const lag = game.lag(f.id, at);
+    if (lag === 0) f.known[at] = by;
+    else f.inbox.push({ arrives: game.state.day + lag, kind: "owner", at, owner: by });
+  }
   const lost = prev === null ? "independent" : `held by ${game.faction(prev).name}`;
   game.log({
     to: alive,
@@ -313,12 +319,19 @@ function intel(game: Game): void {
   const live = new Set(game.state.fleets.map((f) => f.id));
   for (const faction of game.state.factions) {
     if (!faction.alive) continue;
+    // The couriers come in.
+    const arrived = faction.inbox.filter((d) => d.arrives <= day);
+    faction.inbox = faction.inbox.filter((d) => d.arrives > day);
+    for (const d of arrived) {
+      if (d.kind === "owner") faction.known[d.at] = d.owner;
+      else if ((faction.news[d.sighting.fleetId]?.day ?? -1) < d.sighting.day) faction.news[d.sighting.fleetId] = d.sighting;
+    }
     const sees = visibleSystems(game, faction.id);
     const owned = new Set(game.ownedWorlds(faction.id).map((w) => w.at));
     for (const fleet of game.state.fleets) {
       if (fleet.owner === faction.id || fleet.transit !== null || !sees.has(fleet.system)) continue;
       const before = faction.intel[fleet.id];
-      faction.intel[fleet.id] = {
+      const sighting = {
         fleetId: fleet.id,
         owner: fleet.owner,
         system: fleet.system,
@@ -328,6 +341,13 @@ function intel(game: Game): void {
         tons: game.fleetTons(fleet),
         strength: Math.round(game.fleetStrength(fleet)),
       };
+      faction.intel[fleet.id] = sighting;
+      const lag = game.lag(faction.id, fleet.system);
+      if (lag === 0) faction.news[fleet.id] = sighting;
+      else if (before === undefined || before.system !== fleet.system || day % 7 === 0) {
+        // A courier goes when something changes, and weekly besides.
+        faction.inbox.push({ arrives: day + lag, kind: "sighting", sighting });
+      }
       const fresh = before === undefined || before.system !== fleet.system || before.day < day - 1;
       if (fresh && owned.has(fleet.system)) {
         game.log({
@@ -343,6 +363,10 @@ function intel(game: Game): void {
       const gone = !live.has(id) && sees.has(s.system);
       if (gone || day - s.day > 60) delete faction.intel[id];
       else if (sees.has(s.system) && s.day < day) delete faction.intel[id];
+    }
+    for (const [id, s] of Object.entries(faction.news)) {
+      const here = game.lag(faction.id, s.system) === 0 && sees.has(s.system);
+      if (day - s.day > 90 || (here && s.day < day)) delete faction.news[id];
     }
   }
 }

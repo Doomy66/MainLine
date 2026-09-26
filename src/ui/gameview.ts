@@ -32,7 +32,7 @@ export interface Ctx {
   tab: Tab;
   /** The yard the shipyard pane is showing. */
   yard: string | null;
-  /** The first log entry that is news since this player last looked. */
+  /** The last day this player had read the reports up to; later ones are new. */
   newFrom: number;
   refresh(): void;
   selectSystem(at: string | null, centre?: boolean): void;
@@ -139,9 +139,13 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
   function overlay(): void {
     const me = ctx.me;
     const sees = visibleSystems(game, me.id);
+    const lagged = game.state.options.newsLag > 0;
     const owners = new Map<string, string>();
-    for (const [at, ws] of Object.entries(game.state.worlds)) if (ws.owner !== null) owners.set(at, game.faction(ws.owner).colour);
-    const capitals = new Set(game.state.factions.filter((f) => f.alive && game.worldState(f.capital).owner === f.id).map((f) => f.capital));
+    for (const at of Object.keys(game.state.worlds)) {
+      const owner = game.knownOwner(me.id, at);
+      if (owner !== null) owners.set(at, game.faction(owner).colour);
+    }
+    const capitals = new Set(game.state.factions.filter((f) => f.alive && game.knownOwner(me.id, f.capital) === f.id).map((f) => f.capital));
     const fleets: FleetMark[] = [];
     const transits: TransitMark[] = [];
     for (const f of game.state.fleets) {
@@ -159,15 +163,18 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         } else {
           fleets.push({ id: f.id, at: f.system, colour: me.colour, kind: "own", ships: f.ships.length, title: `${f.name}: ${f.ships.length} ships` });
         }
-      } else if (f.transit === null && sees.has(f.system)) {
+      } else if (!lagged && f.transit === null && sees.has(f.system)) {
         const owner = game.faction(f.owner);
         fleets.push({ id: f.id, at: f.system, colour: owner.colour, kind: "enemy", ships: f.ships.length, title: `${owner.name}: ${f.ships.length} ships, ${Math.round(game.fleetTons(f)).toLocaleString()} t` });
       }
     }
-    for (const s of Object.values(me.intel)) {
-      if (sees.has(s.system)) continue;
+    // What the capital has heard of other fleets: fresh news drawn solid, older
+    // news drawn as a ghost of where they were.
+    for (const s of Object.values(lagged ? me.news : me.intel)) {
+      if (!lagged && sees.has(s.system)) continue;
       const owner = game.faction(s.owner);
-      fleets.push({ id: s.fleetId, at: s.system, colour: owner.colour, kind: "ghost", ships: s.ships, title: `${owner.name}: ${s.ships} ships, last seen day ${s.day}` });
+      const fresh = lagged && s.day >= game.state.day;
+      fleets.push({ id: s.fleetId, at: s.system, colour: owner.colour, kind: fresh ? "enemy" : "ghost", ships: s.ships, title: `${owner.name}: ${s.ships} ships, ${fresh ? "seen today" : `seen day ${s.day}`}` });
     }
     let range = new Set<string>();
     let reach = new Set<string>();
@@ -183,7 +190,9 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     }
     const sieges = new Set<string>();
     for (const [at, ws] of Object.entries(game.state.worlds)) {
-      if (ws.siege !== null && (sees.has(at) || ws.siege.by === me.id)) sieges.add(at);
+      if (ws.siege === null) continue;
+      const mine = ws.siege.by === me.id || ws.owner === me.id;
+      if (mine || (!lagged && sees.has(at))) sieges.add(at);
     }
     const battles = new Set(
       game.state.log.filter((e) => e.day === game.state.day && e.kind === "combat" && e.to.includes(me.id) && e.at !== undefined).map((e) => e.at!),
@@ -208,7 +217,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       h("span", { class: "brand" }, h("img", { src: "./icon.svg", alt: "", width: 20, height: 20 }), h("span", {}, "MAINLINE")),
       h("span", { class: "muted sector-name" }, s.sector.name),
       h("span", { class: "date" }, setup ? "Commissioning" : `Day ${s.day} · ${imperialDate(s.day)}`),
-      h("span", { class: "who" }, h("span", { class: "chip", style: `background:${me.colour}` }), `${me.playerName} — ${me.name}`),
+      h("span", { class: "who" }, h("span", { class: "chip", style: `background:${me.colour}` }), `${me.playerName} · ${me.name}`),
       h("span", { class: "credits" }, mcr(me.credits)),
       h("span", { class: statusBad ? "bad" : "muted", style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1" }, status),
       h("button", { class: "small", onclick: () => download(game), title: "Save the whole game as one .game file" }, "Save"),
@@ -230,6 +239,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         },
         "Load",
       ),
+      h("button", { class: "small", onclick: () => window.open("./help.html", "_blank", "noopener"), title: "The rules, and how to get going" }, "Help"),
       h("button", { class: "small", onclick: () => { autosave(game); onQuit(); } }, "Menu"),
       setup || over
         ? null
@@ -263,15 +273,15 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     ctx.fleet = null;
     ctx.ships.clear();
     ctx.tab = s.phase === "setup" ? "fleets" : "reports";
-    ctx.newFrom = readTo.get(next.id) ?? 0;
+    ctx.newFrom = readTo.get(next.id) ?? -1;
     if (multi) handover(next, () => begin());
     else begin();
   }
 
   function begin(): void {
     const me = ctx.me;
-    ctx.newFrom = readTo.get(me.id) ?? 0;
-    readTo.set(me.id, game.state.log.length);
+    ctx.newFrom = readTo.get(me.id) ?? -1;
+    readTo.set(me.id, game.state.day);
     ctx.system = me.capital;
     render();
   }
@@ -295,7 +305,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
 
   function renderTabs(): void {
     const setup = game.state.phase === "setup";
-    const news = game.state.log.slice(ctx.newFrom).filter((e) => e.to.includes(ctx.me.id)).length;
+    const news = game.logFor(ctx.me.id).filter((e) => e.day > ctx.newFrom).length;
     const tab = (id: Tab, label: string, badge = 0) =>
       h("button", { class: ctx.tab === id ? "on" : "", onclick: () => ctx.setTab(id) }, label, badge > 0 ? h("span", { class: "badge" }, badge) : null);
     tabs.replaceChildren(...kids(

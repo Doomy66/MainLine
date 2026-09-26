@@ -18,6 +18,7 @@ export const DEFAULT_OPTIONS: GameOptions = {
   startingCredits: "wealth",
   buildSpeed: 0.25,
   factionMinWorlds: 4,
+  newsLag: 4,
 };
 
 /** The worlds of a sector that are inside the subsectors in play. */
@@ -90,6 +91,9 @@ export function createGame(spec: NewGame): Game {
       personality: rng.pick(PERSONALITIES),
       intel: {},
       builds: [],
+      news: {},
+      known: {},
+      inbox: [],
       ready: false,
       waiting: false,
     });
@@ -125,6 +129,7 @@ export function createGame(spec: NewGame): Game {
     phase: "setup",
     winner: null,
   };
+  for (const f of factions) f.known = Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
   const game = new Game(state);
   for (const f of factions) {
     game.log({

@@ -275,13 +275,22 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
     const name = gameName || `${sector().name} campaign`;
 
     side.replaceChildren(...kids(
-      h("div", { class: "row" }, h("button", { class: "small", onclick: onBack }, "← Back"), h("h3", {}, "New game")),
+      h(
+        "div",
+        { class: "row" },
+        h("button", { class: "small", onclick: onBack }, "← Back"),
+        h("h3", {}, "New game"),
+        h("span", { class: "spacer" }),
+        h("a", { href: "./help.html#start", target: "_blank", rel: "noopener" }, "Help with your first game"),
+      ),
       h("h2", {}, "Sector"),
       h("div", { class: "row" }, sectorSelect, loadSec),
       h(
         "p",
         { class: "hint" },
-        `${sector().worlds.length} systems. Any sector PlanetHex saves comes with a .sec file beside it. Sparse or Rift density plays best: at Standard, one Main can swallow half the sector.`,
+        `${sector().worlds.length} systems. Make a sector of your own in `,
+        h("a", { href: "https://doomy66.github.io/PlanetHex/", target: "_blank", rel: "noopener" }, "PlanetHex"),
+        `: every sector it saves comes with a .sec file beside it. Sparse or Rift density plays best; at Standard, one Main can swallow half the sector.`,
       ),
       message === "" ? null : h("p", { class: "error" }, message),
       h("h2", {}, "Area in play"),
@@ -367,6 +376,21 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           },
           h("option", { value: "wealth", selected: options.startingCredits === "wealth" }, "By the Main's wealth"),
           h("option", { value: "equal", selected: options.startingCredits === "equal" }, "Equal: MCr600 each"),
+        ),
+        h("label", {}, "News travels"),
+        h(
+          "select",
+          {
+            onchange: (e: Event) => {
+              options.newsLag = Number((e.target as HTMLSelectElement).value);
+            },
+          },
+          [
+            [0, "Instantly: you see all your fleets see"],
+            [4, "By express boat: a week per jump-4"],
+            [2, "By courier: a week per jump-2"],
+            [1, "By trader: a week per parsec"],
+          ].map(([v, label]) => h("option", { value: v as number, selected: options.newsLag === v }, label as string)),
         ),
         h("label", {}, "Shipyards"),
         h(

@@ -42,8 +42,9 @@ const t0 = Date.now();
 const days = Number(daysText);
 for (let d = 0; d < days && s.phase === "play"; d += 25) {
   runDays(game, Math.min(25, days - d));
-  const battles = s.log.filter((e) => e.kind === "combat").length;
-  const captures = s.log.filter((e) => e.kind === "capture").length;
+  const uniq = (kind: string) => new Set(s.log.filter((e) => e.kind === kind).map((e) => `${e.happened ?? e.day}|${e.text}`)).size;
+  const battles = uniq("combat");
+  const captures = uniq("capture");
   const ships = s.fleets.reduce((n, f) => n + f.ships.length, 0);
   const inTransit = s.fleets.filter((f) => f.transit !== null).length;
   const neutral = Object.values(s.worlds).filter((w) => w.owner === null).length;

@@ -190,7 +190,7 @@ dl.props dd { margin: 0; }
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 9, 12, 0.94);
+  background: #08090c;
   display: grid;
   place-items: center;
   z-index: 10;

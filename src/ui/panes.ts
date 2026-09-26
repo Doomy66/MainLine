@@ -47,16 +47,21 @@ export function systemPane(ctx: Ctx): HTMLElement {
   const at = ctx.system;
   const w = game.world(at);
   const ws = game.worldState(at);
-  const owner = ws.owner === null ? null : game.faction(ws.owner);
-  const sees = visibleSystems(game, me.id);
+  const knownOwner = game.knownOwner(me.id, at);
+  const owner = knownOwner === null ? null : game.faction(knownOwner);
+  const lag = game.lag(me.id, at);
+  // Where news takes time, the capital sees only its own fleets live; the rest
+  // is what the couriers have brought.
+  const sees = lag > 0 ? new Set<string>() : visibleSystems(game, me.id);
   const u = w.uwp;
   const max = defenceMax(w);
   const selected = ctx.fleet === null ? undefined : game.fleet(ctx.fleet);
   const mineHere = selected !== undefined && selected.owner === me.id && selected.transit === null && selected.system === at;
 
   const locBlocks = LOCS.filter((l) => locExists(game, at, l)).map((loc) => {
-    const here = sees.has(at) ? game.fleetsAt(at, loc) : [];
-    const ghosts = sees.has(at) ? [] : Object.values(me.intel).filter((s) => s.system === at && s.loc === loc);
+    const here = sees.has(at) ? game.fleetsAt(at, loc) : game.fleetsAt(at, loc).filter((f) => f.owner === me.id);
+    const heard = game.state.options.newsLag > 0 ? me.news : me.intel;
+    const ghosts = sees.has(at) ? [] : Object.values(heard).filter((s) => s.system === at && s.loc === loc);
     const rows: HTMLElement[] = [];
     for (const f of here) {
       const who = game.faction(f.owner);
@@ -80,7 +85,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
         mineHere && selected.loc !== loc
           ? h("button", { class: "small", onclick: () => { selected.order = { kind: "move", to: loc }; ctx.say(`${selected.name} will move to the ${LOC_NAMES[loc].toLowerCase()}.`); ctx.refresh(); } }, `Send ${selected.name} here`)
           : null),
-      rows.length > 0 ? rows : h("div", { class: "hint" }, sees.has(at) ? "Nobody." : "Out of sight."),
+      rows.length > 0 ? rows : h("div", { class: "hint" }, sees.has(at) ? "Nobody." : lag > 0 ? "No news." : "Out of sight."),
     );
   });
 
@@ -93,7 +98,8 @@ export function systemPane(ctx: Ctx): HTMLElement {
     h(
       "p",
       {},
-      owner === null ? h("span", { class: "muted" }, "Independent") : h("span", {}, chip(owner.colour), owner.name, owner.capital === at ? " — capital" : ""),
+      owner === null ? h("span", { class: "muted" }, "Independent") : h("span", {}, chip(owner.colour), owner.name, owner.capital === at ? ", capital" : ""),
+      lag > 0 && ws.owner !== me.id ? h("span", { class: "hint" }, ` · news from here takes ${lag} days`) : null,
     ),
     h(
       "dl",
@@ -112,8 +118,8 @@ export function systemPane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Belts"), h("dd", {}, String(w.pbg.belts)),
       h("dt", {}, "Worth"), h("dd", {}, `${mcr(income(w), 2)} a week`),
       h("dt", {}, "Defences"), h("dd", {}, max === 0 ? "None" : h("div", {}, `${Math.round(ws.defence)} of ${max}`, meter(ws.defence / max))),
-      ws.siege === null ? null : h("dt", { class: "bad" }, "Siege"),
-      ws.siege === null ? null : h("dd", { class: "bad" }, `${game.faction(ws.siege.by).name}, day ${ws.siege.days} of ${captureDays(w)}`),
+      ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dt", { class: "bad" }, "Siege"),
+      ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dd", { class: "bad" }, `${game.faction(ws.siege.by).name}, day ${ws.siege.days} of ${captureDays(w)}`),
       h("dt", {}, "Distance"), h("dd", {}, `${distanceBetween(me.capital, at)} parsecs from your capital`),
     ),
     ws.owner === me.id && yard && game.state.phase === "play"
@@ -165,6 +171,8 @@ function fleetCard(ctx: Ctx, f: Fleet): HTMLElement {
 export function fleetPane(ctx: Ctx): HTMLElement {
   const { game, me } = ctx;
   const mine = game.fleetsOf(me.id).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  // With nothing picked, the first fleet is: an empty pane is no use to anyone.
+  if ((ctx.fleet === null || game.fleet(ctx.fleet) === undefined) && mine.length > 0) ctx.fleet = mine[0]!.id;
   const selected = ctx.fleet === null ? undefined : game.fleet(ctx.fleet);
   const detail = selected !== undefined && selected.owner === me.id ? fleetDetail(ctx, selected) : h("p", { class: "muted" }, mine.length === 0 ? "You have no fleets. Build some at a shipyard." : "Pick a fleet.");
   return h("div", {}, detail, h("h2", {}, `Your fleets (${mine.length})`), mine.map((f) => fleetCard(ctx, f)));
@@ -460,6 +468,7 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
         },
         "Import a .ship design…",
       ),
+      h("a", { href: "https://doomy66.github.io/Traveller-Ship-Design/", target: "_blank", rel: "noopener", class: "hint" }, "Design one in the Ship Designer"),
     ),
     queue.length > 0 ? h("div", {}, h("h2", {}, "Building"), h("table", {}, queue)) : null,
     yard === undefined
@@ -573,11 +582,12 @@ export function reportsPane(ctx: Ctx, goto: (at: string) => void): HTMLElement {
         {},
         h("h2", {}, day === 0 ? "Before the first day" : `Day ${day}`),
         list.map((e) => {
-          const isNew = game.state.log.indexOf(e) >= newIndex;
+          const isNew = e.day > newIndex;
           return h(
             "div",
             { class: `log-entry ${e.kind}${isNew ? " new" : ""}` },
             h("div", {}, e.at !== undefined ? h("span", { class: "goto", onclick: () => goto(e.at!) }, e.text) : e.text),
+            e.happened !== undefined ? h("div", { class: "hint" }, `News of day ${e.happened}, ${e.day - e.happened} days on the way.`) : null,
             e.detail !== undefined && e.detail.length > 0 ? h("details", {}, h("summary", { class: "hint" }, "Details"), h("pre", {}, e.detail.join("\n"))) : null,
           );
         }),

@@ -134,6 +134,11 @@ export interface Sighting {
   readonly strength: number;
 }
 
+/** A piece of news on its way to a faction's capital. */
+export type Dispatch =
+  | { readonly arrives: number; readonly kind: "sighting"; readonly sighting: Sighting }
+  | { readonly arrives: number; readonly kind: "owner"; readonly at: string; readonly owner: string | null };
+
 export type Personality = "aggressive" | "cautious" | "expansionist";
 
 export interface Faction {
@@ -151,6 +156,15 @@ export interface Faction {
   readonly personality: Personality;
   intel: Record<string, Sighting>;
   builds: Build[];
+  /**
+   * What the capital knows of other factions' fleets: sightings as they arrive
+   * by courier. With news travelling instantly this is the same as intel.
+   */
+  news: Record<string, Sighting>;
+  /** Who the capital believes holds each world, as the news has it. */
+  known: Record<string, string | null>;
+  /** News on its way to the capital. */
+  inbox: Dispatch[];
   /** A human who has finished their orders for the day. */
   ready: boolean;
   /** A human who wants the days to run until something happens. */
@@ -169,7 +183,10 @@ export interface WorldState {
 export type LogKind = "combat" | "capture" | "arrival" | "build" | "economy" | "info" | "lost" | "sighting";
 
 export interface LogEntry {
+  /** The day the news reaches the faction, which is when it is shown. */
   readonly day: number;
+  /** The day it happened, where the news took time to arrive. */
+  readonly happened?: number;
   /** Faction ids who hear of it. */
   readonly to: readonly string[];
   readonly kind: LogKind;
@@ -188,6 +205,12 @@ export interface GameOptions {
   buildSpeed: number;
   /** Mains shorter than this are left as independent worlds. */
   factionMinWorlds: number;
+  /**
+   * How fast news reaches a capital: the jump rating of the couriers that carry
+   * it, a week a jump. Zero is instantly. Fleets on the spot act on their
+   * standing orders at once; it is the capital that learns late.
+   */
+  newsLag: number;
 }
 
 export interface GameState {

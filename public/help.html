@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <title>Mainline help</title>
+    <style>
+      :root {
+        --bg: #14161a;
+        --panel: #1c1f25;
+        --line: #2e333c;
+        --text: #dfe3ea;
+        --muted: #8b93a1;
+        --accent: #e0b341;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      .page { display: grid; grid-template-columns: 230px minmax(0, 760px); gap: 40px; max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+      nav { position: sticky; top: 24px; align-self: start; font-size: 14px; }
+      nav a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
+      nav a:hover { color: var(--text); }
+      nav .top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; color: var(--accent); font-weight: 700; letter-spacing: 0.04em; }
+      nav .top img { border-radius: 8px; }
+      h1 { font-size: 34px; margin: 0 0 6px; }
+      h2 { font-size: 22px; margin: 44px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+      h3 { font-size: 16px; margin: 24px 0 6px; color: var(--accent); }
+      p, li { color: #cfd4dc; }
+      .lede { font-size: 17px; color: var(--text); }
+      a { color: var(--accent); }
+      code, kbd { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; font-size: 13px; }
+      table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 14px; }
+      th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--muted); font-weight: 500; }
+      .steps { counter-reset: step; list-style: none; padding: 0; }
+      .steps > li { counter-increment: step; position: relative; padding: 10px 14px 10px 52px; margin-bottom: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+      .steps > li::before { content: counter(step); position: absolute; left: 14px; top: 9px; width: 26px; height: 26px; border-radius: 50%; background: #3a3015; border: 1px solid var(--accent); color: #f4dfa6; text-align: center; font-weight: 700; line-height: 24px; }
+      .tip { background: rgba(224, 179, 65, 0.07); border-left: 3px solid var(--accent); padding: 8px 14px; border-radius: 0 6px 6px 0; margin: 14px 0; }
+      .muted { color: var(--muted); }
+      @media (max-width: 800px) {
+        .page { grid-template-columns: 1fr; gap: 0; }
+        nav { position: static; margin-bottom: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav>
+        <div class="top"><img src="./icon.svg" alt="" width="32" height="32" />MAINLINE</div>
+        <a href="#start">Your first game</a>
+        <a href="#screen">The screen</a>
+        <a href="#day">A day</a>
+        <a href="#jump">Jumping and fuel</a>
+        <a href="#standing">Standing orders</a>
+        <a href="#combat">Combat</a>
+        <a href="#siege">Taking a world</a>
+        <a href="#money">Money and shipyards</a>
+        <a href="#news">News</a>
+        <a href="#winning">Winning</a>
+        <a href="#tips">Tips</a>
+        <a href="#own">Your own sectors and ships</a>
+        <a href="#terms">Terms</a>
+        <a href="./" style="margin-top: 14px">← Back to the game</a>
+      </nav>
+
+      <main>
+        <h1>How to play Mainline</h1>
+        <p class="lede">
+          You rule a Main, a chain of worlds a jump-1 ship can cross, and every other Main in the sector
+          is ruled by somebody else. Most of them are the computer. Build a fleet, take worlds and hold on
+          to your own. One turn is a day and a jump takes a week.
+        </p>
+
+        <h2 id="start">Your first game</h2>
+        <ol class="steps">
+          <li>
+            <strong>New game.</strong> Driftwater Reach is a good first sector. Leave the area as the whole
+            sector. The table lists every Main that is a faction, with its size, its capital's profile, its
+            best tech level, what it earns a week and the credits it starts with. Click a Main, in the table
+            or on the map, to take it. A big, rich Main is easier. One whose capital has a class A starport
+            can build its own starships.
+          </li>
+          <li>
+            <strong>Leave the rules as they are</strong> and press <em>Start the game</em>. For a first game
+            you might set <em>News travels</em> to <em>Instantly</em>: it is easier to learn the game when you
+            can see everything your fleets can.
+          </li>
+          <li>
+            <strong>Buy your first fleet.</strong> For this one purchase the whole catalogue is on offer,
+            whatever your worlds can build. Click a class's name to see its design sheet. A good start is two
+            or three ships of jump-2 or better with real guns, such as a Broadsword or Patrol Corvette, plus
+            something cheap to guard home. Keep a few MCr back for fuel and missiles. Press
+            <em>Done: sail</em>.
+          </li>
+          <li>
+            <strong>Find a target.</strong> Click nearby systems. The system pane shows who holds each world,
+            what it is worth, and how strong its defences are. An independent world with weak defences, one or
+            two jumps away, is a good first conquest.
+          </li>
+          <li>
+            <strong>Set standing orders.</strong> On the Fleets tab, pick your fleet and choose the preset
+            <em>Seek and destroy</em>. That fleet will now attack any enemy it meets and besiege any world it
+            does not hold.
+          </li>
+          <li>
+            <strong>Jump.</strong> Press <em>Jump…</em> and click the target on the map. Solid green rings are
+            in range now. Dashed rings need stops on the way, and the fleet will refuel at each. Then press
+            <em>Wait for news</em>, and the days run until your fleet arrives.
+          </li>
+          <li>
+            <strong>Go in.</strong> Your fleet arrives at the jump point. Press <em>Orbit</em> to send it to the
+            main world and end the day. Its guns will start on the defences. When they are silenced the world
+            submits after a few more days, so long as your fleet stays.
+          </li>
+          <li>
+            <strong>Keep going.</strong> Your treasury fills at the end of each week. Spend it at a shipyard,
+            repair at worlds you hold, and look at the Reports tab for battles, sightings and captures. Click
+            the name of a place in a report to go to it on the map.
+          </li>
+        </ol>
+
+        <h2 id="screen">The screen</h2>
+        <p>
+          The <strong>map</strong> is the sector as PlanetHex draws it. The wheel zooms, dragging moves it, and
+          clicking picks a system. Worlds are dots, sized by population and coloured by what their surface is
+          like: blue for water, tan for a dusty atmosphere, grey for airless rock, and a hollow ring where nobody
+          lives. Hexes are washed in the colour of the faction that holds them, and a capital has a ring
+          round it. Zoom in to see starports, hex numbers, naval bases (★) and gas giants.
+        </p>
+        <p>
+          Your fleets are arrows beside their worlds. Other factions' fleets are diamonds; a dashed diamond is
+          where a fleet was last seen, not where it is. A fleet in jump space is a dot on a dashed line between
+          two systems. A red dashed ring is a siege, and a burst marks a battle today.
+        </p>
+        <table>
+          <tr><th>Tab</th><th>What it is for</th></tr>
+          <tr><td>System</td><td>The world picked on the map: its profile, owner, worth, defences, and who is where in the system. Send your selected fleet to any place in the system from here.</td></tr>
+          <tr><td>Fleets</td><td>Your fleets, their orders, standing orders and ships. Tick ships to split them off into a new fleet; merge fleets in the same place.</td></tr>
+          <tr><td>Shipyard</td><td>Lay down new ships at a yard you hold, or at an independent one. Import designs from the Ship Designer.</td></tr>
+          <tr><td>Empire</td><td>Treasury, income, upkeep, what it takes to win, standings, and your worlds.</td></tr>
+          <tr><td>Reports</td><td>Everything you have heard, newest first. Battle reports open to show every round.</td></tr>
+        </table>
+        <p>
+          <strong>Save</strong> writes the whole game to one <code>.game</code> file. The game also keeps
+          itself in the browser, so <em>Carry on</em> on the title screen picks up where you left off.
+        </p>
+
+        <h2 id="day">A day</h2>
+        <p>
+          Give orders, then press <em>End day</em>. With several players, each takes a turn giving orders for
+          the same day and hands the screen on. When the last is done, everybody's orders happen at once. The
+          computer's factions give theirs at the same moment.
+        </p>
+        <p>A fleet can do one of these in a day:</p>
+        <ul>
+          <li><strong>Move</strong> anywhere in its system: the main world's orbit, a gas giant, the planetoid belt or the jump point.</li>
+          <li><strong>Jump</strong> to another system, or start a route of several jumps.</li>
+          <li><strong>Refuel</strong>, going to wherever in the system it can.</li>
+          <li><strong>Repair</strong> at a class A to D starport you hold.</li>
+        </ul>
+        <p>
+          Orders last until they are done, so a fleet on a route of four jumps needs telling once.
+          <em>Wait for news</em> lets the days run, up to thirty, until something happens you should see: a
+          battle, an arrival, a capture, a sighting, a ship commissioned.
+        </p>
+
+        <h2 id="jump">Jumping and fuel</h2>
+        <p>
+          A jump takes a week. It burns a tenth of each ship's hull in fuel for every parsec, so a 400-ton ship
+          needs 40 tons to jump one parsec and 80 to jump two. A fleet can jump as far as its shortest-legged
+          ship, and no further than the fuel in every ship's tanks. Ships arrive at the system's jump point.
+        </p>
+        <table>
+          <tr><th>Where</th><th>Fuel</th><th>Price</th></tr>
+          <tr><td>Class A or B starport</td><td>Refined</td><td>Cr500 a ton</td></tr>
+          <tr><td>Class C or D starport</td><td>Unrefined</td><td>Cr100 a ton</td></tr>
+          <tr><td>Gas giant</td><td>Unrefined, for ships with fuel scoops or a streamlined hull</td><td>Free</td></tr>
+          <tr><td>An ocean on the main world</td><td>Unrefined, for streamlined and partly streamlined ships</td><td>Free</td></tr>
+        </table>
+        <p>
+          Nobody sells fuel to an enemy; skimming a gas giant still works. Jumping on unrefined fuel risks a
+          rough jump, which arrives a few days late. A ship with a fuel processor refines its own.
+        </p>
+        <p>
+          Order a jump beyond range and the fleet plans a route through systems where every ship in it can
+          refuel, and stops to fill up at each.
+        </p>
+        <div class="tip">
+          A Main is every world a jump-1 ship can reach, so a jump-1 ship can never leave its own Main. To
+          attack anyone you need jump-2 or better, and so does every ship in the fleet. A fleet with one
+          system defence boat in it goes nowhere.
+        </div>
+
+        <h2 id="standing">Standing orders</h2>
+        <p>
+          Your fleets meet the enemy while you are elsewhere, so each fleet carries standing orders that say what
+          to do about it.
+        </p>
+        <table>
+          <tr><th>Order</th><th>What it does</th></tr>
+          <tr><td>Engage</td><td>Attack any enemy fleet it meets, only fleets it clearly outguns, or nobody unless attacked first.</td></tr>
+          <tr><td>Target first</td><td>What its guns pick out: warships, the largest, the smallest, the most damaged, or unarmed ships.</td></tr>
+          <tr><td>Besiege</td><td>Attack the defences of any world it is orbiting and does not hold, and stay until it submits.</td></tr>
+          <tr><td>Intercept</td><td>Go after enemy fleets it would engage that are elsewhere in the same system.</td></tr>
+          <tr><td>Evade</td><td>Try to break off whenever attacked.</td></tr>
+          <tr><td>Withdraw at</td><td>Try to break off once the fleet is down to this share of its hull.</td></tr>
+        </table>
+        <p>The presets are a quick way to set them all:</p>
+        <table>
+          <tr><th>Preset</th><th>For</th></tr>
+          <tr><td>Seek and destroy</td><td>Conquest. Engages anything, besieges, intercepts, fights to a quarter of its hull.</td></tr>
+          <tr><td>Raider</td><td>Picks off the weak and unarmed; runs from anything its size.</td></tr>
+          <tr><td>Patrol</td><td>Hunts enemy fleets but leaves worlds alone.</td></tr>
+          <tr><td>Guard</td><td>Fights anything that comes to it, and stays put.</td></tr>
+          <tr><td>Defensive</td><td>Fights back when attacked, and only then.</td></tr>
+          <tr><td>Avoid battle</td><td>Scouts and traders: always tries to get away.</td></tr>
+        </table>
+
+        <h2 id="combat">Combat</h2>
+        <p>
+          Battle happens wherever hostile fleets are in the same place and one of them means to fight. At a main
+          world, its defences join in. A day of battle is three rounds, and every weapon fires once a round.
+        </p>
+        <ul>
+          <li>
+            <strong>Hitting.</strong> Roll two dice and add the gunner (+1), the ship's Fire Control software and
+            its sensors. Take off the target's Evade software, which can be no more than its Thrust. Eight or
+            more hits, and anything over eight is the Effect. Bays and spinal mounts are clumsy against small
+            ships: −2 against anything up to 2,000 tons and −4 up to 100.
+          </li>
+          <li>
+            <strong>Damage.</strong> The weapon's dice plus the Effect, less the target's armour, times the
+            mounting's multiple: 1 for a turret, 3 for a barbette, 10, 20 or 100 for a small, medium or large bay,
+            and 1,000 for a spinal mount. Armour piercing weapons ignore some armour; meson guns ignore all of it.
+          </li>
+          <li>
+            <strong>Missiles and torpedoes</strong> come in salvos from a magazine that runs dry. They hit more
+            easily, but point defence batteries and laser turrets shoot some down, and each one that gets through
+            hits on its own. Reload at a class A to C starport you hold.
+          </li>
+          <li>
+            <strong>Defences.</strong> Sandcasters take a die off laser hits. Meson screens blunt meson guns;
+            nuclear dampers blunt radiation weapons.
+          </li>
+          <li>
+            <strong>Critical hits.</strong> A ship takes one for every tenth of its hull it loses, and one for any
+            hit with an Effect of 6 or more. They knock out weapons, drives, the jump drive, sensors, the computer
+            and crew, or hole the fuel tanks. A ship with a wrecked jump drive cannot jump until repaired.
+          </li>
+          <li>
+            <strong>Breaking off.</strong> A fleet that wants out rolls 8+ on two dice, plus its Thrust less that
+            of the fastest enemy chasing it. A fleet that gets away moves elsewhere in the system.
+          </li>
+        </ul>
+        <p class="muted">Every battle report on the Reports tab opens to show each round, hit and critical.</p>
+
+        <h2 id="siege">Taking a world</h2>
+        <p>
+          Every peopled world has defences: ground batteries and the local system defence boats. They are
+          stronger with more people and a higher tech level, and a naval base adds a squadron's worth. A world
+          of a billion people at TL12 is a fortress; a mining camp has almost nothing. The system pane shows what
+          any world has.
+        </p>
+        <ol>
+          <li>Bring armed ships into orbit with <em>Besiege</em> on in their standing orders.</li>
+          <li>Silence the defences. That may take several days of battle.</li>
+          <li>Hold the orbit, with none of the owner's armed ships there, until the world submits. That takes two days plus one for every two digits of population. The siege resets if you leave or are driven off.</li>
+        </ol>
+        <p>
+          A captured world's defences start at a quarter strength. Defences rebuild a tenth a day once nobody is
+          shooting at them. Lose your capital and you rule from your next biggest world.
+        </p>
+
+        <h2 id="money">Money and shipyards</h2>
+        <p>
+          At the end of every week each world pays its owner. It pays more for more people, higher tech and a
+          better starport, and more again for a rich, industrial or agricultural world. A billion people at TL12
+          with a class A port pay about MCr35 a week. The same week, the upkeep of your ships comes out.
+        </p>
+        <table>
+          <tr><th>Starport</th><th>Builds</th><th>Repairs a day</th><th>Also</th></tr>
+          <tr><td>A</td><td>Anything, up to the world's tech level</td><td>A fifth of the hull</td><td>Fixes critical hits, reloads, refined fuel</td></tr>
+          <tr><td>B</td><td>Ships without a jump drive</td><td>A fifth</td><td>Fixes critical hits, reloads, refined fuel</td></tr>
+          <tr><td>C</td><td>Small craft under 100 tons</td><td>A tenth</td><td>Fixes critical hits, reloads, unrefined fuel</td></tr>
+          <tr><td>D</td><td>Nothing</td><td>A twentieth</td><td>Unrefined fuel</td></tr>
+          <tr><td>E, X</td><td>Nothing</td><td>Nothing</td><td></td></tr>
+        </table>
+        <p>
+          Repairs happen at worlds you hold, whenever a fleet is in orbit and not fighting. Independent class A
+          yards build for anybody for 20% more. A new ship joins a Yard fleet in orbit when it is finished; how
+          long that takes depends on the shipyard setting chosen at the start.
+        </p>
+
+        <h2 id="news">News</h2>
+        <p>
+          Unless you chose <em>Instantly</em>, news travels by ship. A report of anything happening away from
+          your capital takes a week for every jump a courier would need to bring it: a sighting, a battle, a
+          siege, a world changing hands. The map shows what your capital has heard. Other fleets appear where
+          they were when last reported, and worlds show the owner the news last named.
+        </p>
+        <p>
+          Your own fleets and worlds you always see as they are now. And your fleets do not wait for you: they
+          act on their standing orders the moment they meet the enemy. That is what standing orders are for.
+        </p>
+
+        <h2 id="winning">Winning</h2>
+        <p>
+          Hold the share of the peopled worlds in play chosen at the start, half unless you changed it, or be the
+          last faction standing. A faction with no worlds and no ships is out. The Empire tab shows the standings
+          and how many worlds you need.
+        </p>
+
+        <h2 id="tips">Tips</h2>
+        <ul>
+          <li>Leave something at home. The computer will come for your capital, and it looks for weak spots.</li>
+          <li>Keep an eye on fuel. A fleet that runs dry at a world with no gas giant and a hostile starport is stuck.</li>
+          <li>Missile boats hit hard but run out. Send them home to reload, or mix them with lasers.</li>
+          <li>Big bays and spinal mounts are wasted on small ships; a swarm of fighters can tie them up.</li>
+          <li>Independent worlds near your Main are cheap growth early on. Enemy capitals are the hardest nuts in the sector.</li>
+          <li>A fleet that keeps losing ships is telling you something. Raise its withdrawal point.</li>
+          <li>The computer sees no more than you would in its place. It knows nothing of a system where it has no ships and no worlds.</li>
+        </ul>
+
+        <h2 id="own">Your own sectors and ships</h2>
+        <p>
+          <strong>Sectors.</strong> Make one in <a href="https://doomy66.github.io/PlanetHex/" target="_blank" rel="noopener">PlanetHex</a>.
+          When you save a sector there, it writes a <code>.sec</code> file beside the <code>.sector</code> file.
+          In Mainline's new game screen, press <em>Load a PlanetHex .sec…</em> and pick it. Sparse or Rift density
+          makes the best game. At Standard density the worlds join up so well that one Main can cover half the
+          sector. Any other tool that writes the same tab-separated sector format works too.
+        </p>
+        <p>
+          <strong>Ships.</strong> Design one in the
+          <a href="https://doomy66.github.io/Traveller-Ship-Design/" target="_blank" rel="noopener">Traveller Ship Designer</a>
+          and save it as a <code>.ship</code> file. On the Shipyard tab, press <em>Import a .ship design…</em>. It
+          joins the catalogue for this game and travels inside the saved game. A design has to be legal under the
+          designer's rules. Everything Mainline knows about a ship comes off its design sheet: hull, armour,
+          drives, fuel, weapons, software, sensors and price.
+        </p>
+
+        <h2 id="terms">Terms</h2>
+        <table>
+          <tr><td>Main</td><td>A group of worlds each one parsec from another, so a jump-1 ship can cross it. Every Main of four or more worlds is a faction.</td></tr>
+          <tr><td>Parsec</td><td>One hex on the map.</td></tr>
+          <tr><td>Jump-<em>n</em>, J<em>n</em></td><td>How many parsecs a ship can jump at once.</td></tr>
+          <tr><td>Thrust, M<em>n</em></td><td>How hard a ship can manoeuvre: it dodges, chases and escapes with it.</td></tr>
+          <tr><td>UWP</td><td>A world's profile: starport, size, atmosphere, hydrographics, population, government, law level, then tech level. <code>A788899-C</code>.</td></tr>
+          <tr><td>TL</td><td>Tech level. A yard builds nothing above its world's.</td></tr>
+          <tr><td>MCr</td><td>Millions of credits.</td></tr>
+          <tr><td>Hull points</td><td>How much damage a ship takes before it is destroyed.</td></tr>
+          <tr><td>Independent</td><td>A world no faction holds. It defends itself only against a fleet besieging it.</td></tr>
+        </table>
+        <p class="muted" style="margin-top: 40px">
+          An unofficial fan work. Traveller is a trademark of Mongoose Publishing. Sectors from PlanetHex, ships
+          from the Traveller Ship Designer.
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
