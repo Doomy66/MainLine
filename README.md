@@ -5,7 +5,7 @@ the ruler of a **Main**, a chain of worlds a jump-1 ship can cross. Every Main
 nobody takes is played by the computer. One turn is a day and a jump takes a
 week, as it always has.
 
-**[Play it here.](https://doomy66.github.io/Mainline/)** It runs in the
+**[Play it here.](https://doomy66.github.io/MainLine/)** It runs in the
 browser and sends nothing anywhere. A game saves as one `.game` file.
 
 ## Claude
