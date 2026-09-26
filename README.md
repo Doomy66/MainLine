@@ -160,6 +160,11 @@ design engine and reports anything that breaks the rules.
   off armour, and high-tech bays miss anything small. Candidates: a floor of
   batteries on every peopled world, bay-sized ground weapons, no small-target
   penalty for ground fire control, missile silos, and defences firing first.
+- **No pinning by unarmoured ships.** A ship without armour should not count as
+  a pursuer when a fleet tries to break off. At Surari a handful of pinnaces kept
+  a crippled squadron under a world's guns.
+- **Shot-by-shot battle logs.** Each hit in a battle report says who fired, with
+  what, the roll, and the damage after armour, so odd battles can be looked into.
 - **Buying abroad.** A rich empire with no class A yard, only class B, gets a
   chance to buy starships from another empire's yards. Which empires sell, the
   markup, and how the ship is delivered are still to decide.
