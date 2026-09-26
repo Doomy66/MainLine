@@ -18,12 +18,13 @@ export function inRange(game: Game, fleet: Fleet): string[] {
 export function canRefuelAt(game: Game, fleet: Fleet, at: string): boolean {
   const world = game.world(at);
   const hostile = game.hostile(fleet.owner, game.worldState(at).owner);
-  return fleet.ships.every((s) => fuelSources(world, game.cls(s), hostile).length > 0);
+  return fleet.ships.every((s) => game.carried(fleet, s) || fuelSources(world, game.cls(s), hostile).length > 0);
 }
 
 /** Whether every ship's tanks hold enough for a jump of this many parsecs when full. */
 function tanksBigEnough(game: Game, fleet: Fleet, parsecs: number): boolean {
   return fleet.ships.every((s) => {
+    if (game.carried(fleet, s)) return true;
     const c = game.cls(s);
     return c.fuelCapacity + 1e-9 >= jumpFuel(c.tons, parsecs);
   });

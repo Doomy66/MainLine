@@ -140,6 +140,11 @@ function shipCombatant(game: Game, ship: Ship): Combatant {
   };
 }
 
+/** Whether a fleet is where it means to be, rather than on its way somewhere. */
+export function besieging(fleet: Fleet): boolean {
+  return fleet.order === null || fleet.order.kind === "move";
+}
+
 /** Whether party a opens fire on party b of its own accord. */
 function aggressor(a: Party, b: Party): boolean {
   if (a.side !== null && a.side === b.side) return false;
@@ -148,7 +153,8 @@ function aggressor(a: Party, b: Party): boolean {
   // attack the defences of a world it does not own, which is a siege.
   if (a.fleet !== undefined) {
     const orders = a.fleet.standing;
-    if (b.worldAt !== undefined) return orders.besiege;
+    // A fleet passing through, or stopping to refuel, is not laying siege.
+    if (b.worldAt !== undefined) return orders.besiege && besieging(a.fleet);
     if (orders.engage === "any") return true;
     if (orders.engage === "weaker") return a.strength > b.strength * 1.25;
     return false;
@@ -156,7 +162,7 @@ function aggressor(a: Party, b: Party): boolean {
   // Defences. A faction's worlds fire on every other faction's ships in orbit;
   // an independent world only on ships that are attacking it.
   if (a.side !== null) return true;
-  return b.fleet?.standing.besiege === true;
+  return b.fleet !== undefined && b.fleet.standing.besiege && besieging(b.fleet);
 }
 
 /** Everyone in a place who is fighting someone, and whom each is fighting. */

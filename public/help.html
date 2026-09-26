@@ -87,7 +87,9 @@
             can build its own starships.
           </li>
           <li>
-            <strong>Leave the rules as they are</strong> and press <em>Start the game</em>. For a first game
+            <strong>Leave the rules as they are</strong> and press <em>Start the game</em>. <em>Starting wealth</em>
+            multiplies every faction's opening treasury, up to five times, for a bigger war from the first day;
+            it does not change what worlds pay each week. For a first game
             you might set <em>News travels</em> to <em>Instantly</em>: it is easier to learn the game when you
             can see everything your fleets can.
           </li>
@@ -135,7 +137,8 @@
         </p>
         <p>
           Your fleets are arrows beside their worlds. Other factions' fleets are diamonds; a dashed diamond is
-          where a fleet was last seen, not where it is. A fleet in jump space is a dot on a dashed line between
+          where a fleet was last reported, not where it is now. The system pane says when each one arrived and
+          when it was last seen, and lists fleets that have gone under <em>Gone</em>, with the days they were there. A fleet in jump space is a dot on a dashed line between
           two systems. A red dashed ring is a siege, and a burst marks a battle today.
         </p>
         <table>
@@ -193,9 +196,19 @@
         </p>
         <div class="tip">
           A Main is every world a jump-1 ship can reach, so a jump-1 ship can never leave its own Main. To
-          attack anyone you need jump-2 or better, and so does every ship in the fleet. A fleet with one
-          system defence boat in it goes nowhere.
+          attack anyone you need jump-2 or better, and so does every ship in the fleet.
         </div>
+        <h3>Jump tenders</h3>
+        <p>
+          Ships with no jump drive, such as system defence boats, fighters and pinnaces, can still go to war if
+          something carries them. A class A or B starport that will deal with you has jump tenders for hire.
+          Tick <em>Hire jump tenders</em> on the fleet before choosing its jump. The tenders are rated jump-3,
+          so the fleet jumps up to three parsecs, or less if another ship in it has a shorter drive. They
+          charge Traveller's freight rates for every ton they carry, per jump: Cr1,000 a ton for one parsec,
+          Cr1,600 for two, Cr2,600 for three. The fee is paid as each jump starts. The tenders stay with the
+          fleet for the whole route, refuelling themselves, and leave when it arrives. Cancel the route part way
+          and they leave there.
+        </p>
 
         <h2 id="standing">Standing orders</h2>
         <p>
@@ -206,7 +219,7 @@
           <tr><th>Order</th><th>What it does</th></tr>
           <tr><td>Engage</td><td>Attack any enemy fleet it meets, only fleets it clearly outguns, or nobody unless attacked first.</td></tr>
           <tr><td>Target first</td><td>What its guns pick out: warships, the largest, the smallest, the most damaged, or unarmed ships.</td></tr>
-          <tr><td>Besiege</td><td>Attack the defences of any world it is orbiting and does not hold, and stay until it submits.</td></tr>
+          <tr><td>Besiege</td><td>Attack the defences of any world it is orbiting and does not hold, and stay until it submits. A fleet on its way somewhere, or stopping to refuel on a route, leaves the world alone; it lays siege only when it has no orders or has been sent to the world's orbit.</td></tr>
           <tr><td>Intercept</td><td>Go after enemy fleets it would engage that are elsewhere in the same system.</td></tr>
           <tr><td>Evade</td><td>Try to break off whenever attacked.</td></tr>
           <tr><td>Withdraw at</td><td>Try to break off once the fleet is down to this share of its hull.</td></tr>
@@ -297,16 +310,31 @@
           long that takes depends on the shipyard setting chosen at the start.
         </p>
 
-        <h2 id="news">News</h2>
+        <h2 id="news">News and the fog of war</h2>
         <p>
           Unless you chose <em>Instantly</em>, news travels by ship. A report of anything happening away from
-          your capital takes a week for every jump a courier would need to bring it: a sighting, a battle, a
-          siege, a world changing hands. The map shows what your capital has heard. Other fleets appear where
-          they were when last reported, and worlds show the owner the news last named.
+          your capital takes a week for every jump a courier would need to bring it: an enemy fleet arriving or
+          leaving, a battle between other factions, a world changing hands. The map shows what your capital has
+          heard. Other fleets appear where they were when last reported, and worlds show the owner the news last
+          named.
         </p>
         <p>
-          Your own fleets and worlds you always see as they are now. And your fleets do not wait for you: they
-          act on their standing orders the moment they meet the enemy. That is what standing orders are for.
+          Normally you see your own fleets and worlds as they are now, and news of anything they are part of
+          reaches you at once: their battles, arrivals, sieges and captures. Your fleets do not wait for you
+          either. They act on their standing orders the moment they meet the enemy.
+        </p>
+        <h3>Full fog of war</h3>
+        <p>
+          Turn on <em>Full fog</em> and your own fleets report by courier too. Each one appears where it was when
+          its last report was sent, marked with how old that report is, and you hear of its battles when a
+          courier gets home. Orders go the same way: an order to a fleet five weeks away lands five weeks later,
+          and the fleet plans its route from wherever it has got to by then. Orders not yet delivered are listed
+          on the fleet as <em>in the post</em>. A fleet lost in battle stays on your map until the news of it
+          arrives. Splitting and merging fleets can only be done at your capital, where you can see the ships.
+        </p>
+        <p>
+          How fast news travels, and full fog, can both be changed at any time on the Empire tab, for every
+          player at once. Turn full fog off and every order in the post arrives at once.
         </p>
 
         <h2 id="winning">Winning</h2>

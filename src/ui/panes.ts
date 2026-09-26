@@ -12,7 +12,10 @@ import {
   captureDays,
   defenceMax,
   fuelSources,
+  hiresTenders,
   income,
+  TENDER_JUMP,
+  tenderCost,
   jumpFuel,
   repairRate,
   whyNotBuild,
@@ -33,7 +36,7 @@ import {
 } from "../sector/uwp";
 import { distanceBetween } from "../sector/hex";
 import { chip, h, mcr, meter, pct, tons } from "./dom";
-import { whereIs, type Ctx } from "./gameview";
+import { planning, whereIs, type Ctx } from "./gameview";
 
 const LOCS: Loc[] = ["main", "gg", "belt", "deep"];
 
@@ -55,41 +58,55 @@ export function systemPane(ctx: Ctx): HTMLElement {
   const sees = lag > 0 ? new Set<string>() : visibleSystems(game, me.id);
   const u = w.uwp;
   const max = defenceMax(w);
-  const selected = ctx.fleet === null ? undefined : game.fleet(ctx.fleet);
-  const mineHere = selected !== undefined && selected.owner === me.id && selected.transit === null && selected.system === at;
+  const selected = ctx.fleet === null ? undefined : game.fleetSeenBy(me.id, ctx.fleet);
+  const mineHere = selected !== undefined && selected.transit === null && selected.system === at;
+  const heard = game.state.options.newsLag > 0 ? me.news : me.intel;
 
   const locBlocks = LOCS.filter((l) => locExists(game, at, l)).map((loc) => {
-    const here = sees.has(at) ? game.fleetsAt(at, loc) : game.fleetsAt(at, loc).filter((f) => f.owner === me.id);
-    const heard = game.state.options.newsLag > 0 ? me.news : me.intel;
-    const ghosts = sees.has(at) ? [] : Object.values(heard).filter((s) => s.system === at && s.loc === loc);
+    const mine = game.fleetsSeenBy(me.id).filter((f) => f.transit === null && f.system === at && f.loc === loc);
+    const others = sees.has(at) ? game.fleetsAt(at, loc).filter((f) => f.owner !== me.id) : [];
+    const here = [...mine, ...others];
+    const ghosts = sees.has(at) ? [] : Object.values(heard).filter((s) => s.system === at && s.loc === loc && s.left === undefined);
     const rows: HTMLElement[] = [];
     for (const f of here) {
       const who = game.faction(f.owner);
+      const since = f.owner === me.id ? undefined : me.intel[f.id]?.since;
+      const age = f.owner === me.id ? game.reportAge(me.id, f.id) : 0;
       rows.push(
         h(
           "div",
           { class: f.owner === me.id ? "card pick" : "card", onclick: f.owner === me.id ? () => ctx.selectFleet(f.id) : undefined },
           h("div", { class: "fleet-head" }, chip(who.colour), h("span", { class: "name" }, f.owner === me.id ? f.name : who.name), h("span", { class: "spacer" }), h("span", { class: "muted num" }, `${f.ships.length} ships, ${tons(game.fleetTons(f))}`)),
           f.owner === me.id ? null : h("div", { class: "hint" }, summariseClasses(game, f)),
+          since === undefined ? null : h("div", { class: "hint" }, since === game.state.day ? "Arrived today." : `Here since day ${since}.`),
+          age > 0 ? h("div", { class: "hint warn" }, `As reported ${age} days ago.`) : null,
         ),
       );
     }
     for (const s of ghosts) {
       const who = game.faction(s.owner);
-      rows.push(h("div", { class: "card" }, h("div", { class: "fleet-head" }, chip(who.colour), h("span", {}, who.name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${s.ships} ships, ${tons(s.tons)}, seen day ${s.day}`))));
+      rows.push(
+        h(
+          "div",
+          { class: "card" },
+          h("div", { class: "fleet-head" }, chip(who.colour), h("span", {}, who.name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${s.ships} ships, ${tons(s.tons)}`)),
+          h("div", { class: "hint" }, `Here since day ${s.since}; last reported on day ${s.day}, ${game.state.day - s.day} days ago.`),
+        ),
+      );
     }
     return h(
       "div",
       {},
       h("div", { class: "row" }, h("h2", { style: "margin:10px 0 6px" }, LOC_NAMES[loc]), h("span", { class: "spacer" }),
         mineHere && selected.loc !== loc
-          ? h("button", { class: "small", onclick: () => { selected.order = { kind: "move", to: loc }; ctx.say(`${selected.name} will move to the ${LOC_NAMES[loc].toLowerCase()}.`); ctx.refresh(); } }, `Send ${selected.name} here`)
+          ? h("button", { class: "small", onclick: () => ctx.command(selected, { order: { kind: "move", to: loc } }, `${selected.name} to move to the ${LOC_NAMES[loc].toLowerCase()}.`) }, `Send ${selected.name} here`)
           : null),
       rows.length > 0 ? rows : h("div", { class: "hint" }, sees.has(at) ? "Nobody." : lag > 0 ? "No news." : "Out of sight."),
     );
   });
 
   const yard = w.uwp.starport === "A" || w.uwp.starport === "B" || w.uwp.starport === "C";
+  const departed = Object.values(heard).filter((s) => s.system === at && s.left !== undefined);
   return h(
     "div",
     {},
@@ -129,6 +146,21 @@ export function systemPane(ctx: Ctx): HTMLElement {
       ? h("div", { class: "row", style: "margin-top:8px" }, h("button", { class: "small", onclick: () => { ctx.yard = at; ctx.setTab("yard"); } }, "Commission here (independent yard)"))
       : null,
     locBlocks,
+    departed.length === 0
+      ? null
+      : h(
+          "div",
+          {},
+          h("h2", { style: "margin:10px 0 6px" }, "Gone"),
+          departed.map((s) =>
+            h(
+              "div",
+              { class: "card" },
+              h("div", { class: "fleet-head" }, chip(game.faction(s.owner).colour), h("span", {}, game.faction(s.owner).name), h("span", { class: "spacer" }), h("span", { class: "muted" }, `${s.ships} ships, ${tons(s.tons)}`)),
+              h("div", { class: "hint" }, `Here from day ${s.since}, last seen on day ${s.day}, gone by day ${s.left}.`),
+            ),
+          ),
+        ),
   );
 }
 
@@ -164,30 +196,39 @@ function fleetCard(ctx: Ctx, f: Fleet): HTMLElement {
     h("div", { class: "fleet-head" }, h("span", { class: "name" }, f.name), h("span", { class: "muted" }, `${f.ships.length} ships`), h("span", { class: "spacer" }), h("span", { class: "muted num" }, `J${game.fleetJump(f)} M${game.fleetThrust(f)}`)),
     h("div", { class: "hint" }, whereIs(game, f)),
     h("div", { class: "hint" }, orderText(game, f)),
+    game.reportAge(ctx.me.id, f.id) > 0 ? h("div", { class: "hint warn" }, `As reported ${game.reportAge(ctx.me.id, f.id)} days ago`) : null,
     meter(hull),
   );
 }
 
 export function fleetPane(ctx: Ctx): HTMLElement {
   const { game, me } = ctx;
-  const mine = game.fleetsOf(me.id).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const mine = game.fleetsSeenBy(me.id).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   // With nothing picked, the first fleet is: an empty pane is no use to anyone.
-  if ((ctx.fleet === null || game.fleet(ctx.fleet) === undefined) && mine.length > 0) ctx.fleet = mine[0]!.id;
-  const selected = ctx.fleet === null ? undefined : game.fleet(ctx.fleet);
-  const detail = selected !== undefined && selected.owner === me.id ? fleetDetail(ctx, selected) : h("p", { class: "muted" }, mine.length === 0 ? "You have no fleets. Build some at a shipyard." : "Pick a fleet.");
+  if ((ctx.fleet === null || game.fleetSeenBy(me.id, ctx.fleet) === undefined) && mine.length > 0) ctx.fleet = mine[0]!.id;
+  const selected = ctx.fleet === null ? undefined : game.fleetSeenBy(me.id, ctx.fleet);
+  const detail = selected !== undefined ? fleetDetail(ctx, selected) : h("p", { class: "muted" }, mine.length === 0 ? "You have no fleets. Build some at a shipyard." : "Pick a fleet.");
   return h("div", {}, detail, h("h2", {}, `Your fleets (${mine.length})`), mine.map((f) => fleetCard(ctx, f)));
 }
 
 function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
-  const { game } = ctx;
+  const { game, me } = ctx;
   const inJump = f.transit !== null;
   const here = f.system;
-  const others = inJump ? [] : game.fleetsAt(here, f.loc).filter((x) => x !== f && x.owner === f.owner);
-  const set = (order: Fleet["order"], text: string) => {
-    f.order = order;
-    ctx.say(text);
-    ctx.refresh();
-  };
+  const fogged = game.fogged(me.id);
+  const age = game.reportAge(me.id, f.id);
+  // Splitting and merging need the ships in front of you: at your capital, or
+  // anywhere when you can see your fleets as they are.
+  const inHand = !fogged || (age === 0 && game.lag(me.id, here) === 0);
+  const others = inJump || !inHand ? [] : game.fleetsAt(here, f.loc).filter((x) => x.id !== f.id && x.owner === f.owner);
+  const set = (order: Fleet["order"], text: string) => ctx.command(f, { order }, text);
+  const posted = me.orders.filter((c) => c.fleetId === f.id);
+  // Ships with no jump drive, and whether tenders can be had for them here.
+  const riders = f.ships.filter((s) => game.cls(s).jump === 0);
+  const riderTons = game.carriedTons(f);
+  const tenderHere = hiresTenders(game.world(here), game.hostile(f.owner, game.worldState(here).owner)) || f.tender === true;
+  if (riders.length === 0 || (!tenderHere && f.tender !== true)) ctx.tender = false;
+  const plan = planning(ctx, f);
   const world = game.world(here);
   const hostile = game.hostile(f.owner, game.worldState(here).owner);
   const fuelHere = f.ships.every((s) => fuelSources(world, game.cls(s), hostile).length > 0);
@@ -235,10 +276,23 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
     h(
       "div",
       { class: "row" },
-      h("input", { type: "text", value: f.name, style: "font-weight:600;flex:1", onchange: (e: Event) => { f.name = (e.target as HTMLInputElement).value.trim() || f.name; ctx.refresh(); } }),
-      h("span", { class: "muted num" }, `J${game.fleetJump(f)} · M${game.fleetThrust(f)} · range ${game.fleetRange(f)} pc`),
+      h("input", {
+        type: "text",
+        value: f.name,
+        style: "font-weight:600;flex:1",
+        onchange: (e: Event) => {
+          const name = (e.target as HTMLInputElement).value.trim() || f.name;
+          f.name = name;
+          const real = game.fleet(f.id);
+          if (real !== undefined) real.name = name;
+          ctx.refresh();
+        },
+      }),
+      h("span", { class: "muted num" }, `J${game.fleetJump(plan)} · M${game.fleetThrust(f)} · range ${game.fleetRange(plan)} pc${f.tender === true ? " · tenders" : ""}`),
     ),
     h("p", { class: "hint" }, `${whereIs(game, f)}. ${orderText(game, f)}. Strength ${Math.round(game.fleetStrength(f))}, ${tons(game.fleetTons(f))}.`),
+    fogged ? h("p", { class: age > 0 ? "hint warn" : "hint" }, age > 0 ? `This is ${f.name} as reported on day ${game.state.day - age}, ${age} days ago. Orders take about ${game.lag(me.id, f.transit?.to ?? here)} days to reach it.` : `${f.name} is within sight of your capital: its news is today's.`) : null,
+    posted.length > 0 ? h("div", {}, posted.map((c) => h("div", { class: "hint" }, `In the post: ${c.text} Sent day ${c.sent}, arriving about day ${c.arrives}.`))) : null,
     h(
       "div",
       { class: "orders" },
@@ -246,12 +300,45 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
       h(
         "div",
         { class: "row" },
-        h("button", { class: ctx.choosingJump ? "on" : "", disabled: inJump || game.fleetJump(f) === 0, title: game.fleetJump(f) === 0 ? "A ship in this fleet has no working jump drive" : "Then click a system on the map", onclick: () => { ctx.choosingJump = !ctx.choosingJump; ctx.refresh(); } }, "Jump…"),
+        h(
+          "button",
+          {
+            class: ctx.choosingJump ? "on" : "",
+            disabled: inJump || game.fleetJump(plan) === 0,
+            title: game.fleetJump(plan) === 0 ? "A ship in this fleet has no working jump drive: hire tenders for it, or split it off" : "Then click a system on the map",
+            onclick: () => {
+              ctx.choosingJump = !ctx.choosingJump;
+              ctx.refresh();
+            },
+          },
+          "Jump…",
+        ),
         h("button", { disabled: inJump || !fuelHere, title: fuelHere ? "" : "Not every ship can refuel here", onclick: () => set({ kind: "refuel" }, `${f.name} will refuel.`) }, "Refuel"),
         h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport you hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
         h("button", { disabled: f.order === null || inJump, onclick: () => set(null, `${f.name}'s orders are cancelled.`) }, "Cancel"),
       ),
-      inJump || game.fleetRange(f) >= Math.min(1, game.fleetJump(f)) || canRefuelAt(game, f, here)
+      riders.length === 0 || inJump
+        ? null
+        : h(
+            "label",
+            { class: "row", style: "color:var(--text);font-size:12px;flex-wrap:nowrap;align-items:flex-start" },
+            h("input", {
+              type: "checkbox",
+              checked: ctx.tender,
+              disabled: !tenderHere,
+              onchange: (e: Event) => {
+                ctx.tender = (e.target as HTMLInputElement).checked;
+                ctx.refresh();
+              },
+            }),
+            h(
+              "span",
+              {},
+              `Hire jump tenders for the ${riders.length === 1 ? "ship" : `${riders.length} ships`} without jump drives (${tons(riderTons)}). Tenders jump-${TENDER_JUMP}; ${mcr(tenderCost(riderTons, 1), 2)} a jump of one parsec, ${mcr(tenderCost(riderTons, 2), 2)} for two, ${mcr(tenderCost(riderTons, 3), 2)} for three.`,
+              tenderHere ? "" : h("span", { class: "warn" }, " Only a class A or B starport that will deal with you has them."),
+            ),
+          ),
+      inJump || game.fleetRange(plan) >= Math.min(1, game.fleetJump(plan)) || canRefuelAt(game, plan, here)
         ? null
         : h("p", { class: "warn" }, "Not enough fuel to jump, and nowhere here to refuel."),
     ),
@@ -261,14 +348,39 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
     h(
       "div",
       { class: "row", style: "margin-top:8px" },
-      h("button", { class: "small", disabled: inJump || ctx.ships.size === 0 || ctx.ships.size === f.ships.length, onclick: () => { const made = game.splitFleet(f, [...ctx.ships]); if (made !== null) { ctx.say(`${made.name} formed with ${made.ships.length} ships.`); ctx.selectFleet(made.id); } } }, "Split ticked into new fleet"),
+      h(
+        "button",
+        {
+          class: "small",
+          disabled: inJump || !inHand || ctx.ships.size === 0 || ctx.ships.size === f.ships.length,
+          title: inHand ? "" : "Only at your capital, under full fog of war",
+          onclick: () => {
+            const real = game.fleet(f.id);
+            const made = real === undefined ? null : game.splitFleet(real, [...ctx.ships]);
+            if (made !== null && real !== undefined) {
+              if (fogged) {
+                me.reports[real.id] = game.reportOf(real);
+                me.reports[made.id] = game.reportOf(made);
+              }
+              ctx.say(`${made.name} formed with ${made.ships.length} ships.`);
+              ctx.selectFleet(made.id);
+            }
+          },
+        },
+        "Split ticked into new fleet",
+      ),
       others.length > 0
         ? h(
             "select",
             {
               onchange: (e: Event) => {
                 const other = game.fleet((e.target as HTMLSelectElement).value);
-                if (other !== undefined && game.mergeFleets(f, other)) {
+                const real = game.fleet(f.id);
+                if (other !== undefined && real !== undefined && game.mergeFleets(real, other)) {
+                  if (fogged) {
+                    delete me.reports[other.id];
+                    me.reports[real.id] = game.reportOf(real);
+                  }
                   ctx.say(`${other.name} joins ${f.name}.`);
                   ctx.refresh();
                 }
@@ -285,8 +397,11 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
 function standingOrders(ctx: Ctx, f: Fleet): HTMLElement {
   const o = f.standing;
   const change = (patch: Partial<StandingOrders>) => {
-    f.standing = { ...f.standing, ...patch };
-    ctx.refresh();
+    const standing = { ...f.standing, ...patch };
+    // Shown at once on the fleet as the player sees it, whether or not it has
+    // reached the fleet itself yet.
+    f.standing = standing;
+    ctx.command(f, { standing }, `New standing orders for ${f.name}.`);
   };
   const preset = Object.entries(STANDING_PRESETS).find(([, p]) => JSON.stringify(p) === JSON.stringify(o))?.[0] ?? "";
   return h(
@@ -531,6 +646,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Fleet"), h("dd", {}, `${game.fleetsOf(me.id).reduce((n, f) => n + f.ships.length, 0)} ships in ${game.fleetsOf(me.id).length} fleets`),
       h("dt", {}, "To win"), h("dd", {}, `Hold ${need} of the ${populated} peopled worlds`),
     ),
+    fogSettings(ctx),
     h("h2", {}, "Standings"),
     h(
       "table",
@@ -558,6 +674,57 @@ export function empirePane(ctx: Ctx): HTMLElement {
         );
       }),
     ),
+  );
+}
+
+/** How fast news travels, and full fog of war: changeable at any time. */
+function fogSettings(ctx: Ctx): HTMLElement {
+  const { game } = ctx;
+  const o = game.state.options;
+  return h(
+    "div",
+    {},
+    h("h2", {}, "Fog of war"),
+    h(
+      "div",
+      { class: "standing" },
+      h("label", {}, "News travels"),
+      h(
+        "select",
+        {
+          onchange: (e: Event) => {
+            game.setFog(Number((e.target as HTMLSelectElement).value), o.fullFog);
+            ctx.say(o.newsLag === 0 ? "News now arrives instantly." : `News now travels a week per jump-${o.newsLag}.`);
+            ctx.refresh();
+          },
+        },
+        (
+          [
+            [0, "Instantly"],
+            [4, "By express boat: a week per jump-4"],
+            [2, "By courier: a week per jump-2"],
+            [1, "By trader: a week per parsec"],
+          ] as const
+        ).map(([v, label]) => h("option", { value: v, selected: o.newsLag === v }, label)),
+      ),
+      h("label", {}, "Full fog"),
+      h(
+        "label",
+        { class: "row" },
+        h("input", {
+          type: "checkbox",
+          checked: o.fullFog,
+          disabled: o.newsLag === 0,
+          onchange: (e: Event) => {
+            game.setFog(o.newsLag, (e.target as HTMLInputElement).checked);
+            ctx.say(o.fullFog ? "Full fog: your own fleets now report by courier, and orders go the same way." : "Full fog off: you see your own fleets as they are.");
+            ctx.refresh();
+          },
+        }),
+        "Your own fleets report by courier too, and your orders take as long to reach them",
+      ),
+    ),
+    h("p", { class: "hint" }, "These apply to every player, and can be changed at any time."),
   );
 }
 

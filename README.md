@@ -42,7 +42,8 @@ least four worlds becomes a faction; smaller Mains and lone worlds are
 independent and there to be taken. Players pick their Mains and share one
 screen, taking turns. Each faction starts with credits in proportion to what
 its worlds are worth, or with equal shares if you choose, and spends them on a
-first fleet from the whole catalogue.
+first fleet from the whole catalogue. A slider multiplies every opening
+treasury by up to five without touching weekly income.
 
 **A day.** Give orders, then end the day. Everybody's orders happen at once.
 In a day a fleet can reach anywhere in its system, whether the main world's
@@ -110,10 +111,16 @@ None builds above its world's tech level. Independent class A yards build for
 anybody, at a markup.
 
 **News travels by ship.** By default a report reaches your capital a week for
-every jump an express boat would need to carry it. This covers sightings,
-battles, and who holds which world. Your fleets on the spot act on their
-standing orders at once, so it is only your picture of the war that runs
-late. You can turn this off, or make it slower, when setting up.
+every jump an express boat would need to carry it. This covers enemy fleets
+arriving and leaving, other factions' battles, and who holds which world. News
+of your own fleets comes at once, and they act on their standing orders the
+moment they meet the enemy. Turn on **full fog of war** and your own fleets
+report by courier too, while your orders take as long to reach them. Both can
+be changed at any time during a game.
+
+**Jump tenders.** Ships with no jump drive can be carried to war by jump tenders
+hired at a class A or B starport, for Traveller's freight rates per ton per
+jump.
 
 **Winning.** Hold half the peopled worlds in play, or be the last faction
 standing. You can change the share at setup.
@@ -140,8 +147,6 @@ design engine and reports anything that breaks the rules.
 
 - **Admirals.** A commander for every fleet, with Tactics, morale and other
   skills and traits that change how it fights and how soon it breaks.
-- **Fog of war all the way.** Orders take time to reach distant fleets, as
-  news already takes time to come back.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
   carrier's own guns do.
 - A cleverer computer opponent. It has time to think. A turn is a day, and

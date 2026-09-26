@@ -16,9 +16,11 @@ import type { Faction, GameOptions, GameState, Personality } from "./types";
 export const DEFAULT_OPTIONS: GameOptions = {
   victoryShare: 0.5,
   startingCredits: "wealth",
+  startingWealth: 1,
   buildSpeed: 0.25,
   factionMinWorlds: 4,
   newsLag: 4,
+  fullFog: false,
 };
 
 /** The worlds of a sector that are inside the subsectors in play. */
@@ -43,8 +45,8 @@ export function mainIncome(main: Main, worlds: ReadonlyMap<string, World>): numb
  * equal shares everybody starts with the same.
  */
 export function startingCredits(main: Main, worlds: ReadonlyMap<string, World>, options: GameOptions): number {
-  if (options.startingCredits === "equal") return 600;
-  return Math.round(250 + 10 * mainIncome(main, worlds));
+  const base = options.startingCredits === "equal" ? 600 : 250 + 10 * mainIncome(main, worlds);
+  return Math.round(base * (options.startingWealth ?? 1));
 }
 
 export interface PlayerChoice {
@@ -94,6 +96,8 @@ export function createGame(spec: NewGame): Game {
       news: {},
       known: {},
       inbox: [],
+      reports: {},
+      orders: [],
       ready: false,
       waiting: false,
     });

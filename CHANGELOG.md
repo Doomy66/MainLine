@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.0
+
+- Enemy fleets are reported arriving, with the day they came, and reported
+  gone, with the days they were there.
+- Full fog of war, on or off at any time: your own fleets report by courier,
+  and your orders take as long to reach them. Off, news of your own fleets'
+  battles and arrivals reaches you at once.
+- How fast news travels can be changed mid-game.
+- Jump tenders for hire at class A and B starports, to carry ships with no jump
+  drive.
+- A starting wealth slider at setup, one to five times the opening treasury.
+- A fleet on a route no longer besieges the worlds it stops at to refuel, which
+  had been throwing fleets into fights with fortresses.
+
 ## 0.1.0
 
 The first playable game.

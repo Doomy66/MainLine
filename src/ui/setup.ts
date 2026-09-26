@@ -377,6 +377,19 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           h("option", { value: "wealth", selected: options.startingCredits === "wealth" }, "By the Main's wealth"),
           h("option", { value: "equal", selected: options.startingCredits === "equal" }, "Equal: MCr600 each"),
         ),
+        h("label", {}, `Starting wealth: ×${options.startingWealth}`),
+        h("input", {
+          type: "range",
+          min: 1,
+          max: 5,
+          step: 0.5,
+          value: options.startingWealth,
+          oninput: (e: Event) => {
+            options.startingWealth = Number((e.target as HTMLInputElement).value);
+            ((e.target as HTMLElement).previousElementSibling as HTMLElement).textContent = `Starting wealth: ×${options.startingWealth}`;
+          },
+          onchange: () => render(),
+        }),
         h("label", {}, "News travels"),
         h(
           "select",
@@ -391,6 +404,19 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             [2, "By courier: a week per jump-2"],
             [1, "By trader: a week per parsec"],
           ].map(([v, label]) => h("option", { value: v as number, selected: options.newsLag === v }, label as string)),
+        ),
+        h("label", {}, "Full fog of war"),
+        h(
+          "label",
+          { class: "row", style: "color:var(--text)" },
+          h("input", {
+            type: "checkbox",
+            checked: options.fullFog,
+            onchange: (e: Event) => {
+              options.fullFog = (e.target as HTMLInputElement).checked;
+            },
+          }),
+          "Your own fleets report by courier too",
         ),
         h("label", {}, "Shipyards"),
         h(

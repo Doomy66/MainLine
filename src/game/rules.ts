@@ -28,6 +28,28 @@ export const UNREFINED_FUEL_MCR = 0.0001;
 export const MISSILE_MCR = 0.25 / 12;
 export const TORPEDO_MCR = 0.15 / 3;
 
+/**
+ * Jump tenders: ships hired to carry craft with no jump drive of their own
+ * through jump, as a tender carries battle riders. Only a class A or B starport
+ * has them for hire, and they are rated jump-3.
+ */
+export const TENDER_JUMP = 3;
+
+/**
+ * What a tender charges, MCr a ton carried for one jump of so many parsecs:
+ * Traveller's freight rates, Cr1000 a ton for a parsec rising to Cr32000 for six.
+ */
+const FREIGHT_MCR_PER_TON = [0, 0.001, 0.0016, 0.0026, 0.0044, 0.0085, 0.032];
+
+export function tenderCost(tons: number, parsecs: number): number {
+  return tons * (FREIGHT_MCR_PER_TON[Math.max(0, Math.min(6, Math.ceil(parsecs)))] ?? 0.032);
+}
+
+/** Whether tenders can be hired at a world: a class A or B port that will deal with you. */
+export function hiresTenders(world: World, hostileOwner: boolean): boolean {
+  return !hostileOwner && (world.uwp.starport === "A" || world.uwp.starport === "B");
+}
+
 /** Combat rounds fought in a day of battle. */
 export const ROUNDS_PER_DAY = 3;
 

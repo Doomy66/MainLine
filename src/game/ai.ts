@@ -103,7 +103,7 @@ function knownThreat(game: Game, faction: Faction, at: string, sees: ReadonlySet
       .reduce((s, f) => s + game.fleetStrength(f), 0);
   }
   const seen = Object.values(faction.intel)
-    .filter((s) => s.system === at && game.state.day - s.day < 21)
+    .filter((s) => s.system === at && s.left === undefined && game.state.day - s.day < 21)
     .reduce((t, s) => t + s.strength, 0);
   // Nobody leaves a world of theirs unwatched: expect something in orbit of an
   // enemy world, and a good deal more at an enemy capital.

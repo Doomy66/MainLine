@@ -17,7 +17,7 @@
 
 import { distanceBetween } from "../sector/hex";
 import { planAi } from "./ai";
-import { battleAt } from "./combat";
+import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
 import { round } from "./game";
 import { canRefuelAt } from "./nav";
@@ -36,10 +36,12 @@ import {
   reloads,
   repairRate,
   ROUGH_JUMP_CHANCE_ON_2D,
+  hiresTenders,
+  tenderCost,
   TORPEDO_MCR,
   type FuelSource,
 } from "./rules";
-import type { Fleet, Loc, Order } from "./types";
+import type { Faction, Fleet, Loc, Order, Sighting } from "./types";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
 
@@ -55,7 +57,7 @@ export function locExists(game: Game, system: string, loc: Loc): boolean {
 export function refuelLoc(game: Game, fleet: Fleet): Loc | null {
   const world = game.world(fleet.system);
   const hostile = game.hostile(fleet.owner, game.worldState(fleet.system).owner);
-  const perShip = fleet.ships.map((s) => fuelSources(world, game.cls(s), hostile));
+  const perShip = fleet.ships.filter((s) => !game.carried(fleet, s)).map((s) => fuelSources(world, game.cls(s), hostile));
   if (perShip.some((sources) => sources.length === 0)) return null;
   // One place every ship can use, preferring the best of what the first can.
   for (const loc of ["main", "gg"] as Loc[]) {
@@ -70,7 +72,7 @@ export function refuelLoc(game: Game, fleet: Fleet): Loc | null {
 }
 
 function notice(game: Game, owner: string, text: string, at?: string, wake = true): void {
-  game.log({ to: [owner], kind: "info", text, at, wake });
+  game.log({ to: [owner], kind: "info", text, at, wake, firsthand: [owner] });
 }
 
 /** A fleet on a jump order: go if it can, refuel first if that is all it needs. */
@@ -82,13 +84,35 @@ function stepJump(game: Game, fleet: Fleet, order: Extract<Order, { kind: "jump"
   }
   const check = game.canJump(fleet, next);
   if (check.ok) {
+    if (order.tender === true && game.carriedTons(fleet) > 0) {
+      const world = game.world(fleet.system);
+      if (fleet.tender !== true && !hiresTenders(world, game.hostile(fleet.owner, game.worldState(fleet.system).owner))) {
+        notice(game, fleet.owner, `${fleet.name} cannot hire jump tenders at ${world.name}: only a class A or B starport has them.`, fleet.system);
+        fleet.order = null;
+        return;
+      }
+      const parsecs = distanceBetween(fleet.system, next);
+      const cost = tenderCost(game.carriedTons(fleet), parsecs);
+      const faction = game.faction(fleet.owner);
+      if (cost > faction.credits) {
+        notice(game, fleet.owner, `${fleet.name} cannot pay the jump tenders: MCr${round(cost, 2)} for the jump, and the treasury has MCr${round(faction.credits, 2)}.`, fleet.system);
+        fleet.order = null;
+        fleet.tender = false;
+        return;
+      }
+      faction.credits -= cost;
+      if (fleet.tender !== true) {
+        notice(game, fleet.owner, `${fleet.name} hires jump tenders at ${world.name} for its ships without jump drives.`, fleet.system, false);
+      }
+      fleet.tender = true;
+    }
     depart(game, fleet, next);
     order.route.shift();
     return;
   }
   const parsecs = distanceBetween(fleet.system, next);
   const driveOk = parsecs <= game.fleetJump(fleet);
-  const tanksOk = fleet.ships.every((s) => game.cls(s).fuelCapacity + 1e-9 >= jumpFuel(game.cls(s).tons, parsecs));
+  const tanksOk = fleet.ships.every((s) => game.carried(fleet, s) || game.cls(s).fuelCapacity + 1e-9 >= jumpFuel(game.cls(s).tons, parsecs));
   if (driveOk && tanksOk && canRefuelAt(game, fleet, fleet.system)) {
     const loc = refuelLoc(game, fleet);
     if (loc !== null) {
@@ -103,7 +127,9 @@ function stepJump(game: Game, fleet: Fleet, order: Extract<Order, { kind: "jump"
 
 function depart(game: Game, fleet: Fleet, to: string): void {
   const parsecs = distanceBetween(fleet.system, to);
-  for (const s of fleet.ships) s.fuel = Math.max(0, s.fuel - jumpFuel(game.cls(s).tons, parsecs));
+  for (const s of fleet.ships) {
+    if (!game.carried(fleet, s)) s.fuel = Math.max(0, s.fuel - jumpFuel(game.cls(s).tons, parsecs));
+  }
   let days = JUMP_DAYS;
   const rough = fleet.ships.some((s) => s.unrefined && !game.cls(s).fuelProcessor);
   if (rough && game.rng.twoD() <= ROUGH_JUMP_CHANCE_ON_2D) {
@@ -205,6 +231,7 @@ function capture(game: Game, at: string, by: string): void {
     text: `${world.name} (${world.uwpText}), ${lost}, submits to ${taker.name}.`,
     at,
     wake: true,
+    firsthand: prev === null ? [by] : [by, prev],
   });
   if (prev !== null) {
     const loser = game.faction(prev);
@@ -232,7 +259,7 @@ function sieges(game: Game): void {
     const max = defenceMax(world);
     const here = game.fleetsAt(world.at, "main");
     const besiegers = here.filter(
-      (f) => f.standing.besiege && f.owner !== ws.owner && game.fleetArmed(f),
+      (f) => f.standing.besiege && besieging(f) && f.owner !== ws.owner && game.fleetArmed(f),
     );
     const defended = here.some((f) => f.owner === ws.owner && game.fleetArmed(f));
     if (besiegers.length === 0 || defended) {
@@ -267,6 +294,7 @@ function sieges(game: Game): void {
             : `${world.name} will submit to ${game.faction(by).name} tomorrow unless the siege is broken.`,
         at: world.at,
         wake: true,
+        firsthand: to,
       });
     }
   }
@@ -293,6 +321,7 @@ function yards(game: Game): void {
         text: `The ${game.cls(ship).name} ${ship.name} is commissioned at ${game.world(b.at).name}.`,
         at: b.at,
         wake: true,
+        firsthand: [faction.id],
       });
     }
   }
@@ -313,60 +342,142 @@ function economy(game: Game): void {
   }
 }
 
-/** What every faction sees, and what it remembers of what it saw. */
-function intel(game: Game): void {
+/** A fleet as another faction sees it today. */
+function sightingOf(game: Game, fleet: Fleet, before: Sighting | undefined): Sighting {
   const day = game.state.day;
-  const live = new Set(game.state.fleets.map((f) => f.id));
+  const stayed = before !== undefined && before.system === fleet.system && before.left === undefined;
+  return {
+    fleetId: fleet.id,
+    owner: fleet.owner,
+    system: fleet.system,
+    loc: fleet.loc,
+    day,
+    since: stayed ? before.since : day,
+    ships: fleet.ships.length,
+    tons: game.fleetTons(fleet),
+    strength: Math.round(game.fleetStrength(fleet)),
+  };
+}
+
+/** Send a sighting home: at once where the capital can see it, by courier otherwise. */
+function sendHome(game: Game, faction: Faction, sighting: Sighting): void {
+  const lag = game.lag(faction.id, sighting.system);
+  if (lag === 0) faction.news[sighting.fleetId] = sighting;
+  else faction.inbox.push({ arrives: game.state.day + lag, kind: "sighting", sighting });
+}
+
+/** What every faction sees, what it remembers of what it saw, and what it hears. */
+function intel(game: Game, lost: ReadonlyMap<string, { owner: string; system: string }>): void {
+  const day = game.state.day;
+  const live = new Map(game.state.fleets.map((f) => [f.id, f]));
   for (const faction of game.state.factions) {
     if (!faction.alive) continue;
     // The couriers come in.
     const arrived = faction.inbox.filter((d) => d.arrives <= day);
     faction.inbox = faction.inbox.filter((d) => d.arrives > day);
     for (const d of arrived) {
-      if (d.kind === "owner") faction.known[d.at] = d.owner;
-      else if ((faction.news[d.sighting.fleetId]?.day ?? -1) < d.sighting.day) faction.news[d.sighting.fleetId] = d.sighting;
+      switch (d.kind) {
+        case "owner":
+          faction.known[d.at] = d.owner;
+          break;
+        case "sighting":
+          if ((faction.news[d.sighting.fleetId]?.day ?? -1) <= d.sighting.day) faction.news[d.sighting.fleetId] = d.sighting;
+          break;
+        case "fleet":
+          if ((faction.reports[d.report.fleet.id]?.day ?? -1) <= d.report.day) faction.reports[d.report.fleet.id] = d.report;
+          break;
+        case "fleetLost":
+          delete faction.reports[d.fleetId];
+          break;
+      }
     }
+
     const sees = visibleSystems(game, faction.id);
     const owned = new Set(game.ownedWorlds(faction.id).map((w) => w.at));
     for (const fleet of game.state.fleets) {
       if (fleet.owner === faction.id || fleet.transit !== null || !sees.has(fleet.system)) continue;
       const before = faction.intel[fleet.id];
-      const sighting = {
-        fleetId: fleet.id,
-        owner: fleet.owner,
-        system: fleet.system,
-        loc: fleet.loc,
-        day,
-        ships: fleet.ships.length,
-        tons: game.fleetTons(fleet),
-        strength: Math.round(game.fleetStrength(fleet)),
-      };
+      const sighting = sightingOf(game, fleet, before);
       faction.intel[fleet.id] = sighting;
-      const lag = game.lag(faction.id, fleet.system);
-      if (lag === 0) faction.news[fleet.id] = sighting;
-      else if (before === undefined || before.system !== fleet.system || day % 7 === 0) {
-        // A courier goes when something changes, and weekly besides.
-        faction.inbox.push({ arrives: day + lag, kind: "sighting", sighting });
+      const arrivedHere = sighting.since === day;
+      // A courier goes when something changes, and weekly besides.
+      if (arrivedHere || before?.loc !== fleet.loc || day % 7 === 0 || game.lag(faction.id, fleet.system) === 0) {
+        sendHome(game, faction, sighting);
       }
-      const fresh = before === undefined || before.system !== fleet.system || before.day < day - 1;
-      if (fresh && owned.has(fleet.system)) {
+      if (arrivedHere && owned.has(fleet.system)) {
         game.log({
           to: [faction.id],
           kind: "sighting",
-          text: `${game.faction(fleet.owner).name} ships sighted at ${game.world(fleet.system).name}: ${fleet.ships.length} ships, ${Math.round(game.fleetTons(fleet)).toLocaleString()} tons, ${LOC_NAMES[fleet.loc].toLowerCase()}.`,
+          text: `${game.faction(fleet.owner).name} ships arrive at ${game.world(fleet.system).name}: ${fleet.ships.length} ships, ${Math.round(game.fleetTons(fleet)).toLocaleString()} tons, at the ${LOC_NAMES[fleet.loc].toLowerCase()}.`,
           at: fleet.system,
           wake: true,
+          firsthand: [faction.id],
         });
       }
     }
+
+    // Fleets that were here and are not now: gone, as far as anyone can tell.
     for (const [id, s] of Object.entries(faction.intel)) {
-      const gone = !live.has(id) && sees.has(s.system);
-      if (gone || day - s.day > 60) delete faction.intel[id];
-      else if (sees.has(s.system) && s.day < day) delete faction.intel[id];
+      if (s.left !== undefined) {
+        if (day - s.left > 30) delete faction.intel[id];
+        continue;
+      }
+      const now = live.get(id);
+      const stillHere = now !== undefined && now.transit === null && now.system === s.system;
+      if (sees.has(s.system) && !stillHere && s.day < day) {
+        const gone: Sighting = { ...s, left: day };
+        faction.intel[id] = gone;
+        sendHome(game, faction, gone);
+        if (owned.has(s.system)) {
+          game.log({
+            to: [faction.id],
+            kind: "sighting",
+            text: `The ${game.faction(s.owner).name} ships at ${game.world(s.system).name} have gone: ${s.ships} ships, there from day ${s.since} and last seen on day ${s.day}.`,
+            at: s.system,
+            firsthand: [faction.id],
+          });
+        }
+      } else if (day - s.day > 60) {
+        delete faction.intel[id];
+      }
     }
     for (const [id, s] of Object.entries(faction.news)) {
-      const here = game.lag(faction.id, s.system) === 0 && sees.has(s.system);
-      if (day - s.day > 90 || (here && s.day < day)) delete faction.news[id];
+      if (day - (s.left ?? s.day) > 60) delete faction.news[id];
+    }
+
+    // Under full fog, a player's own fleets report home by courier.
+    if (game.fogged(faction.id)) {
+      for (const fleet of game.fleetsOf(faction.id)) {
+        let from: string | null = null;
+        if (fleet.transit === null) from = fleet.system;
+        else if (fleet.transit.depart === day) from = fleet.transit.from;
+        if (from === null) continue;
+        const lag = game.lag(faction.id, from);
+        const report = game.reportOf(fleet);
+        if (lag === 0) faction.reports[fleet.id] = report;
+        else faction.inbox.push({ arrives: day + lag, kind: "fleet", report });
+      }
+      for (const [id, gone] of lost) {
+        if (gone.owner !== faction.id) continue;
+        const lag = game.lag(faction.id, gone.system);
+        if (lag === 0) delete faction.reports[id];
+        else faction.inbox.push({ arrives: day + lag, kind: "fleetLost", fleetId: id });
+      }
+    }
+  }
+}
+
+/** Orders sent by courier that reach their fleets today. */
+function deliverOrders(game: Game): void {
+  const day = game.state.day;
+  for (const faction of game.state.factions) {
+    if (faction.orders.length === 0) continue;
+    const due = faction.orders.filter((c) => c.arrives <= day);
+    faction.orders = faction.orders.filter((c) => c.arrives > day);
+    for (const c of due) {
+      const fleet = game.fleet(c.fleetId);
+      // A fleet that is no more gets no orders; the capital will hear why in time.
+      if (fleet !== undefined) game.applyCommand(fleet, c);
     }
   }
 }
@@ -436,6 +547,7 @@ export function advanceDay(game: Game): void {
   s.day++;
   const day = s.day;
 
+  deliverOrders(game);
   for (const f of s.factions) if (!f.human && f.alive) planAi(game, f);
 
   const refuelling = new Set<Fleet>();
@@ -481,11 +593,16 @@ export function advanceDay(game: Game): void {
     fleet.transit = null;
     const done = fleet.order?.kind !== "jump" || fleet.order.route.length === 0;
     if (done && fleet.order?.kind === "jump") fleet.order = null;
+    if (done && fleet.tender === true) {
+      fleet.tender = false;
+      notice(game, fleet.owner, `The jump tenders carrying ${fleet.name}'s ships set them down at ${game.world(fleet.system).name} and leave.`, fleet.system, false);
+    }
     notice(game, fleet.owner, `${fleet.name} arrives at ${game.world(fleet.system).name}${done ? "" : " and prepares for the next jump"}.`, fleet.system, done);
   }
 
   intercepts(game);
 
+  const present = new Map(s.fleets.map((f) => [f.id, { owner: f.owner, system: f.system }]));
   const places = new Set<string>();
   for (const fleet of s.fleets) if (fleet.transit === null && fleet.ships.length > 0) places.add(`${fleet.system}|${fleet.loc}`);
   const battled = new Set<string>();
@@ -494,9 +611,12 @@ export function advanceDay(game: Game): void {
     const report = battleAt(game, system, loc);
     if (report === null) continue;
     battled.add(place);
-    game.log({ to: report.factions, kind: "combat", text: report.headline, at: system, detail: report.lines, wake: true });
+    game.log({ to: report.factions, kind: "combat", text: report.headline, at: system, detail: report.lines, wake: true, firsthand: report.factions });
   }
   game.removeEmptyFleets();
+  const lost = new Map<string, { owner: string; system: string }>();
+  const survivors = new Set(s.fleets.map((f) => f.id));
+  for (const [id, was] of present) if (!survivors.has(id)) lost.set(id, was);
 
   for (const fleet of s.fleets) {
     if (fleet.transit !== null || battled.has(`${fleet.system}|${fleet.loc}`)) continue;
@@ -507,7 +627,7 @@ export function advanceDay(game: Game): void {
   sieges(game);
   yards(game);
   if (isWeekEnd(day)) economy(game);
-  intel(game);
+  intel(game, lost);
   endings(game);
   for (const f of s.factions) f.ready = false;
 }

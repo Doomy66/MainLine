@@ -90,8 +90,11 @@ export interface Ship {
 
 export type Order =
   | { readonly kind: "move"; readonly to: Loc }
-  /** Hexes still to jump to, in order. The first is the next jump. */
-  | { readonly kind: "jump"; readonly route: string[] }
+  /**
+   * Hexes still to jump to, in order. The first is the next jump. `tender`
+   * hires jump tenders to carry the fleet's ships that have no jump drive.
+   */
+  | { readonly kind: "jump"; readonly route: string[]; readonly tender?: boolean }
   | { readonly kind: "refuel" }
   | { readonly kind: "repair" };
 
@@ -113,6 +116,8 @@ export interface Fleet {
   standing: StandingOrders;
   order: Order | null;
   transit: Transit | null;
+  /** Jump tenders hired and alongside, carrying the ships with no jump drive. */
+  tender?: boolean;
 }
 
 export interface Build {
@@ -128,7 +133,12 @@ export interface Sighting {
   readonly owner: string;
   readonly system: string;
   readonly loc: Loc;
+  /** The last day it was seen. */
   readonly day: number;
+  /** The day it was first seen at this system: when it arrived, as far as anyone knows. */
+  readonly since: number;
+  /** Set once it has been seen to be gone: the day its absence was noticed. */
+  readonly left?: number;
   readonly ships: number;
   readonly tons: number;
   readonly strength: number;
@@ -137,7 +147,33 @@ export interface Sighting {
 /** A piece of news on its way to a faction's capital. */
 export type Dispatch =
   | { readonly arrives: number; readonly kind: "sighting"; readonly sighting: Sighting }
-  | { readonly arrives: number; readonly kind: "owner"; readonly at: string; readonly owner: string | null };
+  | { readonly arrives: number; readonly kind: "owner"; readonly at: string; readonly owner: string | null }
+  | { readonly arrives: number; readonly kind: "fleet"; readonly report: FleetReport }
+  | { readonly arrives: number; readonly kind: "fleetLost"; readonly fleetId: string };
+
+/**
+ * What a capital last heard of one of its own fleets, under full fog of war: the
+ * fleet as it was on the day the report was sent.
+ */
+export interface FleetReport {
+  readonly day: number;
+  readonly fleet: Fleet;
+}
+
+/**
+ * An order on its way from a capital to a fleet, under full fog of war. Only
+ * what is set changes when it arrives.
+ */
+export interface Command {
+  readonly fleetId: string;
+  readonly sent: number;
+  readonly arrives: number;
+  /** A new order; null cancels. Left out, the order stands. */
+  readonly order?: Order | null;
+  readonly standing?: StandingOrders;
+  /** What it says, for the list of orders in the post. */
+  readonly text: string;
+}
 
 export type Personality = "aggressive" | "cautious" | "expansionist";
 
@@ -165,6 +201,10 @@ export interface Faction {
   known: Record<string, string | null>;
   /** News on its way to the capital. */
   inbox: Dispatch[];
+  /** Under full fog of war: what the capital last heard of each of its own fleets. */
+  reports: Record<string, FleetReport>;
+  /** Under full fog of war: orders sent and not yet arrived. */
+  orders: Command[];
   /** A human who has finished their orders for the day. */
   ready: boolean;
   /** A human who wants the days to run until something happens. */
@@ -201,6 +241,8 @@ export interface GameOptions {
   /** Share of the populated worlds in play that wins the game. */
   victoryShare: number;
   startingCredits: "wealth" | "equal";
+  /** Multiplies the starting treasury, one to five. Weekly income is untouched. */
+  startingWealth: number;
   /** Multiplies the sheet's construction time. */
   buildSpeed: number;
   /** Mains shorter than this are left as independent worlds. */
@@ -211,6 +253,12 @@ export interface GameOptions {
    * standing orders at once; it is the capital that learns late.
    */
   newsLag: number;
+  /**
+   * Full fog of war: a player's own fleets report by courier too, and orders take
+   * as long to reach them as their news takes to come back. Players only; the
+   * computer's admirals always know where their fleets are.
+   */
+  fullFog: boolean;
 }
 
 export interface GameState {

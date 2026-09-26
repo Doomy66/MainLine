@@ -9,8 +9,9 @@ import type { ShipClass } from "../catalogue/shipclass";
 import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
 import { Rng } from "./rng";
-import { jumpFuel } from "./rules";
-import type { Crits, Faction, Fleet, GameState, LogEntry, Loc, Ship, WorldState } from "./types";
+import { routeTo } from "./nav";
+import { jumpFuel, TENDER_JUMP } from "./rules";
+import type { Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { shipName } from "./names";
 
@@ -25,11 +26,16 @@ export class Game {
 
   constructor(readonly state: GameState) {
     // Games saved before news took time to travel.
-    const opts = state.options as { newsLag?: number };
+    const opts = state.options as { newsLag?: number; fullFog?: boolean };
     if (opts.newsLag === undefined) opts.newsLag = 0;
+    if (opts.fullFog === undefined) opts.fullFog = false;
+    const more = state.options as { startingWealth?: number };
+    if (more.startingWealth === undefined) more.startingWealth = 1;
     for (const f of state.factions) {
       f.news ??= { ...f.intel };
       f.inbox ??= [];
+      f.reports ??= {};
+      f.orders ??= [];
       f.known ??= Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
     }
     this.catalogue = new Catalogue(new Map(Object.entries(state.designs)));
@@ -132,6 +138,21 @@ export class Game {
     return ship.crits.jump ? 0 : this.cls(ship).jump;
   }
 
+  /** Whether a fleet has tenders with it, or has orders to hire them. */
+  tendered(fleet: Fleet): boolean {
+    return fleet.tender === true || (fleet.order?.kind === "jump" && fleet.order.tender === true);
+  }
+
+  /** A ship the tenders carry: one with no jump drive, in a tendered fleet. */
+  carried(fleet: Fleet, ship: Ship): boolean {
+    return this.cls(ship).jump === 0 && this.tendered(fleet);
+  }
+
+  /** Tons the tenders carry. */
+  carriedTons(fleet: Fleet): number {
+    return fleet.ships.filter((s) => this.cls(s).jump === 0).reduce((t, s) => t + this.cls(s).tons, 0);
+  }
+
   hullLeft(ship: Ship): number {
     return Math.max(0, this.cls(ship).hull - ship.damage);
   }
@@ -146,7 +167,7 @@ export class Game {
   /** And jumps as far as its shortest-legged ship. */
   fleetJump(fleet: Fleet): number {
     if (fleet.ships.length === 0) return 0;
-    return fleet.ships.reduce((low, s) => Math.min(low, this.shipJump(s)), Infinity);
+    return fleet.ships.reduce((low, s) => Math.min(low, this.carried(fleet, s) ? TENDER_JUMP : this.shipJump(s)), Infinity);
   }
 
   fleetTons(fleet: Fleet): number {
@@ -180,6 +201,7 @@ export class Game {
   fleetRange(fleet: Fleet): number {
     let range = this.fleetJump(fleet);
     for (const s of fleet.ships) {
+      if (this.carried(fleet, s)) continue;
       const c = this.cls(s);
       range = Math.min(range, Math.floor((s.fuel + 1e-9) / jumpFuel(c.tons, 1)));
     }
@@ -198,11 +220,12 @@ export class Game {
       const lame = fleet.ships.find((s) => this.shipJump(s) === 0)!;
       return {
         ok: false,
-        reason: this.cls(lame).jump === 0 ? `${lame.name} has no jump drive` : `${lame.name}'s jump drive is damaged`,
+        reason: this.cls(lame).jump === 0 ? `${lame.name} has no jump drive; hire jump tenders at a class A or B starport` : `${lame.name}'s jump drive is damaged`,
       };
     }
     if (parsecs > drive) return { ok: false, reason: `${parsecs} parsecs; the fleet jumps ${drive}` };
     for (const s of fleet.ships) {
+      if (this.carried(fleet, s)) continue;
       const need = jumpFuel(this.cls(s).tons, parsecs);
       if (s.fuel + 1e-9 < need) {
         return { ok: false, reason: `${s.name} has ${round(s.fuel)} of the ${round(need)} tons of fuel it needs` };
@@ -301,16 +324,137 @@ export class Game {
     return 7 * Math.ceil(distanceBetween(at, capital) / rating);
   }
 
-  /** News of something at a place, reaching each faction when a courier would bring it. */
-  log(entry: Omit<LogEntry, "day" | "happened">): void {
+  /**
+   * News of something at a place, reaching each faction when a courier would
+   * bring it. `firsthand` are the factions whose own ships or worlds were
+   * there: they know at once, unless full fog of war says even that has to
+   * come by courier.
+   */
+  log(entry: Omit<LogEntry, "day" | "happened"> & { readonly firsthand?: readonly string[] }): void {
+    const { firsthand = [], ...rest } = entry;
     const today = this.state.day;
     const byLag = new Map<number, string[]>();
     for (const id of entry.to) {
-      const lag = entry.at === undefined ? 0 : this.lag(id, entry.at);
+      const direct = firsthand.includes(id) && !this.fogged(id);
+      const lag = entry.at === undefined || direct ? 0 : this.lag(id, entry.at);
       byLag.set(lag, [...(byLag.get(lag) ?? []), id]);
     }
     for (const [lag, to] of byLag) {
-      this.state.log.push(lag === 0 ? { ...entry, to, day: today } : { ...entry, to, day: today + lag, happened: today });
+      this.state.log.push(lag === 0 ? { ...rest, to, day: today } : { ...rest, to, day: today + lag, happened: today });
+    }
+  }
+
+  /** Whether a faction sees its own fleets only by courier: full fog, for players. */
+  fogged(factionId: string): boolean {
+    const o = this.state.options;
+    if (!o.fullFog || o.newsLag <= 0) return false;
+    return this.state.factions.find((f) => f.id === factionId)?.human === true;
+  }
+
+  /** A fleet as it is today, copied, to be sent home as a report. */
+  reportOf(fleet: Fleet): FleetReport {
+    return { day: this.state.day, fleet: JSON.parse(JSON.stringify(fleet)) as Fleet };
+  }
+
+  /** The fleets a faction's player sees as theirs: live, or as last reported under full fog. */
+  fleetsSeenBy(factionId: string): Fleet[] {
+    if (!this.fogged(factionId)) return this.fleetsOf(factionId);
+    return Object.values(this.faction(factionId).reports).map((r) => r.fleet);
+  }
+
+  /** One of a faction's fleets as its player sees it. */
+  fleetSeenBy(factionId: string, id: string): Fleet | undefined {
+    if (!this.fogged(factionId)) {
+      const f = this.fleet(id);
+      return f?.owner === factionId ? f : undefined;
+    }
+    return this.faction(factionId).reports[id]?.fleet;
+  }
+
+  /** How old a player's picture of one of their fleets is, in days. */
+  reportAge(factionId: string, id: string): number {
+    if (!this.fogged(factionId)) return 0;
+    const r = this.faction(factionId).reports[id];
+    return r === undefined ? 0 : this.state.day - r.day;
+  }
+
+  /**
+   * Give a fleet an order. Straight away where the fleet can be reached at once;
+   * otherwise it goes by courier and lands when a courier would get there.
+   * Returns the day it takes effect.
+   */
+  command(factionId: string, fleetId: string, change: { order?: Order | null; standing?: StandingOrders }, text: string): number {
+    const real = this.fleet(fleetId);
+    const where = real === undefined ? null : real.transit?.to ?? real.system;
+    const lag = !this.fogged(factionId) || where === null ? 0 : this.lag(factionId, where);
+    if (lag === 0) {
+      if (real !== undefined) this.applyCommand(real, change);
+      const seen = this.faction(factionId).reports[fleetId];
+      if (seen !== undefined && real !== undefined) this.faction(factionId).reports[fleetId] = this.reportOf(real);
+      return this.state.day;
+    }
+    const f = this.faction(factionId);
+    f.orders.push({ fleetId, sent: this.state.day, arrives: this.state.day + lag, ...change, text });
+    return this.state.day + lag;
+  }
+
+  /** An order landing on a fleet. A jump is re-planned from wherever it is when the order arrives. */
+  applyCommand(fleet: Fleet, change: { order?: Order | null; standing?: StandingOrders }): void {
+    if (change.standing !== undefined) fleet.standing = { ...change.standing };
+    if (change.order === undefined) return;
+    const order = change.order;
+    // Any order but another tendered jump sends hired tenders away.
+    if (!(order?.kind === "jump" && order.tender === true)) fleet.tender = false;
+    if (order?.kind === "jump" && order.route.length > 0 && fleet.transit === null) {
+      const dest = order.route[order.route.length - 1]!;
+      const first = order.route[0]!;
+      if (distanceBetween(fleet.system, first) > this.fleetJump(fleet) || fleet.system === first) {
+        const again = routeTo(this, fleet, dest);
+        fleet.order = again === null ? null : { kind: "jump", route: again, tender: order.tender };
+        return;
+      }
+    }
+    fleet.order = order === null ? null : order.kind === "jump" ? { ...order, route: [...order.route] } : { ...order };
+  }
+
+
+  /**
+   * Change how fast news travels, and whether players see their own fleets only
+   * by courier, in the middle of a game.
+   */
+  setFog(newsLag: number, fullFog: boolean): void {
+    const o = this.state.options;
+    const wasFogged = o.fullFog && o.newsLag > 0;
+    o.newsLag = newsLag;
+    o.fullFog = fullFog;
+    const nowFogged = fullFog && newsLag > 0;
+    const day = this.state.day;
+    for (const f of this.state.factions) {
+      if (newsLag <= 0) {
+        // Everything on its way arrives at once.
+        for (const d of f.inbox) {
+          if (d.kind === "owner") f.known[d.at] = d.owner;
+          else if (d.kind === "sighting") f.news[d.sighting.fleetId] = d.sighting;
+        }
+        f.inbox = [];
+        for (const e of this.state.log) {
+          if (e.day > day && e.to.includes(f.id)) (e as { day: number }).day = day;
+        }
+      }
+      if (!f.human) continue;
+      if (nowFogged && !wasFogged) {
+        // The picture starts true: the capital knows where it sent everything.
+        f.reports = Object.fromEntries(this.fleetsOf(f.id).map((fl) => [fl.id, this.reportOf(fl)]));
+      }
+      if (!nowFogged && wasFogged) {
+        // Orders in the post arrive now.
+        for (const c of f.orders) {
+          const real = this.fleet(c.fleetId);
+          if (real !== undefined) this.applyCommand(real, c);
+        }
+        f.orders = [];
+        f.inbox = f.inbox.filter((d) => d.kind !== "fleet" && d.kind !== "fleetLost");
+      }
     }
   }
 

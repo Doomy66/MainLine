@@ -29,6 +29,8 @@ export interface Ctx {
   ships: Set<string>;
   /** Choosing where the selected fleet jumps to. */
   choosingJump: boolean;
+  /** The jump being chosen hires tenders for the ships without jump drives. */
+  tender: boolean;
   tab: Tab;
   /** The yard the shipyard pane is showing. */
   yard: string | null;
@@ -39,6 +41,11 @@ export interface Ctx {
   selectFleet(id: string | null): void;
   setTab(tab: Tab): void;
   say(text: string, bad?: boolean): void;
+  /**
+   * Order one of your fleets. Under full fog it goes by courier; the text says
+   * when it will land.
+   */
+  command(fleet: Fleet, change: { order?: Fleet["order"]; standing?: Fleet["standing"] }, text: string): void;
 }
 
 export function showGame(root: HTMLElement, game: Game, onQuit: () => void): void {
@@ -67,6 +74,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     fleet: null,
     ships: new Set(),
     choosingJump: false,
+    tender: false,
     tab: game.state.phase === "setup" ? "fleets" : "reports",
     yard: null,
     newFrom: 0,
@@ -82,7 +90,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       ctx.fleet = id;
       ctx.ships.clear();
       ctx.choosingJump = false;
-      const f = id === null ? undefined : game.fleet(id);
+      const f = id === null ? undefined : game.fleetSeenBy(ctx.me.id, id);
       if (f !== undefined) ctx.system = f.transit?.to ?? f.system;
       ctx.tab = "fleets";
       render();
@@ -96,22 +104,29 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       statusBad = bad;
       renderBar();
     },
+    command(fleet, change, text) {
+      const lands = game.command(ctx.me.id, fleet.id, change, text);
+      const days = lands - game.state.day;
+      ctx.say(days <= 0 ? text : `${text} The order goes by courier and reaches ${fleet.name} in about ${days} days.`);
+      render();
+    },
   };
 
   map.onPickHex((at) => {
     if (ctx.choosingJump && ctx.fleet !== null) {
-      const fleet = game.fleet(ctx.fleet);
-      if (fleet !== undefined && fleet.owner === ctx.me.id) {
-        const route = at === fleet.system ? null : pathIn(jumpMap(game, fleet), fleet.system, at);
+      const fleet = game.fleetSeenBy(ctx.me.id, ctx.fleet);
+      if (fleet !== undefined) {
+        const plan = planning(ctx, fleet);
+        const route = at === fleet.system ? null : pathIn(jumpMap(game, plan), fleet.system, at);
         if (route !== null) {
-          fleet.order = { kind: "jump", route };
           ctx.choosingJump = false;
-          ctx.say(
+          ctx.command(
+            fleet,
+            { order: plan.tender === true ? { kind: "jump", route, tender: true } : { kind: "jump", route } },
             route.length === 1
-              ? `${fleet.name} will jump to ${game.world(at).name}.`
-              : `${fleet.name} will jump to ${game.world(at).name} in ${route.length} jumps, refuelling on the way.`,
+              ? `${fleet.name} to jump to ${game.world(at).name}.`
+              : `${fleet.name} to jump to ${game.world(at).name} in ${route.length} jumps, refuelling on the way.`,
           );
-          render();
           return;
         }
         if (game.worlds.has(at)) {
@@ -128,11 +143,11 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     ctx.selectSystem(at);
   });
   map.onPickFleet((id) => {
-    const f = game.fleet(id);
-    if (f !== undefined && f.owner === ctx.me.id) ctx.selectFleet(id);
+    if (game.fleetSeenBy(ctx.me.id, id) !== undefined) ctx.selectFleet(id);
     else {
-      const sighting = ctx.me.intel[id];
-      ctx.selectSystem(f?.system ?? sighting?.system ?? null);
+      const heard = game.state.options.newsLag > 0 ? ctx.me.news[id] : ctx.me.intel[id];
+      const live = game.state.options.newsLag > 0 ? undefined : game.fleet(id);
+      ctx.selectSystem(live?.system ?? heard?.system ?? null);
     }
   });
 
@@ -148,8 +163,11 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     const capitals = new Set(game.state.factions.filter((f) => f.alive && game.knownOwner(me.id, f.capital) === f.id).map((f) => f.capital));
     const fleets: FleetMark[] = [];
     const transits: TransitMark[] = [];
-    for (const f of game.state.fleets) {
+    const seen = game.fleetsSeenBy(me.id);
+    const fogged = game.fogged(me.id);
+    for (const f of [...seen, ...game.state.fleets.filter((x) => x.owner !== me.id)]) {
       if (f.owner === me.id) {
+        const age = game.reportAge(me.id, f.id);
         if (f.transit !== null) {
           const span = Math.max(1, f.transit.arrive - f.transit.depart);
           transits.push({
@@ -158,10 +176,17 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
             to: f.transit.to,
             progress: Math.min(1, (game.state.day - f.transit.depart) / span),
             colour: me.colour,
-            title: `${f.name}: in jump to ${game.world(f.transit.to).name}, arriving day ${f.transit.arrive}`,
+            title: `${f.name}: in jump to ${game.world(f.transit.to).name}, due day ${f.transit.arrive}${fogged ? ` (reported day ${game.state.day - age})` : ""}`,
           });
         } else {
-          fleets.push({ id: f.id, at: f.system, colour: me.colour, kind: "own", ships: f.ships.length, title: `${f.name}: ${f.ships.length} ships` });
+          fleets.push({
+            id: f.id,
+            at: f.system,
+            colour: me.colour,
+            kind: "own",
+            ships: f.ships.length,
+            title: `${f.name}: ${f.ships.length} ships${age > 0 ? `, as reported ${age} days ago` : ""}`,
+          });
         }
       } else if (!lagged && f.transit === null && sees.has(f.system)) {
         const owner = game.faction(f.owner);
@@ -171,6 +196,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     // What the capital has heard of other fleets: fresh news drawn solid, older
     // news drawn as a ghost of where they were.
     for (const s of Object.values(lagged ? me.news : me.intel)) {
+      if (s.left !== undefined) continue;
       if (!lagged && sees.has(s.system)) continue;
       const owner = game.faction(s.owner);
       const fresh = lagged && s.day >= game.state.day;
@@ -179,11 +205,12 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     let range = new Set<string>();
     let reach = new Set<string>();
     let route: string[] = [];
-    const sel = ctx.fleet === null ? undefined : game.fleet(ctx.fleet);
-    if (sel !== undefined && sel.owner === me.id) {
+    const sel = ctx.fleet === null ? undefined : game.fleetSeenBy(me.id, ctx.fleet);
+    if (sel !== undefined) {
       if (ctx.choosingJump) {
-        range = new Set(inRange(game, sel));
-        reach = new Set(jumpMap(game, sel).keys());
+        const plan = planning(ctx, sel);
+        range = new Set(inRange(game, plan));
+        reach = new Set(jumpMap(game, plan).keys());
       }
       if (sel.order?.kind === "jump") route = [sel.transit?.to ?? sel.system, ...sel.order.route];
       if (sel.transit !== null) route = [sel.transit.from, sel.transit.to, ...(sel.order?.kind === "jump" ? sel.order.route : [])];
@@ -362,6 +389,15 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
   if (game.humans().filter((f) => f.alive).length > 1) handover(first, begin);
   else begin();
   requestAnimationFrame(() => map.centreOn(first.capital, 1.8));
+}
+
+/**
+ * The fleet a jump is planned for: as it is, or with tenders alongside where the
+ * player has chosen to hire them.
+ */
+export function planning(ctx: Ctx, fleet: Fleet): Fleet {
+  const wanted = ctx.tender && ctx.game.carriedTons(fleet) > 0;
+  return wanted && fleet.tender !== true ? { ...fleet, tender: true } : fleet;
 }
 
 /** A fleet's place in words: where it is, or where it is going. */
