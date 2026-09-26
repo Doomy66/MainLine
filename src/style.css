@@ -239,7 +239,7 @@ dl.props dd { margin: 0; }
 .m-close .m-port { display: inline; }
 .m-out { opacity: 0.25; }
 .m-hex { cursor: pointer; }
-.m-held { opacity: 0.22; stroke: none; pointer-events: none; }
+.m-held { opacity: 0.3; stroke: none; pointer-events: none; }
 .m-capital { fill: none; stroke-width: 2.5; vector-effect: non-scaling-stroke; opacity: 0.9; pointer-events: none; }
 .m-range { fill: rgba(94, 224, 122, 0.12); stroke: #5ee07a; stroke-width: 1.6; vector-effect: non-scaling-stroke; pointer-events: none; }
 .m-reach { fill: none; stroke: rgba(94, 224, 122, 0.45); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; pointer-events: none; }

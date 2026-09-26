@@ -99,7 +99,7 @@ export function colourDistance(a: string, b: string): number {
 /** Thirty-six colours for the computer's factions: twelve hues in three tones. */
 const PALETTE: readonly string[] = (() => {
   const out: string[] = [];
-  for (const [s, l] of [[62, 55], [48, 72], [66, 40]] as const) {
+  for (const [s, l] of [[62, 58], [45, 74], [88, 48]] as const) {
     for (let h = 0; h < 360; h += 30) out.push(hslToHex(h + 8, s, l));
   }
   return out;
