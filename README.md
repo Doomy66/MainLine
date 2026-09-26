@@ -169,6 +169,9 @@ design engine and reports anything that breaks the rules.
   shown beside its name so it is easy to see who is who. Every report gets an
   icon for its kind too: battle, capture, arrival, sighting, new ship, money,
   loss.
+- **Buying abroad.** A rich empire with no class A yard, only class B, gets a
+  chance to buy starships from another empire's yards. Which empires sell, the
+  markup, and how the ship is delivered are still to decide.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
   carrier's own guns do. Go through the catalogue for ships whose designs carry
   fighters (the Hyperion, Arakoine and Azhanti among them) and let each carry a

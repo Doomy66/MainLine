@@ -8,7 +8,8 @@ import { subsectorOf } from "../sector/hex";
 import { mainsIn, type Main } from "../sector/mains";
 import type { SectorData, World } from "../sector/sec";
 import { Game } from "./game";
-import { factionColour, polityName } from "./names";
+import { colourTerritories, factionColour, polityName } from "./names";
+import { distanceBetween } from "../sector/hex";
 import { Rng, seedOf } from "./rng";
 import { defenceMax, income } from "./rules";
 import type { Faction, GameOptions, GameState, Personality } from "./types";
@@ -73,6 +74,10 @@ export function createGame(spec: NewGame): Game {
   const byHex = new Map(inArea.map((w) => [w.at, w]));
   const mains = factionMains(spec.sector, spec.area, spec.options.factionMinWorlds);
   const humans = new Map(spec.players.map((p, i) => [p.capital, { ...p, index: i }]));
+  const colours = colourTerritories(
+    mains.map((m) => ({ key: m.capital, hexes: m.hexes, human: humans.get(m.capital)?.index })),
+    distanceBetween,
+  );
 
   const factions: Faction[] = [];
   const owner = new Map<string, string>();
@@ -83,7 +88,7 @@ export function createGame(spec: NewGame): Game {
     factions.push({
       id,
       name: polityName(byHex.get(main.capital)!.name, rng),
-      colour: factionColour(i, human !== undefined, human?.index ?? 0),
+      colour: colours.get(main.capital) ?? factionColour(i, human !== undefined, human?.index ?? 0),
       human: human !== undefined,
       playerName: human?.name ?? "",
       main: main.name,
@@ -132,6 +137,7 @@ export function createGame(spec: NewGame): Game {
     turn: 0,
     phase: "setup",
     winner: null,
+    colourScheme: 2,
   };
   for (const f of factions) f.known = Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
   const game = new Game(state);

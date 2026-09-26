@@ -290,4 +290,6 @@ export interface GameState {
   /** Day zero is buying the starting fleets. */
   phase: "setup" | "play" | "over";
   winner: string | null;
+  /** 2: colours chosen so neighbours differ. Older games are recoloured on loading. */
+  colourScheme?: number;
 }

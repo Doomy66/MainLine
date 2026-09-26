@@ -68,11 +68,106 @@ function roman(n: number): string {
 }
 
 /** Strong colours for humans, so a player's territory stands out. */
-const HUMAN_COLOURS = ["#e0b341", "#4fb3ff", "#ff5d73", "#5ee07a", "#c77dff", "#ff9f43"];
+export const HUMAN_COLOURS = ["#e0b341", "#4fb3ff", "#ff5d73", "#5ee07a", "#c77dff", "#ff9f43"];
+
+function hslToHex(h: number, s: number, l: number): string {
+  const a = (s / 100) * Math.min(l / 100, 1 - l / 100);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const c = l / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(255 * c).toString(16).padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function rgbOf(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** How different two colours look: the "redmean" weighting of RGB distance. */
+export function colourDistance(a: string, b: string): number {
+  const [r1, g1, b1] = rgbOf(a);
+  const [r2, g2, b2] = rgbOf(b);
+  const r = (r1 + r2) / 2;
+  const dr = r1 - r2;
+  const dg = g1 - g2;
+  const db = b1 - b2;
+  return Math.sqrt((2 + r / 256) * dr * dr + 4 * dg * dg + (2 + (255 - r) / 256) * db * db);
+}
+
+/** Thirty-six colours for the computer's factions: twelve hues in three tones. */
+const PALETTE: readonly string[] = (() => {
+  const out: string[] = [];
+  for (const [s, l] of [[62, 55], [48, 72], [66, 40]] as const) {
+    for (let h = 0; h < 360; h += 30) out.push(hslToHex(h + 8, s, l));
+  }
+  return out;
+})();
+
+export interface Territory {
+  readonly key: string;
+  readonly hexes: readonly string[];
+  /** A player's place in the list of players, where a player holds it. */
+  readonly human?: number;
+}
+
+/**
+ * Colours for every faction, chosen so that neighbours look different.
+ *
+ * Players take the strong colours in order. The computer's factions are then
+ * coloured biggest first, each taking the palette colour that looks least like
+ * any neighbour's within a few parsecs, least like any player's anywhere, and
+ * least used so far. A colour can come round twice in a big sector, but not
+ * next door.
+ */
+export function colourTerritories(territories: readonly Territory[], distance: (a: string, b: string) => number): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const t of territories) if (t.human !== undefined) out.set(t.key, HUMAN_COLOURS[t.human % HUMAN_COLOURS.length]!);
+  const near = new Map<string, Map<string, number>>();
+  for (const a of territories) {
+    const row = new Map<string, number>();
+    for (const b of territories) {
+      if (a === b) continue;
+      let d = Infinity;
+      for (const x of a.hexes) for (const y of b.hexes) d = Math.min(d, distance(x, y));
+      if (d <= 6) row.set(b.key, d);
+    }
+    near.set(a.key, row);
+  }
+  const used = new Map<string, number>();
+  const humanColours = [...out.values()];
+  const order = territories.filter((t) => t.human === undefined).sort((a, b) => b.hexes.length - a.hexes.length || a.key.localeCompare(b.key));
+  for (const t of order) {
+    let best = PALETTE[0]!;
+    let bestScore = -Infinity;
+    for (const c of PALETTE) {
+      let score = Infinity;
+      for (const [other, d] of near.get(t.key) ?? []) {
+        const held = out.get(other);
+        if (held === undefined) continue;
+        // Close neighbours matter most: a similar colour next door counts for
+        // far more than one six parsecs off.
+        score = Math.min(score, colourDistance(c, held) / (1 + (6 - d) / 2));
+      }
+      score = Math.min(score, 1000);
+      for (const h of humanColours) score = Math.min(score, colourDistance(c, h) * 2.2);
+      score -= (used.get(c) ?? 0) * 60;
+      if (score > bestScore) {
+        bestScore = score;
+        best = c;
+      }
+    }
+    out.set(t.key, best);
+    used.set(best, (used.get(best) ?? 0) + 1);
+  }
+  return out;
+}
 
 /**
  * Faction colours: humans get the strong ones in order, the rest are spread
- * round the wheel by the golden angle so neighbours in the list differ.
+ * round the wheel by the golden angle so neighbours in the list differ. Kept for
+ * games made before colours were chosen by neighbourhood.
  */
 export function factionColour(index: number, human: boolean, humanIndex: number): string {
   if (human) return HUMAN_COLOURS[humanIndex % HUMAN_COLOURS.length]!;

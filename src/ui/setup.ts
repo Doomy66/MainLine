@@ -10,7 +10,8 @@ import { SUBSECTOR_LETTERS } from "../sector/hex";
 import type { Main } from "../sector/mains";
 import { parseSec, type SectorData } from "../sector/sec";
 import type { Game } from "../game/game";
-import { factionColour } from "../game/names";
+import { colourTerritories } from "../game/names";
+import { distanceBetween } from "../sector/hex";
 import { chooseFile } from "../game/save";
 import { createGame, DEFAULT_OPTIONS, factionMains, mainIncome, startingCredits, worldsInArea } from "../game/setup";
 import { aiSetup } from "../game/turn";
@@ -66,8 +67,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
 
   function recompute(): void {
     mains = factionMains(sector(), [...area], options.factionMinWorlds);
-    colours.clear();
-    mains.forEach((m, i) => colours.set(m.capital, factionColour(i, false, 0)));
+    recolour();
     for (const p of players) {
       if (p.capital !== "" && !mains.some((m) => m.capital === p.capital)) p.capital = "";
     }
@@ -80,16 +80,25 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
     drawMap(inPlay);
   }
 
+  /** The colours the game will use, players and neighbours taken into account. */
+  function recolour(): void {
+    colours.clear();
+    const chosen = colourTerritories(
+      mains.map((m) => {
+        const taken = players.findIndex((p) => p.capital === m.capital);
+        return { key: m.capital, hexes: m.hexes, human: taken >= 0 ? taken : undefined };
+      }),
+      distanceBetween,
+    );
+    for (const [k, c] of chosen) colours.set(k, c);
+  }
+
   function drawMap(inPlay: ReadonlySet<string>): void {
+    recolour();
     const owners = new Map<string, string>();
     const capitals = new Set<string>();
-    players.forEach((p, i) => {
-      const m = mains.find((x) => x.capital === p.capital);
-      if (m !== undefined) colours.set(m.capital, factionColour(0, true, i));
-    });
-    mains.forEach((m, i) => {
-      const taken = players.findIndex((p) => p.capital === m.capital);
-      const colour = taken >= 0 ? factionColour(0, true, taken) : factionColour(i, false, 0);
+    mains.forEach((m) => {
+      const colour = colours.get(m.capital)!;
       for (const at of m.hexes) owners.set(at, colour);
       capitals.add(m.capital);
     });

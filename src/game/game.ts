@@ -13,7 +13,7 @@ import { routeTo } from "./nav";
 import { jumpFuel, slipsAt, TENDER_JUMP } from "./rules";
 import type { Build, Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
-import { shipName } from "./names";
+import { colourTerritories, shipName } from "./names";
 
 export function noCrits(): Crits {
   return { sensors: 0, thrust: 0, weapons: 0, armour: 0, jump: false, crew: 0, computer: 0 };
@@ -39,6 +39,19 @@ export class Game {
       f.known ??= Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
     }
     this.catalogue = new Catalogue(new Map(Object.entries(state.designs)));
+    if (state.colourScheme !== 2) {
+      // Games made before colours were chosen by neighbourhood: recolour the
+      // computer's factions by the worlds they hold now.
+      const held = new Map<string, string[]>();
+      for (const [at, w] of Object.entries(state.worlds)) if (w.owner !== null) held.set(w.owner, [...(held.get(w.owner) ?? []), at]);
+      const humans = state.factions.filter((f) => f.human);
+      const colours = colourTerritories(
+        state.factions.map((f) => ({ key: f.id, hexes: held.get(f.id) ?? [f.capital], human: f.human ? humans.indexOf(f) : undefined })),
+        distanceBetween,
+      );
+      for (const f of state.factions) if (!f.human) (f as { colour: string }).colour = colours.get(f.id) ?? f.colour;
+      state.colourScheme = 2;
+    }
     this.worlds = new Map(state.sector.worlds.map((w) => [w.at, w]));
     this.rng = new Rng(state.rng);
   }
