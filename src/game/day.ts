@@ -365,16 +365,17 @@ function yards(game: Game): void {
       // A yard that has changed hands since the order keeps the ship.
       const owner = game.worldState(b.at).owner;
       if (owner !== faction.id && owner !== null) continue;
-      const ship = game.newShip(b.classId, b.name);
+      const built = game.commission(b.classId, b.name);
+      const ship = built[0]!;
       const waiting = game
         .fleetsAt(b.at, "main")
         .find((f) => f.owner === faction.id && f.order === null && f.name.endsWith("Yard"));
-      if (waiting !== undefined) waiting.ships.push(ship);
-      else game.newFleet(faction.id, b.at, "main", [ship], `${game.world(b.at).name} Yard`);
+      if (waiting !== undefined) waiting.ships.push(...built);
+      else game.newFleet(faction.id, b.at, "main", built, `${game.world(b.at).name} Yard`);
       game.log({
         to: [faction.id],
         kind: "build",
-        text: `The ${game.cls(ship).name} ${ship.name} is commissioned at ${game.world(b.at).name}.`,
+        text: `The ${game.cls(ship).name} ${ship.name} is commissioned at ${game.world(b.at).name}${built.length > 1 ? `, with ${built.length - 1} fighters aboard` : ""}.`,
         at: b.at,
         wake: true,
         firsthand: [faction.id],

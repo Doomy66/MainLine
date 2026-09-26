@@ -88,6 +88,12 @@ export interface ShipClass {
   readonly missiles: number;
   readonly torpedoes: number;
   readonly armed: boolean;
+  /**
+   * Fighter hangars, from the carried craft the design lists as fighters: how
+   * many, and the tonnage each is built for. The fighters' price is in the
+   * carrier's, so a carrier comes with them.
+   */
+  readonly hangars: readonly { readonly label: string; readonly slots: number; readonly tons: number }[];
   /** A rough measure of fighting value, for the AI and the fleet summary. */
   readonly strength: number;
 }
@@ -294,11 +300,24 @@ export function shipClass(id: string, design: Design): ShipClass {
     missiles: arms.missiles,
     torpedoes: arms.torpedoes,
     armed: arms.attacks.length > 0,
+    hangars: hangarsOf(design),
     // Hull and firepower multiplied, so a glass cannon and a brick both
     // count for less than a ship with both. Square-rooted to keep the scale
     // of a destroyer and a dreadnought within reach of each other.
     strength: Math.round(Math.sqrt((s.hullPoints + s.armourProtection * 10) * Math.max(attackValue, 0.5)) * 10) / 10,
   };
+}
+
+/** Carried craft the design calls fighters, grouped by what they are. */
+function hangarsOf(design: Design): { label: string; slots: number; tons: number }[] {
+  const groups = new Map<string, { label: string; slots: number; tons: number }>();
+  for (const c of design.craft ?? []) {
+    if (c.kind !== "smallCraft" || !/fighter/i.test(c.label)) continue;
+    const held = groups.get(c.label);
+    if (held === undefined) groups.set(c.label, { label: c.label, slots: 1, tons: c.tons });
+    else held.slots++;
+  }
+  return [...groups.values()];
 }
 
 /** A design the engine refuses outright is not something the game can field. */

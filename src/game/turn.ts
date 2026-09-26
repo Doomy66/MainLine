@@ -27,11 +27,11 @@ export function buyStarting(game: Game, faction: Faction, classId: string): stri
   if (game.state.phase !== "setup") return "The first fleet has already sailed.";
   if (cls.cost > faction.credits + 1e-9) return `The ${cls.name} costs MCr${cls.cost.toFixed(2)}; the treasury has MCr${faction.credits.toFixed(2)}.`;
   faction.credits -= cls.cost;
-  const ship = game.newShip(classId);
+  const ships = game.commission(classId);
   const home =
     game.fleetsAt(faction.capital, "main").find((f) => f.owner === faction.id && f.name === "Home Fleet") ??
     game.newFleet(faction.id, faction.capital, "main", [], "Home Fleet");
-  home.ships.push(ship);
+  home.ships.push(...ships);
   home.standing = { ...STANDING_PRESETS["Guard"]! };
   return "";
 }

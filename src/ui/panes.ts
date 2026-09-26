@@ -232,7 +232,9 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
   const set = (order: Fleet["order"], text: string) => ctx.command(f, { order }, text);
   const posted = me.orders.filter((c) => c.fleetId === f.id);
   // Ships with no jump drive, and whether tenders can be had for them here.
-  const riders = f.ships.filter((s) => game.cls(s).jump === 0);
+  const aboard = game.hangared(f);
+  const riders = f.ships.filter((s) => game.cls(s).jump === 0 && !aboard.has(s.id));
+  const hangars = game.hangarSpace(f);
   const riderTons = game.carriedTons(f);
   const tenderHere = hiresTenders(game.world(here), game.hostile(f.owner, game.worldState(here).owner)) || f.tender === true;
   if (riders.length === 0 || (!tenderHere && f.tender !== true)) ctx.tender = false;
@@ -301,6 +303,13 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
     h("p", { class: "hint" }, `${whereIs(game, f)}. ${orderText(game, f)}. Strength ${Math.round(game.fleetStrength(f))}, ${tons(game.fleetTons(f))}.`),
     fogged ? h("p", { class: age > 0 ? "hint warn" : "hint" }, age > 0 ? `This is ${f.name} as reported on day ${game.state.day - age}, ${age} days ago. Orders take about ${game.lag(me.id, f.transit?.to ?? here)} days to reach it.` : `${f.name} is within sight of your capital: its news is today's.`) : null,
     posted.length > 0 ? h("div", {}, posted.map((c) => h("div", { class: "hint" }, `In the post: ${c.text} Sent day ${c.sent}, arriving about day ${c.arrives}.`))) : null,
+    hangars.slots > 0
+      ? h(
+          "p",
+          { class: hangars.filled < hangars.slots ? "hint warn" : "hint" },
+          `Hangars: ${hangars.filled} of ${hangars.slots} fighters aboard. Fighters in the hangars jump with their carrier and need no tenders.${hangars.filled < hangars.slots ? " Replace lost ones at a yard that builds small craft, then merge them into this fleet." : ""}`,
+        )
+      : null,
     h(
       "div",
       { class: "orders" },
@@ -832,6 +841,8 @@ export function showSheet(cls: ShipClass): void {
         h("dt", {}, "Defence"), h("dd", {}, [cls.sandcasters > 0 ? `${cls.sandcasters} sandcasters` : "", cls.pointDefence > 0 ? `point defence ${cls.pointDefence}D` : "", cls.mesonScreen > 0 ? "meson screen" : "", cls.nuclearDamper > 0 ? "nuclear damper" : ""].filter((x) => x !== "").join(", ") || "None"),
         h("dt", {}, "Fire control"), h("dd", {}, `Fire Control/${cls.fireControl}, Evade/${cls.evade}, sensors DM ${cls.sensorDm >= 0 ? "+" : ""}${cls.sensorDm}`),
         h("dt", {}, "Ordnance"), h("dd", {}, `${cls.missiles} missiles, ${cls.torpedoes} torpedoes`),
+        cls.hangars.length > 0 ? h("dt", {}, "Hangars") : null,
+        cls.hangars.length > 0 ? h("dd", {}, cls.hangars.map((hg) => `${hg.slots} × ${hg.label} (${hg.tons} t), which come with her`).join("; ")) : null,
         h("dt", {}, "Crew"), h("dd", {}, `${cls.crew}; cargo ${s.cargoTons} tons`),
         h("dt", {}, "Price"), h("dd", {}, `${mcr(cls.cost, 3)}; upkeep ${mcr(cls.upkeep, 3)} a week; built in ${cls.buildDays} days by the book`),
         h("dt", {}, "Strength"), h("dd", {}, String(cls.strength)),

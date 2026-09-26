@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+- Jump tenders asked for are hired: the order had been dropped before it
+  reached the fleet. Orders say when tenders are coming.
+- Wait for news stops only for news of your own fleets and worlds.
+- Faction emblems beside their names, icons for each kind of report, and
+  other factions' news dimmed.
+- Faction colours chosen so neighbours differ, brighter, and more of them.
+- Shipyard slips: three ships at a time at class A, two at B, one at C;
+  further orders wait their turn.
+- Losing a capital brings 28 days of disorder, and worlds may break away.
+- Carriers come with their fighters, which jump in the hangars and fight as
+  ships.
+- News arrives instantly by default in a new game.
+- A Suggestions link to the project's issues.
+
 ## 0.2.0
 
 - Enemy fleets are reported arriving, with the day they came, and reported

@@ -123,6 +123,9 @@ moment they meet the enemy. Turn on **full fog of war** and your own fleets
 report by courier too, while your orders take as long to reach them. Both can
 be changed at any time during a game.
 
+**Carriers** come with the fighters their designs carry, as ships in their
+fleet that jump in the hangars and fight and die like any other.
+
 **Jump tenders.** Ships with no jump drive can be carried to war by jump tenders
 hired at a class A or B starport, for Traveller's freight rates per ton per
 jump.
@@ -150,33 +153,16 @@ design engine and reports anything that breaks the rules.
 
 ## Still to come
 
-- **Bug: jump tenders.** Asking for tenders seems to be ignored, or at least is
-  not shown: the fleet's orders do not mention them.
-
 - **Admirals.** A commander for every fleet, with Tactics, morale and other
   skills and traits that change how it fights and how soon it breaks.
-- **Shipyard slips.** A yard builds only so many ships at once: three at a
-  class A starport, two at class B. Further orders queue until a slip is free.
 - **Planetary defences, reviewed.** A world on its own barely scratches an
   attacker: small worlds have no guns, mid-tech batteries are lasers that bounce
   off armour, and high-tech bays miss anything small. Candidates: a floor of
   batteries on every peopled world, bay-sized ground weapons, no small-target
   penalty for ground fire control, missile silos, and defences firing first.
-- **Wait for news waits for your news.** It should stop only for reports about
-  your own fleets or systems. Today any world changing hands anywhere, or any
-  faction being wiped out, wakes everybody.
-- **Icons in the reports.** Every faction gets an emblem as well as a colour,
-  shown beside its name so it is easy to see who is who. Every report gets an
-  icon for its kind too: battle, capture, arrival, sighting, new ship, money,
-  loss.
 - **Buying abroad.** A rich empire with no class A yard, only class B, gets a
   chance to buy starships from another empire's yards. Which empires sell, the
   markup, and how the ship is delivered are still to decide.
-- **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
-  carrier's own guns do. Go through the catalogue for ships whose designs carry
-  fighters (the Hyperion, Arakoine and Azhanti among them) and let each carry a
-  matching number of Rampart light or Kia heavy fighters as real ships, bought,
-  launched and lost like any other.
 - A cleverer computer opponent. It has time to think. A turn is a day, and
   nobody minds waiting a few seconds for one.
 

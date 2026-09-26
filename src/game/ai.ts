@@ -73,7 +73,7 @@ export function aiStartingFleet(game: Game, faction: Faction): void {
   const strike = chooseShips(classes, budget - guardCost, STRIKE_JUMP, () => game.rng.next());
   const spend = (ids: string[]) => {
     faction.credits -= ids.reduce((s, id) => s + game.catalogue.get(id).cost, 0);
-    return ids.map((id) => game.newShip(id));
+    return ids.flatMap((id) => game.commission(id));
   };
   if (guard.length > 0) {
     const f = game.newFleet(faction.id, faction.capital, "main", spend(guard), HOME_GUARD);
@@ -199,7 +199,9 @@ function gather(game: Game, faction: Faction): void {
   // capital they join the guard.
   for (const f of game.fleetsOf(faction.id)) {
     if (f.transit !== null || f.order !== null || f.name === HOME_GUARD) continue;
-    const lame = f.ships.filter((s) => game.cls(s).jump < STRIKE_JUMP).map((s) => s.id);
+    // Fighters in a carrier's hangars stay with it.
+    const aboard = game.hangared(f);
+    const lame = f.ships.filter((s) => game.cls(s).jump < STRIKE_JUMP && !aboard.has(s.id)).map((s) => s.id);
     if (lame.length > 0 && lame.length < f.ships.length) {
       const guardHere = game
         .fleetsAt(f.system, f.loc)

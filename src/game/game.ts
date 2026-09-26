@@ -151,19 +151,61 @@ export class Game {
     return ship.crits.jump ? 0 : this.cls(ship).jump;
   }
 
+  /**
+   * Ships a fleet's carriers hold in their hangars: craft without a jump drive,
+   * biggest first, each into a hangar built for its size or bigger.
+   */
+  hangared(fleet: Fleet): Set<string> {
+    const slots: number[] = [];
+    for (const s of fleet.ships) for (const h of this.cls(s).hangars) for (let i = 0; i < h.slots; i++) slots.push(h.tons);
+    const out = new Set<string>();
+    if (slots.length === 0) return out;
+    slots.sort((a, b) => a - b);
+    const craft = fleet.ships.filter((s) => this.cls(s).jump === 0).sort((a, b) => this.cls(b).tons - this.cls(a).tons);
+    for (const s of craft) {
+      const tons = this.cls(s).tons;
+      const at = slots.findIndex((t) => t >= tons);
+      if (at < 0) continue;
+      slots.splice(at, 1);
+      out.add(s.id);
+    }
+    return out;
+  }
+
+  /** Hangar space in a fleet, and how much of it is filled. */
+  hangarSpace(fleet: Fleet): { slots: number; filled: number } {
+    let slots = 0;
+    for (const s of fleet.ships) for (const h of this.cls(s).hangars) slots += h.slots;
+    return { slots, filled: slots === 0 ? 0 : this.hangared(fleet).size };
+  }
+
+  /** A new ship of a class, and the fighters that come with it if it is a carrier. */
+  commission(classId: string, name?: string): Ship[] {
+    const ship = this.newShip(classId, name);
+    const out = [ship];
+    for (const h of this.cls(ship).hangars) {
+      const fighter = this.catalogue.fighterFor(h);
+      if (fighter === undefined) continue;
+      for (let i = 0; i < h.slots; i++) out.push(this.newShip(fighter.id, `${ship.name} ${fighter.name.split(" ").pop()} ${i + 1}`));
+    }
+    return out;
+  }
+
   /** Whether a fleet has tenders with it, or has orders to hire them. */
   tendered(fleet: Fleet): boolean {
     return fleet.tender === true || (fleet.order?.kind === "jump" && fleet.order.tender === true);
   }
 
-  /** A ship the tenders carry: one with no jump drive, in a tendered fleet. */
+  /** A ship carried through jump: one with no drive, in a carrier's hangar or aboard hired tenders. */
   carried(fleet: Fleet, ship: Ship): boolean {
-    return this.cls(ship).jump === 0 && this.tendered(fleet);
+    if (this.cls(ship).jump !== 0) return false;
+    return this.tendered(fleet) || this.hangared(fleet).has(ship.id);
   }
 
-  /** Tons the tenders carry. */
+  /** Tons the tenders would carry: ships without jump drives that no hangar holds. */
   carriedTons(fleet: Fleet): number {
-    return fleet.ships.filter((s) => this.cls(s).jump === 0).reduce((t, s) => t + this.cls(s).tons, 0);
+    const held = this.hangared(fleet);
+    return fleet.ships.filter((s) => this.cls(s).jump === 0 && !held.has(s.id)).reduce((t, s) => t + this.cls(s).tons, 0);
   }
 
   hullLeft(ship: Ship): number {

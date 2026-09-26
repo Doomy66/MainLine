@@ -71,4 +71,18 @@ describe("jump tenders", () => {
     expect(fleet.order).toBeNull();
     expect(game.logFor(me.id).some((e) => /cannot hire jump tenders/.test(e.text))).toBe(true);
   });
+
+  it("are not needed by fighters in a carrier's hangars, which come with the carrier", () => {
+    const { game, me } = setup();
+    const ships = game.commission("Hyperion-Escort-Carrier");
+    expect(ships).toHaveLength(11);
+    const fleet = game.newFleet(me.id, me.capital, "main", ships);
+    expect(game.hangarSpace(fleet)).toEqual({ slots: 10, filled: 10 });
+    expect(game.fleetJump(fleet)).toBe(1);
+    expect(game.carriedTons(fleet)).toBe(0);
+    // An eleventh fighter fits no hangar and would need a tender.
+    fleet.ships.push(game.newShip("Rampart-Light-Fighter"));
+    expect(game.fleetJump(fleet)).toBe(0);
+    expect(game.carriedTons(fleet)).toBe(10);
+  });
 });

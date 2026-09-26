@@ -82,6 +82,21 @@ export class Catalogue {
     return [...this.classes.values()].sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
   }
 
+  /**
+   * The class that fills a carrier's hangar: the one the design names, if the
+   * catalogue has it, or else the best armed craft without a jump drive that
+   * fits the hangar.
+   */
+  fighterFor(hangar: { label: string; tons: number }): ShipClass | undefined {
+    const all = this.all().filter((c) => c.jump === 0 && c.armed && c.tons <= hangar.tons);
+    const label = hangar.label.toLowerCase();
+    return (
+      all.find((c) => c.name.toLowerCase() === label) ??
+      all.find((c) => c.name.toLowerCase().includes(label) || label.includes(c.name.toLowerCase())) ??
+      [...all].sort((a, b) => b.strength - a.strength)[0]
+    );
+  }
+
   add(id: string, design: Design): ShipClass {
     const made = shipClass(id, design);
     this.classes.set(id, made);
