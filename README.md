@@ -164,7 +164,10 @@ design engine and reports anything that breaks the rules.
 - **Faction icons.** Every faction gets an emblem as well as a colour, shown
   beside its name in the reports so it is easy to see who is who.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
-  carrier's own guns do.
+  carrier's own guns do. Go through the catalogue for ships whose designs carry
+  fighters (the Hyperion, Arakoine and Azhanti among them) and let each carry a
+  matching number of Rampart light or Kia heavy fighters as real ships, bought,
+  launched and lost like any other.
 - A cleverer computer opponent. It has time to think. A turn is a day, and
   nobody minds waiting a few seconds for one.
 
