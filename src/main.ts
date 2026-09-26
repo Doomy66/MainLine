@@ -18,10 +18,14 @@ const root = document.getElementById("app")!;
  * player's to write.
  */
 function suggestionUrl(): string {
-  const body = `
-
----
-Mainline ${__APP_VERSION__}`;
+  const body = [
+    "",
+    "",
+    "(A ship design you have found useful? Attach its .ship file from the Traveller Ship Designer, and say where the design comes from, and it can go in the catalogue for everybody.)",
+    "",
+    "---",
+    `Mainline ${__APP_VERSION__}`,
+  ].join(String.fromCharCode(10));
   return `https://github.com/Doomy66/MainLine/issues/new?body=${encodeURIComponent(body)}`;
 }
 
@@ -83,7 +87,7 @@ function title(message = ""): void {
             "button",
             { onclick: () => window.open(suggestionUrl(), "_blank", "noopener") },
             "Suggestions",
-            h("span", {}, "Found something wrong, or want something it does not do? Open an issue on GitHub."),
+            h("span", {}, "Found something wrong, want something it does not do, or have a ship design worth adding to the catalogue? Open an issue on GitHub."),
           ),
         ),
         error,

@@ -637,6 +637,11 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
         "Import a .ship design…",
       ),
       h("a", { href: "https://doomy66.github.io/Traveller-Ship-Design/", target: "_blank", rel: "noopener", class: "hint" }, "Design one in the Ship Designer"),
+      h(
+        "a",
+        { href: "https://github.com/Doomy66/MainLine/issues/new?title=Ship%20design%3A%20", target: "_blank", rel: "noopener", class: "hint", title: "Attach the .ship file to the issue" },
+        "Suggest a design for the catalogue",
+      ),
     ),
     queue.length > 0 ? h("div", {}, h("h2", {}, "Building"), h("table", {}, queue)) : null,
     slipLine,
