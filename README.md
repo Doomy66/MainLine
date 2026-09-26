@@ -158,6 +158,8 @@ design engine and reports anything that breaks the rules.
   hard and its yards stop work. Breakaways: each of its worlds may declare
   itself independent, likelier the further it is from the new capital and the
   lower its law level.
+- **Faction icons.** Every faction gets an emblem as well as a colour, shown
+  beside its name in the reports so it is easy to see who is who.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
   carrier's own guns do.
 - A cleverer computer opponent. It has time to think. A turn is a day, and
