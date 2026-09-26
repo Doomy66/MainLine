@@ -1,96 +1,60 @@
 {
   "name": "Dragon System Defence Boat",
-  "notes": "A jumpless four-hundred-ton defender that spends its drive-and-fuel budget on armour and bay weapons instead, hiding in gas giants and oceans until raiders arrive. Built for in-system work only. Source: https://wiki.travellerrpg.com/Dragon_class_System_Defense_Boat (JTAS 9, Classic Traveller; the source leaves the weapon fit blank, so the bays are this catalogue's choice; re-built to High Guard 2022).",
-  "tl": 12,
+  "notes": "The Dragon class, High Guard's system defence boat: four hundred tons with no jump drive, the space spent instead on armour, drives and guns. Stationed in orbit of a main world, lurking in gas giants, or hidden in belts and oceans to strike later. Source: Mongoose Traveller High Guard Update 2022, page 193 (TL13, Thrust 7, crystaliron 13, two particle barbettes, a small missile bay and a point defence battery); the book's size-reduced missile bay is built here at full size, and Intellect left out for want of computer bandwidth.",
+  "tl": 13,
   "standardDesign": true,
   "military": true,
   "hull": {
     "tons": 400,
     "configuration": "streamlined",
-    "specialised": [
-      "reinforced"
-    ]
+    "specialised": ["reinforced"],
+    "options": ["radiationShielding"],
+    "stealth": "improved"
   },
   "armour": {
     "type": "crystaliron",
-    "protection": 12
+    "protection": 13
   },
-  "manoeuvre": 6,
+  "manoeuvre": 7,
   "powerPlant": {
     "type": "fusion12",
     "tons": 30,
     "weeks": 16
   },
   "bridge": {
-    "kind": "standard"
+    "kind": "standard",
+    "holographic": true
   },
   "computer": {
-    "processing": 20,
+    "processing": 25,
     "fib": true
   },
   "sensors": "improved",
   "weapons": [
-    {
-      "kind": "bay",
-      "size": "small",
-      "weapon": "particleBeam",
-      "quantity": 2
-    },
-    {
-      "kind": "bay",
-      "size": "small",
-      "weapon": "missile"
-    },
-    {
-      "kind": "turret",
-      "mount": "triple",
-      "weapons": [
-        "beamLaser",
-        "beamLaser",
-        "sandcaster"
-      ]
-    }
+    { "kind": "barbette", "weapon": "particle", "quantity": 2 },
+    { "kind": "bay", "size": "small", "weapon": "missile" },
+    { "kind": "pointDefence", "battery": "laser", "type": "typeII" }
   ],
   "ordnance": [
-    {
-      "missile": "standard",
-      "count": 144
-    },
-    {
-      "canister": "sand",
-      "count": 40
-    }
+    { "missile": "standard", "count": 336 }
   ],
   "systems": [
-    {
-      "fuelScoops": true
-    },
-    {
-      "perTon": "fuelProcessor",
-      "tons": 2
-    },
-    {
-      "perTon": "repairDrones"
-    }
+    { "fuelScoops": true },
+    { "perTon": "repairDrones" },
+    { "flat": "sensorStation", "quantity": 2 },
+    { "flat": "enhancedSignalProcessing" },
+    { "flat": "armoury" },
+    { "flat": "medicalBay" },
+    { "flat": "workshop" }
   ],
-  "staterooms": 8,
-  "doubleOccupancy": true,
-  "commonAreaTons": 8,
+  "staterooms": 12,
+  "commonAreaTons": 10,
   "software": [
-    {
-      "software": "manoeuvre"
-    },
-    {
-      "software": "library"
-    },
-    {
-      "software": "fireControl",
-      "level": 2
-    },
-    {
-      "software": "evade",
-      "level": 1
-    }
+    { "software": "manoeuvre" },
+    { "software": "library" },
+    { "software": "autoRepair", "level": 1 },
+    { "software": "evade", "level": 1 },
+    { "software": "fireControl", "level": 2 }
   ],
   "version": 1
 }

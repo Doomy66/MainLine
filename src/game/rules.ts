@@ -122,7 +122,7 @@ export function defenceArmour(world: World): number {
 
 /**
  * What the defences shoot with, by tech level. A world gets a battery for every
- * population digit over four, three more for a naval base and one for a scout
+ * population digit over three, three more for a naval base and one for a scout
  * base. The weapon is the best a world of its TL could mount in the ground.
  * A world is a fortress: it takes a squadron, not a pair of cruisers, to
  * silence one with a billion people on it.
@@ -134,11 +134,39 @@ export function defenceAttacks(world: World): Attack[] {
   if (batteries === 0 || tl < 7) return [];
   const base = { ap: 0, count: batteries, perSalvo: 1, heavy: false, laser: false, radiation: false, meson: false, ion: false };
   if (tl >= 14) return [{ ...base, label: "Meson battery", dice: 5, multiple: 10, ap: Infinity, heavy: true, meson: true }];
-  if (tl >= 12) return [{ ...base, label: "Particle beam battery", dice: 6, multiple: 10, heavy: true, radiation: true }];
+  // Barbette-sized at TL12-13: hard to crack, not a wall. The bay-sized meson
+  // battery at TL14 and up is the deep-site meson gun of Traveller's setting.
+  if (tl >= 12) return [{ ...base, label: "Particle battery", dice: 6, multiple: 3, radiation: true }];
   if (tl >= 11) return [{ ...base, label: "Particle barbette battery", dice: 4, multiple: 3, radiation: true }];
   if (tl >= 9) return [{ ...base, label: "Laser battery", dice: 2, multiple: 1, count: batteries * 3, laser: true }];
   return [{ ...base, label: "Missile battery", dice: 4, multiple: 1, count: batteries * 2, ordnance: "missile" }];
 }
+
+/**
+ * Fire control of a world's ground batteries. The rules give planets no fire
+ * control software, so this is ours, and kept modest: a world's guns are big and
+ * buried, not uncannily accurate.
+ */
+export function defenceFireControl(world: World): number {
+  const tl = world.uwp.tl;
+  return tl >= 12 ? 2 : tl >= 10 ? 1 : 0;
+}
+
+/**
+ * How many system defence boats a world keeps: one for every two population
+ * digits over three, from population 5, and two more at a naval base. High
+ * Guard puts a world's defence in its planetary navy, 200- to 500-ton boats
+ * that, carrying no jump drive or fuel, can beat a starship of their size and
+ * more (page 4). A world below TL9 has none.
+ */
+export function navySize(world: World): number {
+  const { population, tl } = world.uwp;
+  if (population === 0 || tl < 9) return 0;
+  return (population >= 5 ? Math.floor((population - 3) / 2) : 0) + (hasNavalBase(world) ? 2 : 0);
+}
+
+/** A planetary navy's lost boats are replaced one a week; the damaged mend a fifth a day. */
+export const NAVY_REPAIR = 0.2;
 
 /** Days a world must be held, its defences silenced, before it submits. */
 export function captureDays(world: World): number {

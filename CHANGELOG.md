@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+- Battle reports show every weapon's fire: what it needed to hit and why, what
+  was shot down, and what each hit did.
+- Worlds keep a planetary navy of system defence boats beside their ground
+  batteries, lost in battle and replaced a boat a week.
+- Ground batteries aim less uncannily: fire control +1 to +2, no sensor bonus;
+  TL12-13 batteries are barbette-sized. TL14 and up are left as fortresses.
+- The Dragon system defence boat rebuilt to High Guard's own design, page 193.
+- Only an armed, armoured ship in a real force can keep a fleet from breaking
+  off.
+- A help section on planetary defences, their strengths and weaknesses.
+
 ## 0.3.0
 
 - Jump tenders asked for are hired: the order had been dropped before it

@@ -91,7 +91,9 @@ anybody anything:
 A day of battle is three rounds.
 
 **Taking a world.** Every peopled world has defences, sized by population and
-tech level, with more at a naval base. Silence them, keep armed ships in orbit
+tech level, with more at a naval base: ground batteries dug into armour that
+lasers cannot touch, and a planetary navy of system defence boats. Worlds of
+TL14 and up are fortresses, as in Traveller's setting. Silence them, keep armed ships in orbit
 with orders to besiege, and the world submits in a few days. That is two days
 plus one for every two population digits. Defences rebuild once nobody is
 shooting at them.
@@ -153,21 +155,6 @@ design engine and reports anything that breaks the rules.
 
 ## Still to come
 
-- **Admirals.** A commander for every fleet, with Tactics, morale and other
-  skills and traits that change how it fights and how soon it breaks.
-- **Planetary defences, reviewed.** A world on its own barely scratches an
-  attacker: small worlds have no guns, mid-tech batteries are lasers that bounce
-  off armour, and high-tech bays miss anything small. Candidates: a floor of
-  batteries on every peopled world, bay-sized ground weapons, no small-target
-  penalty for ground fire control, missile silos, and defences firing first.
-- **No pinning by unarmoured ships.** A ship without armour should not count as
-  a pursuer when a fleet tries to break off. At Surari a handful of pinnaces kept
-  a crippled squadron under a world's guns.
-- **Shot-by-shot battle logs.** Each hit in a battle report says who fired, with
-  what, the roll, and the damage after armour, so odd battles can be looked into.
-- **Buying abroad.** A rich empire with no class A yard, only class B, gets a
-  chance to buy starships from another empire's yards. Which empires sell, the
-  markup, and how the ship is delivered are still to decide.
 - A cleverer computer opponent. It has time to think. A turn is a day, and
   nobody minds waiting a few seconds for one.
 

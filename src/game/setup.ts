@@ -140,6 +140,7 @@ export function createGame(spec: NewGame): Game {
     colourScheme: 2,
   };
   for (const f of factions) f.known = Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
+  // Worlds are given their navies as the game is made, by the Game itself.
   const game = new Game(state);
   for (const f of factions) {
     game.log({

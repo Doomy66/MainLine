@@ -10,7 +10,7 @@ import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
 import { Rng } from "./rng";
 import { routeTo } from "./nav";
-import { jumpFuel, slipsAt, TENDER_JUMP } from "./rules";
+import { jumpFuel, navySize, slipsAt, TENDER_JUMP } from "./rules";
 import type { Build, Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { colourTerritories, shipName } from "./names";
@@ -39,6 +39,12 @@ export class Game {
       f.known ??= Object.fromEntries(Object.entries(state.worlds).map(([at, w]) => [at, w.owner]));
     }
     this.catalogue = new Catalogue(new Map(Object.entries(state.designs)));
+    this.worlds = new Map(state.sector.worlds.map((w) => [w.at, w]));
+    // Games made before worlds had planetary navies are given them, at full strength.
+    for (const w of state.sector.worlds) {
+      const ws = state.worlds[w.at];
+      if (ws !== undefined && ws.navy === undefined) ws.navy = this.freshNavy(w);
+    }
     if (state.colourScheme !== 2) {
       // Games made before colours were chosen by neighbourhood: recolour the
       // computer's factions by the worlds they hold now.
@@ -363,6 +369,35 @@ export class Game {
 
   removeEmptyFleets(): void {
     this.state.fleets = this.state.fleets.filter((f) => f.ships.length > 0);
+  }
+
+  /* Planetary navies ------------------------------------------------------ */
+
+  /**
+   * The class of a world's system defence boats: the strongest armed craft with
+   * no jump drive that a world of its tech level could build.
+   */
+  navyClassFor(world: World): ShipClass | undefined {
+    const boats = this.catalogue.all().filter((c) => c.jump === 0 && c.armed && c.tons >= 20);
+    const own = boats.filter((c) => c.tl <= world.uwp.tl).sort((a, b) => b.strength - a.strength || a.cost - b.cost)[0];
+    // A world that cannot build one makes do with an import, as High Guard's
+    // planetary navies make do with antiques: the lowest-tech boat there is.
+    return own ?? [...boats].sort((a, b) => a.tl - b.tl || b.strength - a.strength)[0];
+  }
+
+  /** A world's navy at full strength, fresh. */
+  freshNavy(world: World): WorldState["navy"] {
+    const size = navySize(world);
+    const cls = size > 0 ? this.navyClassFor(world) : undefined;
+    return cls === undefined ? null : { classId: cls.id, boats: Array.from({ length: size }, () => 0) };
+  }
+
+  /** Boats a world has now, and how many it should have. */
+  navyOf(at: string): { cls: ShipClass | undefined; boats: number; full: number } {
+    const world = this.world(at);
+    const navy = this.worldState(at).navy;
+    const cls = navy === null || navy === undefined ? undefined : this.catalogue.has(navy.classId) ? this.catalogue.get(navy.classId) : undefined;
+    return { cls, boats: navy?.boats.length ?? 0, full: cls === undefined ? 0 : navySize(world) };
   }
 
   /* Shipyards ------------------------------------------------------------- */

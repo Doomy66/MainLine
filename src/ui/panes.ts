@@ -141,6 +141,16 @@ export function systemPane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Belts"), h("dd", {}, String(w.pbg.belts)),
       h("dt", {}, "Worth"), h("dd", {}, `${mcr(income(w), 2)} a week`),
       h("dt", {}, "Defences"), h("dd", {}, max === 0 ? "None" : h("div", {}, `${Math.round(ws.defence)} of ${max}`, meter(ws.defence / max))),
+      h("dt", {}, "Navy"),
+      h(
+        "dd",
+        {},
+        (() => {
+          const navy = game.navyOf(at);
+          if (navy.cls === undefined || navy.full === 0) return "None";
+          return `${navy.boats} of ${navy.full} ${navy.cls.name}${navy.full === 1 ? "" : "s"}`;
+        })(),
+      ),
       ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dt", { class: "bad" }, "Siege"),
       ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dd", { class: "bad" }, `${game.faction(ws.siege.by).name}, day ${ws.siege.days} of ${captureDays(w)}`),
       h("dt", {}, "Distance"), h("dd", {}, `${distanceBetween(me.capital, at)} parsecs from your capital`),

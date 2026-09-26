@@ -59,6 +59,7 @@
         <a href="#jump">Jumping and fuel</a>
         <a href="#standing">Standing orders</a>
         <a href="#combat">Combat</a>
+        <a href="#defences">Planetary defences</a>
         <a href="#siege">Taking a world</a>
         <a href="#money">Money and shipyards</a>
         <a href="#news">News</a>
@@ -277,26 +278,84 @@
           </li>
           <li>
             <strong>Breaking off.</strong> A fleet that wants out rolls 8+ on two dice, plus its Thrust less that
-            of the fastest enemy chasing it. A fleet that gets away moves elsewhere in the system.
+            of the fastest enemy chasing it. A fleet that gets away moves elsewhere in the system. Only a real threat
+            can hold you: a chaser must be armed, armoured and able to move, in a force at least a quarter as strong
+            as yours. A world's batteries never chase, and a few boats that cannot hurt you do not keep you under
+            its guns.
           </li>
         </ul>
-        <p class="muted">Every battle report on the Reports tab opens to show each round, hit and critical.</p>
+        <p class="muted">
+          Every battle report on the Reports tab opens to show each round: for every weapon of every ship at
+          every target, how many fired, what they needed to hit and why, how many missiles were shot down, how
+          many hit and for how much, and every critical. If a battle went strangely, the answer is in there.
+        </p>
+
+        <h2 id="defences">Planetary defences</h2>
+        <p>
+          In orbit of its main world, every world with people on it and a tech level of 7 or better fights back.
+          It has two kinds of defence, and to take the world you must beat both.
+        </p>
+        <h3>Ground batteries</h3>
+        <p>
+          Buried guns, missile silos and bunkers, counted together as one target. A world has one battery for every
+          population digit over three, three more for a naval base and one for a scout base. Their hull points
+          grow with population and tech level; a naval base adds 300. What they shoot with depends on tech level:
+        </p>
+        <table>
+          <tr><th>Tech level</th><th>Batteries fire</th><th>Against ships</th></tr>
+          <tr><td>7 to 8</td><td>Missiles, two a battery, 4D each</td><td>A nuisance</td></tr>
+          <tr><td>9 to 10</td><td>Lasers, three a battery, 2D each</td><td>Mostly stopped by armour</td></tr>
+          <tr><td>11</td><td>Particle barbettes, 4D × 3</td><td>Hurts</td></tr>
+          <tr><td>12 to 13</td><td>Particle batteries, 6D × 3</td><td>Hurts badly</td></tr>
+          <tr><td>14 and up</td><td>Meson batteries, 5D × 10, straight through armour</td><td>Deadly: the deep-site meson guns of Traveller's setting</td></tr>
+        </table>
+        <p>
+          Their fire control is +1 at TL10 and 11 and +2 from TL12, with a gunner's +1. Like any bay, the meson
+          batteries are clumsy against small ships: −2 against anything up to 2,000 tons, −4 up to 100.
+        </p>
+        <h3>The planetary navy</h3>
+        <p>
+          High Guard defends worlds with ships, and so does Mainline. A world of TL9 or better and population 5 or
+          more keeps system defence boats in orbit: one for every two population digits over three, two more at a
+          naval base. They are the best armed boats without a jump drive that the world could build: Pinnaces up to
+          TL12, the Dragon system defence boat from TL13. A world that can build none makes do with the nearest
+          thing it can import. The boats fight beside the batteries as ships do, with their own armour, guns and
+          missiles, and they can chase a fleet that tries to leave. The system pane shows how many a world has.
+        </p>
+        <h3>Their strengths</h3>
+        <ul>
+          <li><strong>Armour.</strong> Batteries are dug into rock: their armour is four-fifths of the world's tech level, 9 at TL12 and 11 at TL14. A beam laser, 1D, cannot get through that at all, and a pulse laser, 2D, rarely does. A fleet of laser ships will scratch the paint.</li>
+          <li><strong>Point defence.</strong> From TL10 a world shoots down missiles: two dice of them a round for every population digit over four. Each boat with a point defence battery stops more. A dozen missiles thrown at a big world may all be stopped.</li>
+          <li><strong>Screens.</strong> From TL12 a nuclear damper blunts particle and fusion weapons; from TL13 a meson screen blunts mesons.</li>
+          <li><strong>Depth.</strong> Batteries have deep magazines and the navy reloads between fights. Left alone, batteries rebuild a tenth of their strength a day, damaged boats mend a fifth a day, and one lost boat is replaced every week.</li>
+        </ul>
+        <h3>Their weaknesses</h3>
+        <ul>
+          <li><strong>They cannot move.</strong> Batteries fight only in orbit of their own world, and never chase. A fleet at the jump point, the gas giant or the belt is out of their reach.</li>
+          <li><strong>Small worlds are soft.</strong> A world of a few thousand people has no batteries to speak of, and below TL9 no navy. Take those first.</li>
+          <li><strong>What gets through armour.</strong> Missiles in numbers (enough to swamp the point defence), barbettes, bays, armour-piercing weapons such as railguns, fusion and plasma guns, and above all meson guns, which ignore armour entirely.</li>
+          <li><strong>They are not rebuilt under fire.</strong> Keep a fleet in orbit and the batteries stay down and the lost boats stay lost.</li>
+        </ul>
+        <h3>How to take one</h3>
+        <ul>
+          <li>Look before you jump: the system pane gives the world's population, tech level, defences and navy.</li>
+          <li>Bring the right guns. Check each class's weapons on its design sheet; a ship whose only weapons are beam lasers is for fighting other ships, not worlds.</li>
+          <li>Bring enough. At TL12 expect to need a squadron; at TL14 and up, capital ships or a great many missile boats.</li>
+          <li>Set a sensible withdrawal point on the fleet's standing orders, so a siege that is going wrong ends before the fleet does.</li>
+        </ul>
 
         <h2 id="siege">Taking a world</h2>
         <p>
-          Every peopled world has defences: ground batteries and the local system defence boats. They are
-          stronger with more people and a higher tech level, and a naval base adds a squadron's worth. A world
-          of a billion people at TL12 is a fortress; a mining camp has almost nothing. The system pane shows what
-          any world has.
+          A world falls to a fleet that silences its <a href="#defences">defences</a> and holds its orbit.
         </p>
         <ol>
           <li>Bring armed ships into orbit with <em>Besiege</em> on in their standing orders.</li>
-          <li>Silence the defences. That may take several days of battle.</li>
+          <li>Silence the batteries and destroy the planetary navy. That may take several days of battle.</li>
           <li>Hold the orbit, with none of the owner's armed ships there, until the world submits. That takes two days plus one for every two digits of population. The siege resets if you leave or are driven off.</li>
         </ol>
         <p>
-          A captured world's defences start at a quarter strength. Defences rebuild a tenth a day once nobody is
-          shooting at them.
+          A captured world's batteries start at a quarter strength, and it has no navy: the new owner's boats
+          arrive one a week. Batteries rebuild a tenth a day once nobody is shooting at them.
         </p>
         <h3>Losing your capital</h3>
         <p>

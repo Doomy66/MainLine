@@ -89,9 +89,11 @@ export function aiStartingFleet(game: Game, faction: Faction): void {
 function defenceStrength(game: Game, at: string): number {
   const world = game.world(at);
   const ws = game.worldState(at);
-  if (ws.defence <= 0) return 0;
+  const navy = game.navyOf(at);
+  const boats = navy.cls === undefined ? 0 : navy.boats * navy.cls.strength;
+  if (ws.defence <= 0) return boats;
   const fire = defenceAttacks(world).reduce((t, a) => t + a.dice * 3.5 * a.multiple * a.count, 0.5);
-  return Math.sqrt((ws.defence + defenceArmour(world) * 10) * fire) * (ws.defence / Math.max(1, defenceMax(world)) + 0.2);
+  return Math.sqrt((ws.defence + defenceArmour(world) * 10) * fire) * (ws.defence / Math.max(1, defenceMax(world)) + 0.2) + boats;
 }
 
 /** Enemy strength a faction believes is at a system: what it sees, or last saw. */

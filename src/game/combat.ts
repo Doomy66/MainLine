@@ -25,10 +25,10 @@
  * damage lands.
  */
 
-import type { Attack } from "../catalogue/shipclass";
+import type { Attack, ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
 import type { Rng } from "./rng";
-import { defenceArmour, defenceAttacks, defenceMax, ROUNDS_PER_DAY } from "./rules";
+import { defenceArmour, defenceAttacks, defenceFireControl, defenceMax, ROUNDS_PER_DAY } from "./rules";
 import type { Fleet, Loc, Ship, TargetPriority } from "./types";
 import { LOC_NAMES } from "./types";
 
@@ -101,6 +101,40 @@ function partyThrust(p: Party): number {
 function partyHullShare(p: Party): number {
   const left = p.combatants.reduce((s, c) => s + Math.max(0, c.hull), 0);
   return p.startHull === 0 ? 0 : left / p.startHull;
+}
+
+/** A craft of a class that is not one of anybody's ships: a world's defence boat. */
+function classCombatant(c: ShipClass, damage: number, label: string): Combatant {
+  return {
+    label,
+    tons: c.tons,
+    hullMax: c.hull,
+    hull: c.hull - damage,
+    armour: c.armour,
+    thrust: c.thrust,
+    evade: c.evade,
+    sensorDm: c.sensorDm,
+    fireControl: c.fireControl,
+    gunnery: 1,
+    attacks: c.attacks.map((a) => ({ ...a })),
+    sandcasters: c.sandcasters,
+    pointDefence: c.pointDefence,
+    lasers: c.attacks.filter((a) => a.laser && a.multiple === 1).reduce((n, a) => n + a.count, 0),
+    mesonScreen: c.mesonScreen,
+    nuclearDamper: c.nuclearDamper,
+    // Boats defending their own world reload between fights.
+    missiles: c.missiles,
+    torpedoes: c.torpedoes,
+    pdLeft: 0,
+    sandLeft: 0,
+    crits: 0,
+  };
+}
+
+/** Fighting value of a combatant as it stands, in the same measure as a class's strength. */
+function combatantStrength(c: Combatant): number {
+  const fire = c.attacks.reduce((t, a) => t + a.dice * 3.5 * a.multiple * a.count * a.perSalvo * (a.ion ? 0.5 : 1), 0.5);
+  return Math.sqrt((Math.max(0, c.hull) + c.armour * 10) * fire);
 }
 
 /** A ship as it goes into battle, damage and critical hits and all. */
@@ -227,17 +261,41 @@ interface Hit {
   readonly effect: number;
 }
 
-function attackRoll(rng: Rng, from: Combatant, target: Combatant, attack: Attack): number {
-  let dm = from.gunnery + from.fireControl + Math.max(-2, Math.min(2, from.sensorDm));
-  dm -= Math.min(target.evade, target.thrust);
-  if (attack.ordnance !== undefined) dm += 2; // Smart.
-  else if (attack.heavy) dm += target.tons <= 100 ? -4 : target.tons <= 2000 ? -2 : 0;
-  return rng.twoD() + dm - 8;
+/** The modifiers to one attack, each named, so a battle report can show its working. */
+function attackDms(from: Combatant, target: Combatant, attack: Attack): { total: number; parts: string[] } {
+  const parts: [string, number][] = [
+    ["gunner", from.gunnery],
+    ["fire control", from.fireControl],
+    ["sensors", Math.max(-2, Math.min(2, from.sensorDm))],
+    ["evade", -Math.min(target.evade, target.thrust)],
+  ];
+  if (attack.ordnance !== undefined) parts.push(["smart", 2]);
+  else if (attack.heavy) parts.push(["small target", target.tons <= 100 ? -4 : target.tons <= 2000 ? -2 : 0]);
+  const shown = parts.filter(([, v]) => v !== 0);
+  return {
+    total: parts.reduce((t, [, v]) => t + v, 0),
+    parts: shown.map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`),
+  };
 }
 
 function armourAgainst(target: Combatant, attack: Attack): number {
   if (attack.meson) return 0;
   return Math.max(0, target.armour - attack.ap);
+}
+
+/** One attack as it happened, for the report. */
+interface Shot {
+  readonly from: Combatant;
+  readonly target: Combatant;
+  readonly attack: Attack;
+  readonly dm: { total: number; parts: string[] };
+  /** Missiles or torpedoes launched, and how many point defence stopped. */
+  readonly launched: number;
+  readonly stopped: number;
+  /** Null where nothing got through to roll for. */
+  readonly effect: number | null;
+  readonly armour: number;
+  readonly amount: number;
 }
 
 /** One shot, or one salvo, from one weapon. */
@@ -248,10 +306,15 @@ function fire(
   enemies: Combatant[],
   hits: Hit[],
   priority: TargetPriority | undefined,
+  shots: Shot[],
 ): void {
   const target = pickTarget(rng, attack, enemies, priority);
   if (target === undefined) return;
+  const dm = attackDms(from, target, attack);
+  const armour = armourAgainst(target, attack);
   let salvo = 1;
+  let launched = 0;
+  let stopped = 0;
   if (attack.ordnance !== undefined) {
     const store = attack.ordnance === "missile" ? "missiles" : "torpedoes";
     // Defences have magazines deep enough not to count.
@@ -260,14 +323,20 @@ function fire(
       from[store] -= attack.perSalvo;
     }
     salvo = attack.perSalvo;
-    const stopped = Math.min(target.pdLeft, salvo);
+    launched = salvo;
+    stopped = Math.min(target.pdLeft, salvo);
     target.pdLeft -= stopped;
     salvo -= stopped;
-    if (salvo === 0) return;
+    if (salvo === 0) {
+      shots.push({ from, target, attack, dm, launched, stopped, effect: null, armour, amount: 0 });
+      return;
+    }
   }
-  const effect = attackRoll(rng, from, target, attack);
-  if (effect < 0) return;
-  const armour = armourAgainst(target, attack);
+  const effect = rng.twoD() + dm.total - 8;
+  if (effect < 0) {
+    shots.push({ from, target, attack, dm, launched, stopped, effect, armour, amount: 0 });
+    return;
+  }
   let amount = 0;
   if (attack.ordnance !== undefined) {
     for (let i = 0; i < salvo; i++) amount += Math.max(0, rng.roll(attack.dice) + (i === 0 ? effect : 0) - armour);
@@ -282,7 +351,42 @@ function fire(
     amount = Math.max(0, base) * attack.multiple;
   }
   if (attack.ion) amount = Math.floor(amount / 2);
+  shots.push({ from, target, attack, dm, launched, stopped, effect, armour, amount });
   if (amount > 0) hits.push({ target, amount, effect });
+}
+
+/**
+ * The round's fire, one line for each weapon of each ship at each target: how
+ * many fired, what they needed, how many hit and for how much. Enough to see
+ * who did what to whom, without a line for every laser.
+ */
+function describeShots(shots: readonly Shot[], lines: string[]): void {
+  const groups = new Map<string, Shot[]>();
+  for (const s of shots) {
+    const key = `${s.from.label}|${s.attack.label}|${s.target.label}`;
+    groups.set(key, [...(groups.get(key) ?? []), s]);
+  }
+  for (const group of groups.values()) {
+    const first = group[0]!;
+    const a = first.attack;
+    const rolled = group.filter((s) => s.effect !== null);
+    const hitting = rolled.filter((s) => s.effect! >= 0);
+    const need = 8 - first.dm.total;
+    const dms = first.dm.parts.length === 0 ? "no DMs" : first.dm.parts.join(", ");
+    const what =
+      a.ordnance !== undefined
+        ? `${group.reduce((n, s) => n + s.launched, 0)} ${a.ordnance === "missile" ? "missile" : "torpedo"}${group.reduce((n, s) => n + s.launched, 0) === 1 ? "" : "s"} from ${group.length} ${a.label}`
+        : `${group.length} × ${a.label}`;
+    const stopped = group.reduce((n, s) => n + s.stopped, 0);
+    const damage = hitting.map((s) => s.amount);
+    const armourNote = first.armour > 0 ? `, armour ${first.armour}` : a.meson ? ", armour ignored" : "";
+    const mult = a.multiple > 1 ? `, ×${a.multiple}` : "";
+    lines.push(
+      `    ${first.from.label} → ${first.target.label}: ${what}, needing ${need}+ (${dms}${armourNote}${mult}).` +
+        `${stopped > 0 ? ` ${stopped} shot down.` : ""}` +
+        ` ${hitting.length} of ${rolled.length} hit${hitting.length > 0 ? `, for ${damage.join(", ")}` : ""}.`,
+    );
+  }
 }
 
 /** Critical hits, High Guard's location table cut to what the game tracks. */
@@ -403,7 +507,10 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       strength: game.fleetStrength(fleet),
     });
   }
-  if (loc === "main" && ws.defence > 0 && world.uwp.population > 0) {
+  const navy = ws.navy ?? null;
+  const navyClass = navy !== null && game.catalogue.has(navy.classId) ? game.catalogue.get(navy.classId) : undefined;
+  const boats = navyClass === undefined ? [] : navy!.boats;
+  if (loc === "main" && (ws.defence > 0 || boats.length > 0) && world.uwp.population > 0) {
     const attacks = defenceAttacks(world);
     const defences: Combatant = {
       label: `${world.name} defences`,
@@ -413,8 +520,8 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       armour: defenceArmour(world),
       thrust: 0,
       evade: 0,
-      sensorDm: world.uwp.tl >= 12 ? 1 : 0,
-      fireControl: Math.min(4, Math.max(0, world.uwp.tl - 9)),
+      sensorDm: 0,
+      fireControl: defenceFireControl(world),
       gunnery: 1,
       attacks,
       sandcasters: 0,
@@ -428,15 +535,18 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       sandLeft: 0,
       crits: 0,
     };
+    // The planetary navy fights beside the batteries.
+    const navyCombatants = boats.map((damage, i) => classCombatant(navyClass!, damage, `${world.name} navy ${navyClass!.name} ${i + 1}`));
+    const combatants = [...(ws.defence > 0 ? [defences] : []), ...navyCombatants];
     parties.push({
       key: `def:${system}`,
       side: ws.owner,
       label: ws.owner === null ? `independent ${world.name}` : `${world.name} (${game.faction(ws.owner).name})`,
       worldAt: system,
-      combatants: [defences],
+      combatants,
       escaped: false,
-      startHull: defences.hull,
-      strength: Math.sqrt(defences.hull * attacks.reduce((t, a) => t + a.dice * 3.5 * a.multiple * a.count, 0.5)),
+      startHull: combatants.reduce((s, c) => s + c.hull, 0),
+      strength: combatants.reduce((s, c) => s + combatantStrength(c), 0),
     });
   }
   if (parties.length < 2) return null;
@@ -455,8 +565,15 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       if (p.fleet === undefined) continue;
       const wants = p.fleet.standing.evade || partyHullShare(p) <= p.fleet.standing.withdrawAt;
       if (!wants) continue;
-      const chasers = foes.filter((f) => aggressor(f, p));
-      const chase = chasers.length === 0 ? 0 : Math.max(...chasers.map(partyThrust));
+      // Only a real threat can hold a fleet: an armed, armoured ship that can
+      // move, in a force not trivial beside the fleet it is chasing. A boat that
+      // cannot hurt you does not keep you under a world's guns.
+      const fleeing = p.combatants.filter(alive).reduce((s, c) => s + combatantStrength(c), 0);
+      const chasers = foes
+        .filter((f) => aggressor(f, p))
+        .map((f) => f.combatants.filter((c) => alive(c) && c.thrust > 0 && c.armour > 0 && c.attacks.length > 0))
+        .filter((cs) => cs.length > 0 && cs.reduce((s, c) => s + combatantStrength(c), 0) >= fleeing * 0.25);
+      const chase = chasers.length === 0 ? 0 : Math.max(...chasers.map((cs) => Math.max(...cs.map((c) => c.thrust))));
       const roll = rng.twoD() + partyThrust(p) - chase;
       if (chasers.length === 0 || roll >= 8) {
         p.escaped = true;
@@ -474,15 +591,17 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       }
     }
     const hits: Hit[] = [];
+    const shots: Shot[] = [];
     for (const [p, foes] of firing) {
       const enemies = foes.flatMap((f) => f.combatants);
       for (const c of p.combatants) {
         if (!alive(c)) continue;
         for (const attack of c.attacks) {
-          for (let i = 0; i < attack.count; i++) fire(rng, c, attack, enemies, hits, p.fleet?.standing.target);
+          for (let i = 0; i < attack.count; i++) fire(rng, c, attack, enemies, hits, p.fleet?.standing.target, shots);
         }
       }
     }
+    describeShots(shots, lines);
     const dealt = new Map<Combatant, number>();
     for (const h of hits) dealt.set(h.target, (dealt.get(h.target) ?? 0) + h.amount);
     for (const [c, amount] of dealt) lines.push(`  ${c.label} takes ${amount} damage.`);
@@ -517,14 +636,18 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
         if (fleet.order?.kind === "move") fleet.order = null;
       }
     } else if (p.worldAt !== undefined) {
-      const d = p.combatants[0]!;
-      ws.defence = Math.max(0, Math.round(d.hull));
+      const batteries = p.combatants.find((c) => c.tons === 1_000_000);
+      if (batteries !== undefined) ws.defence = Math.max(0, Math.round(batteries.hull));
       ws.fought = game.state.day;
-      summary.push(
-        ws.defence === 0
-          ? `${p.label}: defences silenced.`
-          : `${p.label}: defences at ${Math.round((100 * ws.defence) / d.hullMax)}%.`,
-      );
+      const max = defenceMax(world);
+      const boatsIn = p.combatants.filter((c) => c !== batteries);
+      const boatsLeft = boatsIn.filter(alive);
+      if (navy !== null && navyClass !== undefined) navy.boats = boatsLeft.map((c) => c.hullMax - c.hull);
+      const parts = [
+        ws.defence === 0 ? "defences silenced" : `defences at ${Math.round((100 * ws.defence) / Math.max(1, max))}%`,
+        boatsIn.length === 0 ? "" : `navy ${boatsLeft.length} of ${boatsIn.length} boats left`,
+      ].filter((x) => x !== "");
+      summary.push(`${p.label}: ${parts.join(", ")}.`);
     }
   }
   const names = involved.map((p) => p.label);

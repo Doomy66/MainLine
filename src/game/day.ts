@@ -38,6 +38,8 @@ import {
   ROUGH_JUMP_CHANCE_ON_2D,
   hiresTenders,
   tenderCost,
+  NAVY_REPAIR,
+  navySize,
   breakawayChance,
   DISORDER_DAYS,
   DISORDER_INCOME,
@@ -45,6 +47,7 @@ import {
   type FuelSource,
 } from "./rules";
 import type { Faction, Fleet, Loc, Order, Sighting } from "./types";
+import type { World } from "../sector/sec";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
 
@@ -219,6 +222,9 @@ function capture(game: Game, at: string, by: string): void {
   ws.owner = by;
   ws.siege = null;
   ws.defence = Math.round(defenceMax(world) * CAPTURED_DEFENCE);
+  // The old navy went down fighting; the new owner builds its own, a boat a week.
+  const fresh = game.freshNavy(world);
+  ws.navy = fresh === null ? null : { classId: fresh!.classId, boats: [] };
   const taker = game.faction(by);
   const alive = game.state.factions.filter((f) => f.alive).map((f) => f.id);
   // Each capital hears of it when a courier gets there.
@@ -303,6 +309,16 @@ function fallOfCapital(game: Game, factionId: string, lostAt: string): void {
   }
 }
 
+/** A planetary navy left in peace mends its boats, and replaces one lost a week. */
+function mendNavy(game: Game, world: World): void {
+  const ws = game.worldState(world.at);
+  const navy = ws.navy;
+  if (navy === null || navy === undefined || !game.catalogue.has(navy.classId)) return;
+  const cls = game.catalogue.get(navy.classId);
+  navy.boats = navy.boats.map((d) => Math.max(0, d - Math.ceil(cls.hull * NAVY_REPAIR)));
+  if (isWeekEnd(game.state.day) && navy.boats.length < navySize(world)) navy.boats.push(0);
+}
+
 function sieges(game: Game): void {
   const day = game.state.day;
   for (const world of game.state.sector.worlds) {
@@ -319,10 +335,11 @@ function sieges(game: Game): void {
       if (ws.fought !== day && ws.defence < max) {
         ws.defence = Math.min(max, ws.defence + Math.ceil(max * DEFENCE_REGEN));
       }
+      if (ws.fought !== day) mendNavy(game, world);
       continue;
     }
-    // Still shooting back: the siege has not begun.
-    if (ws.defence > 0) {
+    // Still shooting back, or boats still in orbit: the siege has not begun.
+    if (ws.defence > 0 || (ws.navy?.boats.length ?? 0) > 0) {
       ws.siege = null;
       continue;
     }

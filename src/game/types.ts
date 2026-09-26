@@ -218,10 +218,21 @@ export interface Faction {
   waiting: boolean;
 }
 
+/**
+ * A world's planetary navy: system defence boats of one class, each by the
+ * damage it carries. A boat lost is gone from the list until it is replaced.
+ */
+export interface Navy {
+  readonly classId: string;
+  boats: number[];
+}
+
 export interface WorldState {
   owner: string | null;
   /** Defence hull points left. */
   defence: number;
+  /** The planetary navy, where the world has one. */
+  navy?: Navy | null;
   siege: { by: string; days: number } | null;
   /** The last day there was a battle at the main world. */
   fought: number;
