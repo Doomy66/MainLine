@@ -35,6 +35,8 @@ import {
   STARPORTS,
 } from "../sector/uwp";
 import { distanceBetween } from "../sector/hex";
+import { starportRank } from "../sector/mains";
+import type { World } from "../sector/sec";
 import { chip, h, mcr, meter, pct, tons } from "./dom";
 import { planning, whereIs, type Ctx } from "./gameview";
 
@@ -534,10 +536,13 @@ function catalogueTable(ctx: Ctx, action: (cls: ShipClass) => HTMLElement, price
 
 export function shipyardPane(ctx: Ctx): HTMLElement {
   const { game, me } = ctx;
-  const own = game.ownedWorlds(me.id).filter((w) => ["A", "B", "C"].includes(w.uwp.starport));
+  // Best yards first: by starport class, then by tech level, highest first.
+  const byYard = (a: World, b: World) =>
+    starportRank(a.uwp.starport) - starportRank(b.uwp.starport) || b.uwp.tl - a.uwp.tl || a.name.localeCompare(b.name);
+  const own = game.ownedWorlds(me.id).filter((w) => ["A", "B", "C"].includes(w.uwp.starport)).sort(byYard);
   const independent = game.state.sector.worlds
     .filter((w) => w.uwp.starport === "A" && game.worldState(w.at).owner === null)
-    .sort((a, b) => distanceBetween(me.capital, a.at) - distanceBetween(me.capital, b.at));
+    .sort(byYard);
   const yards = [...own, ...independent];
   if (ctx.yard === null || !yards.some((w) => w.at === ctx.yard)) ctx.yard = own.find((w) => w.uwp.starport === "A")?.at ?? yards[0]?.at ?? null;
   const yard = ctx.yard === null ? undefined : game.world(ctx.yard);
