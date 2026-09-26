@@ -1,5 +1,6 @@
-<!-- The `hexagons` glyph is from Tabler Icons by Pawel Kuna, MIT licence.
-     Full text in LICENSE-tabler-icons.txt beside this file. -->
+<!-- Mainline's mark: three worlds a jump apart, a Main, and a fleet on its way
+     along it. Drawn to the same frame and glyph grid as PlanetHex and the
+     Traveller Ship Designer, so the three read as one family. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
   <rect width="256" height="256" rx="52" fill="#14161a" />
   <rect x="4" y="4" width="248" height="248" rx="48" fill="none" stroke="#2e333c" stroke-width="4" />
@@ -11,8 +12,11 @@
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <path d="M4 18v-5l4 -2l4 2v5l-4 2l-4 -2" />
-    <path d="M8 11v-5l4 -2l4 2v5" />
-    <path d="M12 13l4 -2l4 2v5l-4 2l-4 -2" />
+    <circle cx="5" cy="17" r="2" />
+    <circle cx="12" cy="7" r="2" />
+    <circle cx="19" cy="17" r="2" />
+    <path d="M6.2 15.3l4.6 -6.6" />
+    <path d="M13.2 8.7l4.6 6.6" />
+    <path d="M9 20.5l3 -2l-3 -2" />
   </g>
 </svg>

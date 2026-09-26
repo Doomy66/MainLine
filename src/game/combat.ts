@@ -82,7 +82,7 @@ export interface BattleReport {
 }
 
 const DAMAGE_CRIT_EFFECT = 6;
-/** One enormous hit wrecks a ship; it does not need to list every system it wrecked. */
+/** A ship that survives a round takes no more than this many critical hits in it. */
 const MAX_CRITS_PER_HIT = 3;
 
 function alive(c: Combatant): boolean {
@@ -342,19 +342,28 @@ function critical(rng: Rng, c: Combatant, lines: string[]): void {
   lines.push(`  ${c.label}: critical hit, ${what}.`);
 }
 
+/**
+ * All of a round's damage lands at once. Critical hits are worked out per ship
+ * for the round rather than per hit, and not at all for a ship that did not
+ * survive it: a wreck does not need its every system listed.
+ */
 function land(rng: Rng, hits: Hit[], lines: string[]): void {
+  const byTarget = new Map<Combatant, { amount: number; effect: number }>();
   for (const hit of hits) {
-    const c = hit.target;
+    const held = byTarget.get(hit.target) ?? { amount: 0, effect: 0 };
+    byTarget.set(hit.target, { amount: held.amount + hit.amount, effect: Math.max(held.effect, hit.effect) });
+  }
+  for (const [c, { amount, effect }] of byTarget) {
     if (c.hull <= 0) continue;
     const before = c.hull;
-    c.hull -= hit.amount;
-    if (c.ship !== undefined) {
+    c.hull -= amount;
+    if (c.ship !== undefined && c.hull > 0) {
       const step = c.hullMax / 10;
-      const crossed = Math.floor((c.hullMax - Math.max(0, c.hull)) / step) - Math.floor((c.hullMax - before) / step);
-      const count = Math.min(MAX_CRITS_PER_HIT, crossed + (hit.effect >= DAMAGE_CRIT_EFFECT ? 1 : 0));
+      const crossed = Math.floor((c.hullMax - c.hull) / step) - Math.floor((c.hullMax - before) / step);
+      const count = Math.min(MAX_CRITS_PER_HIT, crossed + (effect >= DAMAGE_CRIT_EFFECT ? 1 : 0));
       for (let i = 0; i < count && c.hull > 0; i++) critical(rng, c, lines);
     }
-    if (c.hull <= 0 && before > 0) lines.push(`  ${c.label} is destroyed.`);
+    if (c.hull <= 0) lines.push(c.ship === undefined ? `  ${c.label} are silenced.` : `  ${c.label} is destroyed.`);
   }
 }
 

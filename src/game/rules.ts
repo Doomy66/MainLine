@@ -89,8 +89,8 @@ export function hasScoutBase(world: World): boolean {
  */
 export function defenceMax(world: World): number {
   const { population, tl } = world.uwp;
-  if (population === 0 || tl < 7) return hasNavalBase(world) ? 200 : 0;
-  return Math.round(population * 20 * (1 + tl / 10) + (hasNavalBase(world) ? 200 : 0));
+  if (population === 0 || tl < 7) return hasNavalBase(world) ? 300 : 0;
+  return Math.round(population * 60 * (1 + tl / 10) + (hasNavalBase(world) ? 300 : 0));
 }
 
 /** Armour of the defences: rock, and as much of it as the world can pour. */
@@ -102,11 +102,13 @@ export function defenceArmour(world: World): number {
  * What the defences shoot with, by tech level. A world gets a battery for every
  * population digit over four, three more for a naval base and one for a scout
  * base. The weapon is the best a world of its TL could mount in the ground.
+ * A world is a fortress: it takes a squadron, not a pair of cruisers, to
+ * silence one with a billion people on it.
  */
 export function defenceAttacks(world: World): Attack[] {
   const { population, tl } = world.uwp;
   const batteries =
-    Math.max(0, population - 4) + (hasNavalBase(world) ? 3 : 0) + (hasScoutBase(world) ? 1 : 0);
+    Math.max(0, population - 3) + (hasNavalBase(world) ? 3 : 0) + (hasScoutBase(world) ? 1 : 0);
   if (batteries === 0 || tl < 7) return [];
   const base = { ap: 0, count: batteries, perSalvo: 1, heavy: false, laser: false, radiation: false, meson: false, ion: false };
   if (tl >= 14) return [{ ...base, label: "Meson battery", dice: 5, multiple: 10, ap: Infinity, heavy: true, meson: true }];

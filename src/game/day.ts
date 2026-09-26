@@ -219,20 +219,26 @@ function capture(game: Game, at: string, by: string): void {
   }
 }
 
-function sieges(game: Game, battled: ReadonlySet<string>): void {
+function sieges(game: Game): void {
   const day = game.state.day;
   for (const world of game.state.sector.worlds) {
     const ws = game.worldState(world.at);
     const max = defenceMax(world);
-    if (ws.fought !== day && ws.defence < max) {
-      ws.defence = Math.min(max, ws.defence + Math.ceil(max * DEFENCE_REGEN));
-    }
     const here = game.fleetsAt(world.at, "main");
     const besiegers = here.filter(
       (f) => f.standing.besiege && f.owner !== ws.owner && game.fleetArmed(f),
     );
     const defended = here.some((f) => f.owner === ws.owner && game.fleetArmed(f));
-    if (besiegers.length === 0 || ws.defence > 0 || defended) {
+    if (besiegers.length === 0 || defended) {
+      ws.siege = null;
+      // Defences rebuild only when nobody is sitting in orbit shooting at them.
+      if (ws.fought !== day && ws.defence < max) {
+        ws.defence = Math.min(max, ws.defence + Math.ceil(max * DEFENCE_REGEN));
+      }
+      continue;
+    }
+    // Still shooting back: the siege has not begun.
+    if (ws.defence > 0) {
       ws.siege = null;
       continue;
     }
@@ -244,14 +250,17 @@ function sieges(game: Game, battled: ReadonlySet<string>): void {
     const need = captureDays(world);
     if (ws.siege.days >= need) {
       capture(game, world.at, by);
-    } else if (!battled.has(`${world.at}|main`) || ws.siege.days === 1) {
+    } else if (ws.siege.days === 1 || ws.siege.days === need - 1) {
       const to = [by, ...(ws.owner === null ? [] : [ws.owner])];
       game.log({
         to,
         kind: "info",
-        text: `${world.name} is under siege by ${game.faction(by).name}: day ${ws.siege.days} of ${need}.`,
+        text:
+          ws.siege.days === 1
+            ? `${world.name}'s defences are silenced and ${game.faction(by).name} holds its orbit. It submits in ${need} days if the siege holds.`
+            : `${world.name} will submit to ${game.faction(by).name} tomorrow unless the siege is broken.`,
         at: world.at,
-        wake: ws.siege.days === 1,
+        wake: true,
       });
     }
   }
@@ -471,7 +480,7 @@ export function advanceDay(game: Game): void {
     if (fleet.loc === "main" && game.worldState(fleet.system).owner === fleet.owner) dockyard(game, fleet);
   }
 
-  sieges(game, battled);
+  sieges(game);
   yards(game);
   if (isWeekEnd(day)) economy(game);
   intel(game);
