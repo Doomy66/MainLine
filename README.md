@@ -164,9 +164,6 @@ design engine and reports anything that breaks the rules.
 - **Wait for news waits for your news.** It should stop only for reports about
   your own fleets or systems. Today any world changing hands anywhere, or any
   faction being wiped out, wakes everybody.
-- **Tell the player when a ship is built.** A report is written today, but it
-  is easy to miss among the rest. Make it stand out, with a notice at the start
-  of the turn, and point to the new ship's fleet.
 - **Icons in the reports.** Every faction gets an emblem as well as a colour,
   shown beside its name so it is easy to see who is who. Every report gets an
   icon for its kind too: battle, capture, arrival, sighting, new ship, money,
