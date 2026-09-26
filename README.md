@@ -164,8 +164,10 @@ design engine and reports anything that breaks the rules.
 - **Tell the player when a ship is built.** A report is written today, but it
   is easy to miss among the rest. Make it stand out, with a notice at the start
   of the turn, and point to the new ship's fleet.
-- **Faction icons.** Every faction gets an emblem as well as a colour, shown
-  beside its name in the reports so it is easy to see who is who.
+- **Icons in the reports.** Every faction gets an emblem as well as a colour,
+  shown beside its name so it is easy to see who is who. Every report gets an
+  icon for its kind too: battle, capture, arrival, sighting, new ship, money,
+  loss.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
   carrier's own guns do. Go through the catalogue for ships whose designs carry
   fighters (the Hyperion, Arakoine and Azhanti among them) and let each carry a
