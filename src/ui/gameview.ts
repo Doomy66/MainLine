@@ -55,7 +55,8 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
   const pane = h("div", { class: "pane" });
   const help = h("div", { class: "map-help" }, "Wheel to zoom, drag to move, click a system.");
   const banner = h("div", { class: "mode-banner", style: "display:none" });
-  const mapBox = h("div", { class: "map" }, map.element, help, banner);
+  const notices = h("div", { class: "notices" });
+  const mapBox = h("div", { class: "map" }, map.element, help, banner, notices);
   const side = h("div", { class: "side" }, tabs, pane);
   root.replaceChildren(h("div", { class: "game" }, bar, mapBox, side));
 
@@ -123,9 +124,10 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
           ctx.command(
             fleet,
             { order: plan.tender === true ? { kind: "jump", route, tender: true } : { kind: "jump", route } },
-            route.length === 1
+            (route.length === 1
               ? `${fleet.name} to jump to ${game.world(at).name}.`
-              : `${fleet.name} to jump to ${game.world(at).name} in ${route.length} jumps, refuelling on the way.`,
+              : `${fleet.name} to jump to ${game.world(at).name} in ${route.length} jumps, refuelling on the way.`) +
+              (plan.tender === true ? " Jump tenders will carry its ships without jump drives." : ""),
           );
           return;
         }
@@ -311,6 +313,52 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     readTo.set(me.id, game.state.day);
     ctx.system = me.capital;
     render();
+    showNotices();
+  }
+
+  /**
+   * Ships finished since this player last looked, where they will not be missed:
+   * a card over the map, each with a way to the fleet the ship joined.
+   */
+  function showNotices(): void {
+    const me = ctx.me;
+    const built = game.logFor(me.id).filter((e) => e.kind === "build" && e.day > ctx.newFrom && /commissioned/.test(e.text));
+    if (built.length === 0 || game.state.phase !== "play") {
+      notices.replaceChildren();
+      return;
+    }
+    const close = () => notices.replaceChildren();
+    notices.replaceChildren(
+      h(
+        "div",
+        { class: "notice-card" },
+        h("div", { class: "row" }, h("strong", {}, built.length === 1 ? "A new ship" : `${built.length} new ships`), h("span", { class: "spacer" }), h("button", { class: "small", onclick: close }, "✕")),
+        built.map((e) =>
+          h(
+            "div",
+            { class: "row notice-line" },
+            h("span", {}, e.text),
+            e.at === undefined
+              ? null
+              : h(
+                  "button",
+                  {
+                    class: "small",
+                    onclick: () => {
+                      const at = e.at!;
+                      const fleets = game.fleetsSeenBy(me.id).filter((f) => f.transit === null && f.system === at);
+                      const yard = fleets.find((f) => f.name.endsWith("Yard")) ?? fleets[0];
+                      map.centreOn(at);
+                      if (yard !== undefined) ctx.selectFleet(yard.id);
+                      else ctx.selectSystem(at);
+                    },
+                  },
+                  "Show",
+                ),
+          ),
+        ),
+      ),
+    );
   }
 
   function handover(next: Faction, then: () => void): void {

@@ -123,6 +123,8 @@ export interface Fleet {
 export interface Build {
   readonly classId: string;
   readonly at: string;
+  /** The day work begins: today, or when a slip at the yard comes free. */
+  readonly start?: number;
   readonly done: number;
   readonly name: string;
 }

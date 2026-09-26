@@ -11,8 +11,10 @@ import {
   canBuildAt,
   captureDays,
   defenceMax,
+  buildDaysFor,
   fuelSources,
   hiresTenders,
+  slipsAt,
   income,
   TENDER_JUMP,
   tenderCost,
@@ -180,8 +182,10 @@ function orderText(game: Game, f: Fleet): string {
   switch (o.kind) {
     case "move":
       return `Moving to the ${LOC_NAMES[o.to].toLowerCase()}`;
-    case "jump":
-      return o.route.length === 0 ? "Jumping" : `Jumping to ${o.route.map((at) => game.world(at).name).join(" → ")}`;
+    case "jump": {
+      const carried = o.tender === true || f.tender === true ? ", jump tenders carrying the ships without drives" : "";
+      return o.route.length === 0 ? `Jumping${carried}` : `Jumping to ${o.route.map((at) => game.world(at).name).join(" → ")}${carried}`;
+    }
     case "refuel":
       return "Refuelling";
     case "repair":
@@ -555,7 +559,30 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
     independent.length > 0 ? h("optgroup", { label: "Independent yards, 20% dearer" }, independent.map((w) => h("option", { value: w.at, selected: w.at === ctx.yard }, `${w.name} (TL${w.uwp.tl}, ${distanceBetween(me.capital, w.at)} pc)`))) : null,
   );
 
-  const queue = me.builds.map((b) => h("tr", {}, h("td", {}, b.name), h("td", {}, game.catalogue.get(b.classId).name), h("td", {}, game.world(b.at).name), h("td", { class: "r num" }, `day ${b.done}`)));
+  const today = game.state.day;
+  const queue = me.builds.map((b) =>
+    h(
+      "tr",
+      {},
+      h("td", {}, b.name),
+      h("td", {}, game.catalogue.get(b.classId).name),
+      h("td", {}, game.world(b.at).name),
+      h("td", { class: "r num" }, (b.start ?? today) > today ? `waits to day ${b.start}` : "on the slips"),
+      h("td", { class: "r num" }, `day ${b.done}`),
+    ),
+  );
+  const slipLine = (() => {
+    if (yard === undefined) return null;
+    const total = slipsAt(yard);
+    const onSlips = game.buildsAt(yard.at).filter((b) => (b.start ?? today) <= today && b.done > today).length;
+    const waiting = game.buildsAt(yard.at).filter((b) => (b.start ?? today) > today).length;
+    const next = game.scheduleAt(yard.at, 0).start;
+    return h(
+      "p",
+      { class: "hint" },
+      `${total} slip${total === 1 ? "" : "s"}, ${onSlips} in use${waiting > 0 ? `, ${waiting} waiting` : ""}. ${next > today ? `The next slip comes free on day ${next}.` : "A slip is free now."}`,
+    );
+  })();
 
   return h(
     "div",
@@ -591,6 +618,7 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
       h("a", { href: "https://doomy66.github.io/Traveller-Ship-Design/", target: "_blank", rel: "noopener", class: "hint" }, "Design one in the Ship Designer"),
     ),
     queue.length > 0 ? h("div", {}, h("h2", {}, "Building"), h("table", {}, queue)) : null,
+    slipLine,
     yard === undefined
       ? null
       : h(
@@ -612,7 +640,11 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
                     ctx.refresh();
                   },
                 },
-                `Build · ${Math.max(7, Math.ceil(cls.buildDays * game.state.options.buildSpeed))}d`,
+                (() => {
+                  const days = buildDaysFor(cls, game.state.options.buildSpeed);
+                  const when = game.scheduleAt(yard.at, days);
+                  return when.start > game.state.day ? `Queue · day ${when.done}` : `Build · ${days}d`;
+                })(),
               );
             },
             (cls) => yardPrice(cls, isOwn),

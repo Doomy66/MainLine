@@ -9,7 +9,7 @@ import { routeTo } from "./nav";
 import { captureDays, defenceMax, jumpFuel } from "./rules";
 import { parseGame, serialise } from "./save";
 import { createGame, DEFAULT_OPTIONS } from "./setup";
-import { aiSetup, buyStarting, endTurn, runDays } from "./turn";
+import { aiSetup, buyStarting, endTurn, orderBuild, runDays } from "./turn";
 import type { GameOptions } from "./types";
 import { STANDING_PRESETS } from "./types";
 
@@ -147,6 +147,23 @@ describe("taking a world", () => {
     for (let i = 0; i < 10; i++) advanceDay(game);
     expect(game.worldState(target.at).owner).toBeNull();
     expect(game.state.log.some((e) => e.kind === "combat" && e.at === target.at)).toBe(false);
+  });
+});
+
+describe("shipyards", () => {
+  it("build three at a time at a class A yard, and queue the rest", () => {
+    const game = newGame({}, 1);
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const yard = game.state.sector.worlds.find((w) => w.uwp.starport === "A" && w.uwp.tl >= 12)!;
+    game.worldState(yard.at).owner = me.id;
+    me.credits = 10_000;
+    for (let i = 0; i < 4; i++) expect(orderBuild(game, me, "Patrol-Corvette", yard.at)).toBe("");
+    const [a, b, c, d] = me.builds;
+    expect([a!.start, b!.start, c!.start]).toEqual([1, 1, 1]);
+    expect(d!.start).toBe(a!.done);
+    expect(d!.done - d!.start!).toBe(a!.done - a!.start!);
   });
 });
 

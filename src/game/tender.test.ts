@@ -45,6 +45,19 @@ describe("jump tenders", () => {
     expect(fleet.tender).toBe(false);
   });
 
+  it("survive being ordered the way the screen orders them", () => {
+    const { game, me } = setup();
+    const port = game.state.sector.worlds.find((w) => w.uwp.starport === "A" && game.state.sector.worlds.some((x) => distanceBetween(w.at, x.at) === 2))!.at;
+    game.worldState(port).owner = me.id;
+    const fleet = game.newFleet(me.id, port, "main", [game.newShip("Dragon-System-Defence-Boat")]);
+    const to = game.state.sector.worlds.find((w) => distanceBetween(port, w.at) === 2)!.at;
+    const route = routeTo(game, { ...fleet, tender: true }, to)!;
+    game.command(me.id, fleet.id, { order: { kind: "jump", route, tender: true } }, "jump");
+    expect(fleet.order).toMatchObject({ kind: "jump", tender: true });
+    advanceDay(game);
+    expect(fleet.transit?.to).toBe(route[0]);
+  });
+
   it("cannot be hired where there is no class A or B starport", () => {
     const { game, me } = setup();
     const poor = game.state.sector.worlds.find(

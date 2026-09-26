@@ -15,7 +15,7 @@
 import type { ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
 import { jumpMap, pathIn, routeTo } from "./nav";
-import { canBuildAt, defenceArmour, defenceAttacks, defenceMax, income, repairRate, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, income, repairRate, yardPrice } from "./rules";
 import { distanceBetween } from "../sector/hex";
 import { visibleSystems } from "./visibility";
 import type { Faction, Fleet, StandingOrders } from "./types";
@@ -150,6 +150,8 @@ function build(game: Game, faction: Faction): void {
       const mine = game.worldState(w.at).owner === faction.id;
       const price = yardPrice(cls, mine);
       if (!cls.armed || price > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
+      // A yard with a long queue is somewhere else's job.
+      if (game.scheduleAt(w.at, 0).start > game.state.day + 14) continue;
       if (cls.jump < STRIKE_JUMP && !(wantGuard && w.at === faction.capital)) continue;
       const already = game.fleetsOf(faction.id).reduce((n, f) => n + f.ships.filter((sh) => sh.classId === cls.id).length, 0);
       const score = (cls.strength / price) * Math.pow(0.9, already) * (0.9 + 0.2 * game.rng.next());
@@ -158,12 +160,8 @@ function build(game: Game, faction: Faction): void {
   }
   if (best === null) return;
   faction.credits -= best.price;
-  faction.builds.push({
-    classId: best.cls.id,
-    at: best.at,
-    done: game.state.day + Math.max(7, Math.ceil(best.cls.buildDays * game.state.options.buildSpeed)),
-    name: shipName(game.rng, game.shipNamesInUse()),
-  });
+  const { start, done } = game.scheduleAt(best.at, buildDaysFor(best.cls, game.state.options.buildSpeed));
+  faction.builds.push({ classId: best.cls.id, at: best.at, start, done, name: shipName(game.rng, game.shipNamesInUse()) });
 }
 
 /** Fleets of one faction idle in one place become one fleet, guard kept apart. */

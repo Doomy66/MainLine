@@ -260,3 +260,9 @@ dl.props dd { margin: 0; }
 }
 .standing label.row { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 6px; color: var(--text); font-size: 12px; }
 .standing label.row input { margin-top: 2px; flex: none; }
+
+/* Notices over the map at the start of a turn: ships finished, and the like. */
+.notices { position: absolute; left: 10px; top: 10px; max-width: min(460px, calc(100% - 20px)); z-index: 2; }
+.notice-card { background: rgba(28, 31, 37, 0.97); border: 1px solid var(--good); border-radius: 6px; padding: 8px 10px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
+.notice-line { flex-wrap: nowrap; align-items: flex-start; margin-top: 6px; font-size: 12.5px; }
+.notice-line span { flex: 1; }

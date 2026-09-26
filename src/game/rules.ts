@@ -232,6 +232,21 @@ export function yardPrice(cls: ShipClass, own: boolean): number {
   return own ? cls.cost : cls.cost * FOREIGN_YARD_MARKUP;
 }
 
+/**
+ * How many ships a yard can have on the slips at once, by starport class.
+ * Orders beyond that wait their turn.
+ */
+export const SLIPS: Readonly<Record<string, number>> = { A: 3, B: 2, C: 1 };
+
+export function slipsAt(world: World): number {
+  return SLIPS[world.uwp.starport] ?? 0;
+}
+
+/** Days a class takes on the slips, under the game's shipyard speed. */
+export function buildDaysFor(cls: ShipClass, buildSpeed: number): number {
+  return Math.max(7, Math.ceil(cls.buildDays * buildSpeed));
+}
+
 /** Share of a ship's hull repaired in a day at an owned starport, by class. */
 export function repairRate(port: string): number {
   return { A: 0.2, B: 0.2, C: 0.1, D: 0.05 }[port] ?? 0;

@@ -10,8 +10,8 @@ import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
 import { Rng } from "./rng";
 import { routeTo } from "./nav";
-import { jumpFuel, TENDER_JUMP } from "./rules";
-import type { Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
+import { jumpFuel, slipsAt, TENDER_JUMP } from "./rules";
+import type { Build, Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { shipName } from "./names";
 
@@ -310,6 +310,28 @@ export class Game {
     this.state.fleets = this.state.fleets.filter((f) => f.ships.length > 0);
   }
 
+  /* Shipyards ------------------------------------------------------------- */
+
+  /** Every ship on the slips or waiting for one at a yard, whoever ordered it. */
+  buildsAt(at: string): Build[] {
+    return this.state.factions.flatMap((f) => f.builds.filter((b) => b.at === at));
+  }
+
+  /**
+   * When a ship ordered today at a yard would start and finish. Each order takes
+   * the first slip to come free, in the order they were placed.
+   */
+  scheduleAt(at: string, days: number): { start: number; done: number } {
+    const today = this.state.day;
+    const slips = slipsAt(this.world(at));
+    const ends = this.buildsAt(at)
+      .map((b) => b.done)
+      .filter((d) => d > today)
+      .sort((a, b) => a - b);
+    const start = ends.length < slips ? today : ends[ends.length - slips]!;
+    return { start, done: start + days };
+  }
+
   /* The log --------------------------------------------------------------- */
 
   /**
@@ -408,9 +430,23 @@ export class Game {
     if (order?.kind === "jump" && order.route.length > 0 && fleet.transit === null) {
       const dest = order.route[order.route.length - 1]!;
       const first = order.route[0]!;
-      if (distanceBetween(fleet.system, first) > this.fleetJump(fleet) || fleet.system === first) {
-        const again = routeTo(this, fleet, dest);
+      // Judged as the fleet will be once the order is on it: a tendered jump
+      // counts the tenders, which a fleet of boats without jump drives needs to
+      // go anywhere at all.
+      const probe: Fleet = { ...fleet, order };
+      if (distanceBetween(fleet.system, first) > this.fleetJump(probe) || fleet.system === first) {
+        const again = routeTo(this, probe, dest);
         fleet.order = again === null ? null : { kind: "jump", route: again, tender: order.tender };
+        if (again === null) {
+          this.log({
+            to: [fleet.owner],
+            kind: "info",
+            text: `${fleet.name} can find no way to ${this.world(dest).name} from ${this.world(fleet.system).name}, and waits for orders.`,
+            at: fleet.system,
+            wake: true,
+            firsthand: [fleet.owner],
+          });
+        }
         return;
       }
     }

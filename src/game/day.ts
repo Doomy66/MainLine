@@ -225,14 +225,12 @@ function capture(game: Game, at: string, by: string): void {
     else f.inbox.push({ arrives: game.state.day + lag, kind: "owner", at, owner: by });
   }
   const lost = prev === null ? "independent" : `held by ${game.faction(prev).name}`;
-  game.log({
-    to: alive,
-    kind: "capture",
-    text: `${world.name} (${world.uwpText}), ${lost}, submits to ${taker.name}.`,
-    at,
-    wake: true,
-    firsthand: prev === null ? [by] : [by, prev],
-  });
+  const text = `${world.name} (${world.uwpText}), ${lost}, submits to ${taker.name}.`;
+  const parties = prev === null ? [by] : [by, prev];
+  // Everybody hears of it; only the two sides are woken by it.
+  game.log({ to: parties, kind: "capture", text, at, wake: true, firsthand: parties });
+  const others = alive.filter((id) => !parties.includes(id));
+  if (others.length > 0) game.log({ to: others, kind: "capture", text, at });
   if (prev !== null) {
     const loser = game.faction(prev);
     loser.builds = loser.builds.filter((b) => {
@@ -494,7 +492,6 @@ function endings(game: Game): void {
         to: s.factions.map((x) => x.id),
         kind: "lost",
         text: `${f.name} is no more: no worlds, no ships.`,
-        wake: true,
       });
     }
   }

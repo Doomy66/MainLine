@@ -10,7 +10,7 @@
 import { aiStartingFleet } from "./ai";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
-import { canBuildAt, whyNotBuild, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, whyNotBuild, yardPrice } from "./rules";
 import { shipName } from "./names";
 import type { Faction } from "./types";
 import { STANDING_PRESETS } from "./types";
@@ -58,9 +58,20 @@ export function orderBuild(game: Game, faction: Faction, classId: string, at: st
   const price = yardPrice(cls, owner === faction.id);
   if (price > faction.credits + 1e-9) return `The ${cls.name} costs MCr${price.toFixed(2)} here; the treasury has MCr${faction.credits.toFixed(2)}.`;
   faction.credits -= price;
-  const days = Math.max(7, Math.ceil(cls.buildDays * game.state.options.buildSpeed));
-  faction.builds.push({ classId, at, done: game.state.day + days, name: shipName(game.rng, game.shipNamesInUse()) });
-  game.log({ to: [faction.id], kind: "build", text: `The ${cls.name} is laid down at ${world.name}, due in ${days} days.`, at });
+  const days = buildDaysFor(cls, game.state.options.buildSpeed);
+  const { start, done } = game.scheduleAt(at, days);
+  faction.builds.push({ classId, at, start, done, name: shipName(game.rng, game.shipNamesInUse()) });
+  const today = game.state.day;
+  game.log({
+    to: [faction.id],
+    kind: "build",
+    text:
+      start > today
+        ? `The ${cls.name} is ordered at ${world.name}. Every slip is busy: work starts on day ${start} and she is due on day ${done}.`
+        : `The ${cls.name} is laid down at ${world.name}, due on day ${done}.`,
+    at,
+    firsthand: [faction.id],
+  });
   return "";
 }
 
