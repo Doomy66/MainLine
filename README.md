@@ -161,6 +161,9 @@ design engine and reports anything that breaks the rules.
   hard and its yards stop work. Breakaways: each of its worlds may declare
   itself independent, likelier the further it is from the new capital and the
   lower its law level.
+- **Tell the player when a ship is built.** A report is written today, but it
+  is easy to miss among the rest. Make it stand out, with a notice at the start
+  of the turn, and point to the new ship's fleet.
 - **Faction icons.** Every faction gets an emblem as well as a colour, shown
   beside its name in the reports so it is easy to see who is who.
 - **Carriers.** Fighters carried aboard a carrier do not fight yet; only the
