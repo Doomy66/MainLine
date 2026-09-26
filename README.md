@@ -96,6 +96,10 @@ with orders to besiege, and the world submits in a few days. That is two days
 plus one for every two population digits. Defences rebuild once nobody is
 shooting at them.
 
+**Losing a capital** moves the government to your next biggest world and
+throws the faction into disorder for four weeks: a quarter of the income, idle
+yards, and worlds far from the new capital, or with little law, breaking away.
+
 **Money.** At the end of each week every world pays its owner. It pays more
 for more people, higher tech, a better starport and a rich or industrial
 economy.
@@ -158,10 +162,6 @@ design engine and reports anything that breaks the rules.
   off armour, and high-tech bays miss anything small. Candidates: a floor of
   batteries on every peopled world, bay-sized ground weapons, no small-target
   penalty for ground fire control, missile silos, and defences firing first.
-- **Losing a capital.** Disorder: for some weeks the faction's income falls
-  hard and its yards stop work. Breakaways: each of its worlds may declare
-  itself independent, likelier the further it is from the new capital and the
-  lower its law level.
 - **Wait for news waits for your news.** It should stop only for reports about
   your own fleets or systems. Today any world changing hands anywhere, or any
   faction being wiped out, wakes everybody.

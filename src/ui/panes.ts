@@ -680,6 +680,8 @@ export function empirePane(ctx: Ctx): HTMLElement {
       "dl",
       { class: "props" },
       h("dt", {}, "Treasury"), h("dd", {}, mcr(me.credits)),
+      (me.disorderUntil ?? 0) > game.state.day ? h("dt", { class: "bad" }, "Disorder") : null,
+      (me.disorderUntil ?? 0) > game.state.day ? h("dd", { class: "bad" }, `Until day ${me.disorderUntil}: income a quarter, yards idle`) : null,
       h("dt", {}, "Income"), h("dd", {}, `${mcr(inc)} a week`),
       h("dt", {}, "Upkeep"), h("dd", {}, `${mcr(upkeep, 2)} a week`),
       h("dt", {}, "Fleet"), h("dd", {}, `${game.fleetsOf(me.id).reduce((n, f) => n + f.ships.length, 0)} ships in ${game.fleetsOf(me.id).length} fleets`),

@@ -144,6 +144,7 @@ function build(game: Game, faction: Faction): void {
   const total = game.fleetsOf(faction.id).reduce((s, f) => s + game.fleetStrength(f), 0);
   const guardNow = game.fleetsOf(faction.id).filter((f) => f.name === HOME_GUARD).reduce((s, f) => s + game.fleetStrength(f), 0);
   const wantGuard = guardNow < total / 5;
+  const wealth = Math.min(0.8, Math.max(0, Math.log10(faction.credits / 150) * 0.6));
   let best: { cls: ShipClass; at: string; score: number; price: number } | null = null;
   for (const w of yards) {
     for (const cls of classes) {
@@ -154,8 +155,22 @@ function build(game: Game, faction: Faction): void {
       if (game.scheduleAt(w.at, 0).start > game.state.day + 14) continue;
       if (cls.jump < STRIKE_JUMP && !(wantGuard && w.at === faction.capital)) continue;
       const already = game.fleetsOf(faction.id).reduce((n, f) => n + f.ships.filter((sh) => sh.classId === cls.id).length, 0);
-      const score = (cls.strength / price) * Math.pow(0.9, already) * (0.9 + 0.2 * game.rng.next());
+      // Slips are few, so a rich faction puts its money into bigger hulls
+      // rather than a queue of cheap ones.
+      const score = (cls.strength / price) * Math.pow(price, wealth) * Math.pow(0.9, already) * (0.9 + 0.2 * game.rng.next());
       if (best === null || score > best.score) best = { cls, at: w.at, score, price };
+    }
+  }
+  // Nothing that can go anywhere is to be had: a rich faction guards what it
+  // has instead, with boats from its own yards.
+  if (best === null && faction.credits > 400) {
+    for (const w of own) {
+      for (const cls of classes) {
+        if (!cls.armed || cls.jump > 0 || cls.cost > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
+        if (game.scheduleAt(w.at, 0).start > game.state.day + 14) continue;
+        const score = (cls.strength / cls.cost) * Math.pow(cls.cost, wealth) * (0.9 + 0.2 * game.rng.next());
+        if (best === null || score > best.score) best = { cls, at: w.at, score, price: cls.cost };
+      }
     }
   }
   if (best === null) return;

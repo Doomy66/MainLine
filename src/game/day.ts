@@ -38,6 +38,9 @@ import {
   ROUGH_JUMP_CHANCE_ON_2D,
   hiresTenders,
   tenderCost,
+  breakawayChance,
+  DISORDER_DAYS,
+  DISORDER_INCOME,
   TORPEDO_MCR,
   type FuelSource,
 } from "./rules";
@@ -219,11 +222,7 @@ function capture(game: Game, at: string, by: string): void {
   const taker = game.faction(by);
   const alive = game.state.factions.filter((f) => f.alive).map((f) => f.id);
   // Each capital hears of it when a courier gets there.
-  for (const f of game.state.factions) {
-    const lag = game.lag(f.id, at);
-    if (lag === 0) f.known[at] = by;
-    else f.inbox.push({ arrives: game.state.day + lag, kind: "owner", at, owner: by });
-  }
+  announceOwner(game, at, by);
   const lost = prev === null ? "independent" : `held by ${game.faction(prev).name}`;
   const text = `${world.name} (${world.uwpText}), ${lost}, submits to ${taker.name}.`;
   const parties = prev === null ? [by] : [by, prev];
@@ -238,15 +237,69 @@ function capture(game: Game, at: string, by: string): void {
       notice(game, prev, `The ${game.catalogue.get(b.classId).name} building at ${world.name} is lost with the yard.`, at);
       return false;
     });
-    if (loser.capital === at) {
-      const next = game
-        .ownedWorlds(prev)
-        .sort((a, b) => b.uwp.population - a.uwp.population || b.uwp.tl - a.uwp.tl)[0];
-      if (next !== undefined) {
-        loser.capital = next.at;
-        notice(game, prev, `The capital falls. ${loser.name} now rules from ${next.name}.`, next.at);
-      }
-    }
+    if (loser.capital === at) fallOfCapital(game, prev, at);
+  }
+}
+
+/** Tell every capital a world has changed hands, when a courier would get there. */
+function announceOwner(game: Game, at: string, owner: string | null): void {
+  for (const f of game.state.factions) {
+    const lag = game.lag(f.id, at);
+    if (lag === 0) f.known[at] = owner;
+    else f.inbox.push({ arrives: game.state.day + lag, kind: "owner", at, owner });
+  }
+}
+
+/**
+ * A capital falls. Government moves to the next world, the faction is thrown
+ * into disorder for some weeks, and worlds that were held by the old capital's
+ * authority and not much else take their chance to go their own way.
+ */
+function fallOfCapital(game: Game, factionId: string, lostAt: string): void {
+  const loser = game.faction(factionId);
+  const next = game
+    .ownedWorlds(factionId)
+    .sort((a, b) => b.uwp.population - a.uwp.population || b.uwp.tl - a.uwp.tl)[0];
+  if (next === undefined) return;
+  loser.capital = next.at;
+  loser.disorderUntil = game.state.day + DISORDER_DAYS;
+  const everyone = game.state.factions.filter((f) => f.alive).map((f) => f.id);
+  game.log({
+    to: [factionId],
+    kind: "lost",
+    text: `${game.world(lostAt).name} has fallen and with it the government. ${loser.name} rules now from ${next.name}, in disorder: for ${DISORDER_DAYS} days income is cut to a quarter and the yards stand idle.`,
+    at: next.at,
+    wake: true,
+    firsthand: [factionId],
+  });
+  const gone: string[] = [];
+  for (const w of game.ownedWorlds(factionId)) {
+    if (w.at === next.at) continue;
+    if (game.rng.next() >= breakawayChance(w, distanceBetween(w.at, next.at))) continue;
+    const ws = game.worldState(w.at);
+    ws.owner = null;
+    ws.siege = null;
+    gone.push(w.name);
+    announceOwner(game, w.at, null);
+    loser.builds = loser.builds.filter((b) => b.at !== w.at);
+    game.log({
+      to: everyone,
+      kind: "capture",
+      text: `${w.name} (${w.uwpText}) breaks away from ${loser.name} and declares itself independent.`,
+      at: w.at,
+      wake: false,
+      firsthand: [factionId],
+    });
+  }
+  if (gone.length > 0) {
+    game.log({
+      to: [factionId],
+      kind: "lost",
+      text: `${gone.length} world${gone.length === 1 ? "" : "s"} broke away in the confusion: ${gone.join(", ")}.`,
+      at: next.at,
+      wake: true,
+      firsthand: [factionId],
+    });
   }
 }
 
@@ -301,6 +354,11 @@ function sieges(game: Game): void {
 function yards(game: Game): void {
   const day = game.state.day;
   for (const faction of game.state.factions) {
+    // In disorder nothing on the slips moves: every build slips a day.
+    if ((faction.disorderUntil ?? 0) > day) {
+      faction.builds = faction.builds.map((b) => ({ ...b, start: (b.start ?? day) + 1, done: b.done + 1 }));
+      continue;
+    }
     const due = faction.builds.filter((b) => b.done <= day);
     faction.builds = faction.builds.filter((b) => b.done > day);
     for (const b of due) {
@@ -329,13 +387,14 @@ function economy(game: Game): void {
   for (const faction of game.state.factions) {
     if (!faction.alive) continue;
     const worlds = game.ownedWorlds(faction.id);
-    const inc = worlds.reduce((s, w) => s + income(w), 0);
+    const disorder = (faction.disorderUntil ?? 0) > game.state.day;
+    const inc = worlds.reduce((s, w) => s + income(w), 0) * (disorder ? DISORDER_INCOME : 1);
     const upkeep = game.fleetsOf(faction.id).reduce((s, f) => s + f.ships.reduce((t, sh) => t + game.cls(sh).upkeep, 0), 0);
     faction.credits += inc - upkeep;
     game.log({
       to: [faction.id],
       kind: "economy",
-      text: `Week's end: MCr${round(inc, 1)} in from ${worlds.length} worlds, MCr${round(upkeep, 2)} out on the fleet. Treasury MCr${round(faction.credits, 1)}.`,
+      text: `Week's end: MCr${round(inc, 1)} in from ${worlds.length} worlds${disorder ? ", cut by the disorder" : ""}, MCr${round(upkeep, 2)} out on the fleet. Treasury MCr${round(faction.credits, 1)}.`,
     });
   }
 }

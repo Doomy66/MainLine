@@ -167,6 +167,39 @@ describe("shipyards", () => {
   });
 });
 
+describe("losing a capital", () => {
+  it("moves the government, throws the faction into disorder, and may lose it worlds", () => {
+    const game = newGame({}, 1, "FALL");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const victim = [...game.state.factions].filter((f) => !f.human).sort((a, b) => game.ownedWorlds(b.id).length - game.ownedWorlds(a.id).length)[0]!;
+    (victim as { human: boolean }).human = true; // kept still for the test
+    const capital = victim.capital;
+    const before = game.ownedWorlds(victim.id).length;
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== capital);
+    game.worldState(capital).defence = 0;
+    const fleet = game.newFleet(me.id, capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    for (let i = 0; i < 20 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
+    expect(game.worldState(capital).owner).toBe(me.id);
+    expect(victim.capital).not.toBe(capital);
+    expect(game.worldState(victim.capital).owner).toBe(victim.id);
+    expect(victim.disorderUntil).toBeGreaterThan(game.state.day);
+    const after = game.ownedWorlds(victim.id).length;
+    const brokeAway = game.state.log.filter((e) => /breaks away from/.test(e.text) && e.text.includes(victim.name)).length;
+    expect(after).toBe(before - 1 - brokeAway);
+    // Nothing on its slips moves while the disorder lasts.
+    const yard = game.ownedWorlds(victim.id).find((w) => w.uwp.starport === "A" || w.uwp.starport === "B");
+    if (yard !== undefined) {
+      victim.builds.push({ classId: "Pinnace", at: yard.at, start: game.state.day, done: game.state.day + 7, name: "Test" });
+      const due = victim.builds[victim.builds.length - 1]!.done;
+      advanceDay(game);
+      expect(victim.builds[victim.builds.length - 1]!.done).toBe(due + 1);
+    }
+  });
+});
+
 describe("news", () => {
   it("reaches a distant capital a week per courier jump", () => {
     const game = newGame({ newsLag: 2 });

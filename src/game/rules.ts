@@ -146,6 +146,21 @@ export function captureDays(world: World): number {
   return 2 + Math.ceil(world.uwp.population / 2);
 }
 
+/** Days of disorder after a capital falls. */
+export const DISORDER_DAYS = 28;
+
+/** Share of its income a faction in disorder still collects. */
+export const DISORDER_INCOME = 0.25;
+
+/**
+ * The chance a world breaks away when its faction's capital falls: a tenth, and
+ * more the further it is from the new capital and the less its law holds it.
+ */
+export function breakawayChance(world: World, parsecsFromCapital: number): number {
+  const lawless = world.uwp.law <= 3 ? 0.1 : 0;
+  return Math.min(0.6, 0.1 + 0.03 * parsecsFromCapital + lawless);
+}
+
 /** Defences rebuild a tenth of their strength a day when nobody is shooting at them. */
 export const DEFENCE_REGEN = 0.1;
 

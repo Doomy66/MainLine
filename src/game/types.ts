@@ -207,6 +207,11 @@ export interface Faction {
   reports: Record<string, FleetReport>;
   /** Under full fog of war: orders sent and not yet arrived. */
   orders: Command[];
+  /**
+   * The day the disorder that follows losing a capital ends. Until then income
+   * is cut and the yards stand idle.
+   */
+  disorderUntil?: number;
   /** A human who has finished their orders for the day. */
   ready: boolean;
   /** A human who wants the days to run until something happens. */
