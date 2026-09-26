@@ -145,6 +145,9 @@ design engine and reports anything that breaks the rules.
 
 ## Still to come
 
+- **Bug: jump tenders.** Asking for tenders seems to be ignored, or at least is
+  not shown: the fleet's orders do not mention them.
+
 - **Admirals.** A commander for every fleet, with Tactics, morale and other
   skills and traits that change how it fights and how soon it breaks.
 - **Shipyard slips.** A yard builds only so many ships at once: three at a
