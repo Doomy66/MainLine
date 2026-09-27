@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "name": "Snub 2",
+  "tl": 12,
+  "military": true,
+  "standardDesign": true,
+  "hull": {
+    "tons": 20,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 8
+  },
+  "manoeuvre": 6,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 2,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "cockpit"
+  },
+  "computer": {
+    "processing": 10
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "fixed",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser",
+        "missileRack"
+      ]
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "fireControl",
+      "level": 1
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 24
+    }
+  ],
+  "notes": "The Snub rebuilt at TL12: a proper thrust 6 manoeuvre drive in place of the booster, so it can stay out as long as its pilot can, crystaliron instead of titanium steel, military sensors, and a second pulse laser."
+}

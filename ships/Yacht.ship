@@ -30,7 +30,7 @@
     {
       "label": "Ship's Boat",
       "tons": 30,
-      "cost": 10.43,
+      "cost": 11.59,
       "kind": "smallCraft",
       "berth": "dockingSpace"
     },

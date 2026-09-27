@@ -72,79 +72,17 @@
   ],
   "craft": [
     {
-      "label": "Snub Fighter (20t)",
+      "label": "Snub Fighter",
       "tons": 20,
-      "cost": 8,
+      "cost": 7.66,
       "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Snub Fighter (20t)",
-      "tons": 20,
-      "cost": 8,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
+      "berth": "dockingSpace",
+      "quantity": 10
     },
     {
       "label": "Pinnace",
       "tons": 40,
-      "cost": 14.09,
+      "cost": 15.66,
       "kind": "smallCraft",
       "berth": "dockingSpace"
     },

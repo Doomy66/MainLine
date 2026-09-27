@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "name": "Snub",
+  "tl": 9,
+  "military": true,
+  "standardDesign": true,
+  "hull": {
+    "tons": 20,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "titaniumSteel",
+    "protection": 3
+  },
+  "manoeuvre": 1,
+  "highBurnThruster": {
+    "thrust": 5,
+    "hours": 2
+  },
+  "powerPlant": {
+    "type": "fusion8",
+    "tons": 1,
+    "weeks": 4
+  },
+  "bridge": {
+    "kind": "cockpit"
+  },
+  "computer": {
+    "processing": 5
+  },
+  "sensors": "civilian",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "fixed",
+      "weapons": [
+        "pulseLaser",
+        "missileRack"
+      ]
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 12
+    }
+  ],
+  "notes": "The fighter a TL9 navy can build. Its manoeuvre drive only cruises; a reaction booster gives it thrust 6 for two hours of combat, and then it has to go home. One pulse laser and a missile rack in a fixed mount, and a cockpit: the pilot lives aboard the carrier."
+}

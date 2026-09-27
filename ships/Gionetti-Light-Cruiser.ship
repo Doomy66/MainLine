@@ -101,37 +101,10 @@
     {
       "label": "Modular Cutter",
       "tons": 50,
-      "cost": 16.37,
+      "cost": 18.19,
       "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Modular Cutter",
-      "tons": 50,
-      "cost": 16.37,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Modular Cutter",
-      "tons": 50,
-      "cost": 16.37,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Modular Cutter",
-      "tons": 50,
-      "cost": 16.37,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Modular Cutter",
-      "tons": 50,
-      "cost": 16.37,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
+      "berth": "dockingSpace",
+      "quantity": 5
     }
   ],
   "systems": [

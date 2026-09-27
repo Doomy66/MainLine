@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Two new fighters: the Snub, a 20-ton TL9 fighter, and the Snub 2, the same airframe rebuilt at TL12.
+  The Hyperion escort carrier now comes with ten Snubs instead of Rampart light fighters, and costs a
+  little less.
+- Carriers and ships with boats cost slightly more: a carried fighter, cutter, pinnace or ship's boat
+  now costs its full price, which the carrier's own discount already covers, rather than being
+  discounted twice. The Arakoine goes up about MCr360, most others by a few megacredits.
 - Big ships build much faster: time on the slips beyond a month is cut by modular building, as High
   Guard allows. A 5,000-ton carrier takes about three months instead of a year and a half, an Azhanti
   seven and a half instead of thirteen years; ships of a month or less are unchanged.

@@ -26,7 +26,7 @@
     {
       "label": "Pinnace",
       "tons": 40,
-      "cost": 14.09,
+      "cost": 15.66,
       "kind": "smallCraft",
       "berth": "dockingSpace"
     },
@@ -35,14 +35,8 @@
       "tons": 4,
       "cost": 0.25,
       "kind": "vehicle",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Air/Raft",
-      "tons": 4,
-      "cost": 0.25,
-      "kind": "vehicle",
-      "berth": "dockingSpace"
+      "berth": "dockingSpace",
+      "quantity": 2
     }
   ],
   "systems": [

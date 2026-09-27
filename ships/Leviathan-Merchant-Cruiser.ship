@@ -56,7 +56,7 @@
     {
       "label": "Pinnace",
       "tons": 40,
-      "cost": 14.09,
+      "cost": 15.66,
       "kind": "smallCraft",
       "berth": "dockingSpace"
     },
@@ -65,14 +65,8 @@
       "tons": 20,
       "cost": 3.6,
       "kind": "smallCraft",
-      "berth": "dockingSpace"
-    },
-    {
-      "label": "Lifeboat (launch)",
-      "tons": 20,
-      "cost": 3.6,
-      "kind": "smallCraft",
-      "berth": "dockingSpace"
+      "berth": "dockingSpace",
+      "quantity": 2
     },
     {
       "label": "Air/Raft",
