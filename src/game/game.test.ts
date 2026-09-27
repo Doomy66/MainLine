@@ -237,6 +237,16 @@ describe("a whole game", () => {
     expect(again.state.day).toBe(game.state.day + 5);
   });
 
+  it("gains catalogue classes added since it was saved, and keeps its own", () => {
+    const game = newGame({}, 0, "OLD");
+    const saved = JSON.parse(serialise(game));
+    delete saved.designs["Wasp-Heavy-Fighter"];
+    saved.designs["Patrol-Corvette"].notes = "as saved";
+    const loaded = parseGame(JSON.stringify(saved));
+    expect(loaded.catalogue.has("Wasp-Heavy-Fighter")).toBe(true);
+    expect(loaded.catalogue.get("Patrol-Corvette").notes).toBe("as saved");
+  });
+
   it("rolls the same game from the same seed", () => {
     const a = newGame({}, 0, "SAME");
     const b = newGame({}, 0, "SAME");

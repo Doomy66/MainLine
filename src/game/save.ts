@@ -4,6 +4,7 @@
  * design travel inside it, so a file opens anywhere.
  */
 
+import { bundledDesigns } from "../catalogue/catalogue";
 import { Game } from "./game";
 import type { GameState } from "./types";
 
@@ -25,7 +26,13 @@ export function parseGame(text: string): Game {
   if (typeof s !== "object" || s === null || s.version !== 1 || !Array.isArray(s.factions) || s.sector === undefined) {
     throw new Error("That file is not a Mainline game.");
   }
-  return new Game(s as GameState);
+  // A game keeps the classes it was made with, so a saved ship always has its
+  // design. Classes added to the catalogue since join it; none it has changes.
+  const state = s as GameState;
+  for (const [id, design] of bundledDesigns()) {
+    if (!(id in state.designs)) state.designs[id] = design;
+  }
+  return new Game(state);
 }
 
 export function autosave(game: Game): void {
