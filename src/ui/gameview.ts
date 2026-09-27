@@ -51,6 +51,56 @@ export interface Ctx {
   command(fleet: Fleet, change: { order?: Fleet["order"]; standing?: Fleet["standing"] }, text: string): void;
 }
 
+const SIDE_WIDTH_KEY = "mainline.sideWidth";
+
+/**
+ * Lets the side panel be dragged wider or narrower by its left edge. The
+ * width is this browser's own choice, remembered between games.
+ */
+function sideResizer(screen: HTMLElement, grip: HTMLElement): void {
+  const apply = (px: number | null) => {
+    if (px === null) screen.style.removeProperty("--side-width");
+    else screen.style.setProperty("--side-width", `${Math.round(px)}px`);
+  };
+  const clampWidth = (px: number) => Math.max(300, Math.min(px, window.innerWidth - 320));
+  try {
+    const kept = Number(localStorage.getItem(SIDE_WIDTH_KEY));
+    if (kept > 0) apply(clampWidth(kept));
+  } catch {
+    // No storage: the usual width.
+  }
+  const keep = (px: number | null) => {
+    try {
+      if (px === null) localStorage.removeItem(SIDE_WIDTH_KEY);
+      else localStorage.setItem(SIDE_WIDTH_KEY, String(Math.round(px)));
+    } catch {
+      // Not remembered, then.
+    }
+  };
+  grip.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    grip.setPointerCapture(event.pointerId);
+    grip.classList.add("dragging");
+    let width = window.innerWidth - event.clientX;
+    const move = (e: PointerEvent) => {
+      width = clampWidth(window.innerWidth - e.clientX);
+      apply(width);
+    };
+    const up = () => {
+      grip.classList.remove("dragging");
+      grip.removeEventListener("pointermove", move);
+      grip.removeEventListener("pointerup", up);
+      keep(width);
+    };
+    grip.addEventListener("pointermove", move);
+    grip.addEventListener("pointerup", up);
+  });
+  grip.addEventListener("dblclick", () => {
+    apply(null);
+    keep(null);
+  });
+}
+
 export function showGame(root: HTMLElement, game: Game, onQuit: () => void): void {
   const map = createMap();
   const bar = h("div", { class: "bar" });
@@ -60,8 +110,11 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
   const banner = h("div", { class: "mode-banner", style: "display:none" });
   const tip = h("div", { class: "map-tip", style: "display:none" });
   const mapBox = h("div", { class: "map" }, map.element, help, banner, tip);
-  const side = h("div", { class: "side" }, tabs, pane);
-  root.replaceChildren(h("div", { class: "game" }, bar, mapBox, side));
+  const grip = h("div", { class: "side-grip", title: "Drag to widen or narrow the panel; double-click for the usual width" });
+  const side = h("div", { class: "side" }, grip, tabs, pane);
+  const screen = h("div", { class: "game" }, bar, mapBox, side);
+  root.replaceChildren(screen);
+  sideResizer(screen, grip);
 
   const inPlay = new Set(game.state.sector.worlds.map((w) => w.at));
   map.setWorlds(game.state.sector.worlds, inPlay);
@@ -336,7 +389,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
             if (file === null) return;
             try {
               const loaded = parseGame(file.text);
-              autosave(loaded);
+              void autosave(loaded);
               showGame(root, loaded, onQuit);
             } catch (error) {
               ctx.say(error instanceof Error ? error.message : String(error), true);
@@ -346,7 +399,21 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         "Load",
       ),
       h("button", { class: "small", onclick: () => window.open("./help.html", "_blank", "noopener"), title: "The rules, and how to get going" }, "Help"),
-      h("button", { class: "small", onclick: () => { autosave(game); onQuit(); } }, "Menu"),
+      h(
+        "button",
+        {
+          class: "small",
+          onclick: async () => {
+            window.clearTimeout(saveTimer);
+            if (!(await autosave(game))) {
+              ctx.say("This browser would not keep the game for Carry on: use Save to keep it as a file first.", true);
+              return;
+            }
+            onQuit();
+          },
+        },
+        "Menu",
+      ),
       setup || over
         ? null
         : h("button", { onclick: () => finish(true), title: "Let the days pass until something happens that you should see (up to 30 days)" }, "Wait for news"),
@@ -365,7 +432,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     const s = game.state;
     ctx.choosingJump = false;
     const dayEnded = wait ? waitForEvents(game) : endTurn(game);
-    autosave(game);
+    keep();
     if (dayEnded && s.phase !== "setup") {
       status = s.day > before + 1 ? `${s.day - before} days passed.` : "";
     }
@@ -453,10 +520,21 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
   }
 
   let saveTimer = 0;
+  let saveWarned = false;
+  /** Autosaves, and says so once if the browser will not keep it. */
+  function keep(): void {
+    window.clearTimeout(saveTimer);
+    void autosave(game).then((ok) => {
+      if (ok || saveWarned) return;
+      saveWarned = true;
+      ctx.say("This browser would not keep the game for Carry on: use Save to keep it as a file.", true);
+      renderBar();
+    });
+  }
   function render(): void {
     // Orders given count as the game changing: keep the autosave up with them.
     window.clearTimeout(saveTimer);
-    saveTimer = window.setTimeout(() => autosave(game), 800);
+    saveTimer = window.setTimeout(keep, 800);
     renderBar();
     renderTabs();
     renderPane();

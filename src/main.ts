@@ -65,10 +65,10 @@ function link(text: string, href: string, newTab = true): HTMLElement {
   return h("a", newTab ? { href, target: "_blank", rel: "noopener" } : { href }, text);
 }
 
-function title(message = ""): void {
-  const saved = loadAutosave();
+async function title(message = ""): Promise<void> {
+  const saved = await loadAutosave();
   const error = h("div", { class: "error" }, message);
-  const play = (game: Game) => showGame(root, game, () => title());
+  const play = (game: Game) => showGame(root, game, () => void title());
   const who = saved === null ? "" : saved.humans().map((f) => f.name).join(", ");
 
   root.replaceChildren(
@@ -110,7 +110,7 @@ function title(message = ""): void {
             ICONS.newgame,
             "New game",
             ["Pick a sector, choose your Empire, buy your first fleet."],
-            h("button", { onclick: () => showSetup(root, (game) => { autosave(game); play(game); }, () => title()) }, "Start"),
+            h("button", { onclick: () => showSetup(root, (game) => { void autosave(game); play(game); }, () => void title()) }, "Start"),
           ),
           level(
             ICONS.load,
@@ -124,7 +124,7 @@ function title(message = ""): void {
                   if (file === null) return;
                   try {
                     const game = parseGame(file.text);
-                    autosave(game);
+                    void autosave(game);
                     play(game);
                   } catch (e) {
                     error.textContent = e instanceof Error ? e.message : String(e);
@@ -168,4 +168,4 @@ function title(message = ""): void {
   );
 }
 
-title();
+void title();

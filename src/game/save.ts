@@ -35,18 +35,66 @@ export function parseGame(text: string): Game {
   return new Game(state);
 }
 
-export function autosave(game: Game): void {
+/*
+ * The autosave lives in the browser's database, not its local storage: a long
+ * game, with every battle's shots in its log, soon outgrows local storage's
+ * five megabytes, and a save that no longer fits there fails without a word.
+ * An autosave from before the move is read from local storage until the
+ * first new one replaces it.
+ */
+
+const DB_NAME = "mainline";
+const STORE = "saves";
+
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function withStore<T>(mode: IDBTransactionMode, work: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+  const db = await openDb();
   try {
-    localStorage.setItem(AUTOSAVE_KEY, serialise(game));
-  } catch {
-    // A full or blocked store costs the autosave, not the game.
+    return await new Promise<T>((resolve, reject) => {
+      const tx = db.transaction(STORE, mode);
+      const req = work(tx.objectStore(STORE));
+      tx.oncomplete = () => resolve(req.result);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
   }
 }
 
-export function loadAutosave(): Game | null {
+/** Keeps the game in the browser for Carry on. Resolves false if it could not be kept. */
+export async function autosave(game: Game): Promise<boolean> {
   try {
-    const text = localStorage.getItem(AUTOSAVE_KEY);
-    return text === null ? null : parseGame(text);
+    await withStore("readwrite", (store) => store.put(serialise(game), AUTOSAVE_KEY));
+  } catch {
+    return false;
+  }
+  try {
+    localStorage.removeItem(AUTOSAVE_KEY);
+  } catch {
+    // An old copy left behind is read only if the new one is missing.
+  }
+  return true;
+}
+
+export async function loadAutosave(): Promise<Game | null> {
+  let text: string | undefined;
+  try {
+    text = (await withStore("readonly", (store) => store.get(AUTOSAVE_KEY))) as string | undefined;
+  } catch {
+    text = undefined;
+  }
+  try {
+    text ??= localStorage.getItem(AUTOSAVE_KEY) ?? undefined;
+    return text === undefined ? null : parseGame(text);
   } catch {
     return null;
   }

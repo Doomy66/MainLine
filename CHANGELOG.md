@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Carry on offered an old game once a game grew past about 5 MB, the most a browser's local storage
+  holds: the autosave failed without a word. It now lives in the browser's database, which has room, and
+  if a save is ever refused the top bar says so.
+- The panel on the right is a fifth wider, and can be dragged wider or narrower by its left edge.
 - Carriers in the Shipyard say which fighters they come with, and how many. A fleet with craft that no
   hangar holds says so, and merging fleets asks first when it would leave craft with no hangar.
 - Two new fighters: the Snub, a 20-ton TL9 fighter, and the Snub 2, the same airframe rebuilt at TL12.
