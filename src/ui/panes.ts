@@ -8,6 +8,7 @@ import { roleOf, type Role } from "../catalogue/roles";
 import type { Attack, ShipClass } from "../catalogue/shipclass";
 import { locExists } from "../game/day";
 import type { Game } from "../game/game";
+import type { Catalogue } from "../catalogue/catalogue";
 import { canRefuelAt } from "../game/nav";
 import {
   canBuildAt,
@@ -321,6 +322,13 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
           `Hangars: ${hangars.filled} of ${hangars.slots} fighters aboard. Fighters in the hangars jump with their carrier and need no tenders.${hangars.filled < hangars.slots ? " Replace lost ones at a yard that builds small craft, then merge them into this fleet." : ""}`,
         )
       : null,
+    hangars.slots > 0 && riders.length > 0 && !game.tendered(f)
+      ? h(
+          "p",
+          { class: "warn" },
+          `${riders.length} craft ${riders.length === 1 ? "has" : "have"} no hangar, so ${f.name} cannot jump. Split ${riders.length === 1 ? "one" : riders.length} of its fighters off into a new fleet, or hire tenders for the jump.`,
+        )
+      : null,
     h(
       "div",
       { class: "orders" },
@@ -404,7 +412,21 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
               onchange: (e: Event) => {
                 const other = game.fleet((e.target as HTMLSelectElement).value);
                 const real = game.fleet(f.id);
-                if (other !== undefined && real !== undefined && game.mergeFleets(real, other)) {
+                if (other === undefined || real === undefined) return;
+                // Warn before a merge leaves craft with no hangar: a fleet
+                // like that cannot jump without tenders.
+                const joined = { ...real, ships: [...real.ships, ...other.ships] };
+                if (unhoused(game, joined) > 0 && game.hangarSpace(joined).slots > 0 && !game.tendered(real)) {
+                  const n = unhoused(game, joined);
+                  const ok = window.confirm(
+                    `Merging leaves ${n} craft with no hangar (${game.hangarSpace(joined).slots} hangars, all full), so ${f.name} could not jump without hiring tenders. Merge anyway?`,
+                  );
+                  if (!ok) {
+                    ctx.refresh();
+                    return;
+                  }
+                }
+                if (game.mergeFleets(real, other)) {
                   if (fogged) {
                     delete me.reports[other.id];
                     me.reports[real.id] = game.reportOf(real);
@@ -563,20 +585,39 @@ function catalogueTable(ctx: Ctx, action: (cls: ShipClass) => HTMLElement, price
           },
         },
         h("summary", {}, `${sec.title} (${classes.length})`, h("span", { class: "hint" }, ` ${sec.hint}`)),
-        classRows(classes, action, price, note),
+        classRows(ctx.game.catalogue, classes, action, price, note),
       );
     }),
   );
 }
 
-/** A carrier's tag: how many fighters its hangars hold, which come with it. */
-function carrierTag(c: ShipClass): HTMLElement | null {
-  const fighters = c.hangars.reduce((n, hg) => n + hg.slots, 0);
-  if (fighters === 0) return null;
-  return h("span", { class: "tag", title: "Its fighters come with it, and jump in its hangars" }, `Carrier · ${fighters} fighters`);
+/** A carrier's tag: the fighters that come with it, a full hangar's worth. */
+function carrierTag(c: ShipClass, catalogue: Catalogue): HTMLElement | null {
+  if (c.hangars.length === 0) return null;
+  const aboard = c.hangars.map((hg) => {
+    const name = catalogue.fighterFor(hg)?.name ?? "fighter";
+    return `${hg.slots} ${/fighter$/i.test(name) ? `${name}s` : `${name} fighters`}`;
+  });
+  return h(
+    "span",
+    { class: "tag", title: "Built with a full set of fighters, in the price. Buy more only to replace losses: fighters beyond the hangars need tenders to jump." },
+    `Comes with ${aboard.join(" and ")}`,
+  );
 }
 
-function classRows(classes: readonly ShipClass[], action: (cls: ShipClass) => HTMLElement, price: (cls: ShipClass) => number, note: (cls: ShipClass) => string): HTMLElement {
+/** Craft without a jump drive in a fleet that no hangar holds. */
+function unhoused(game: Game, f: Fleet): number {
+  const aboard = game.hangared(f);
+  return f.ships.filter((s) => game.cls(s).jump === 0 && !aboard.has(s.id)).length;
+}
+
+function classRows(
+  catalogue: Catalogue,
+  classes: readonly ShipClass[],
+  action: (cls: ShipClass) => HTMLElement,
+  price: (cls: ShipClass) => number,
+  note: (cls: ShipClass) => string,
+): HTMLElement {
   return h(
     "table",
     { class: "catalogue" },
@@ -590,7 +631,7 @@ function classRows(classes: readonly ShipClass[], action: (cls: ShipClass) => HT
           "td",
           {},
           h("span", { class: "goto", style: "cursor:pointer", onclick: () => showSheet(c) }, c.name),
-          carrierTag(c),
+          carrierTag(c, catalogue),
           h("div", { class: "hint" }, weaponsSummary(c.attacks)),
           why === "" ? null : h("div", { class: "hint warn" }, why),
         ),

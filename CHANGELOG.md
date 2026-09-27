@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Carriers in the Shipyard say which fighters they come with, and how many. A fleet with craft that no
+  hangar holds says so, and merging fleets asks first when it would leave craft with no hangar.
 - Two new fighters: the Snub, a 20-ton TL9 fighter, and the Snub 2, the same airframe rebuilt at TL12.
   The Hyperion escort carrier now comes with ten Snubs instead of Rampart light fighters, and costs a
   little less.
