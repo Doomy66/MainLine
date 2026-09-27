@@ -172,8 +172,15 @@ export type OrdnanceChoice =
 export interface CraftChoice {
   readonly label: string;
   readonly tons: number;
-  /** MCr. The book prices an air/raft at MCr0.25 on its sheets. ShipSpec 4.11.3. */
+  /**
+   * MCr, each, at full price. The book prices an air/raft at MCr0.25 on its
+   * sheets. A standard design's discount is taken off the whole ship, craft
+   * included, so a craft entered at its own discounted price is discounted
+   * twice. ShipSpec 4.11.3.
+   */
   readonly cost: number;
+  /** How many identical craft this line stands for, each with its own berth. */
+  readonly quantity?: number;
   /** A small craft adds a pilot to the crew; a vehicle does not. */
   readonly kind: "smallCraft" | "vehicle";
   readonly berth: "dockingSpace" | "fullHangar" | "none";

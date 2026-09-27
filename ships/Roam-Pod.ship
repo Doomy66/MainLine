@@ -1,0 +1,82 @@
+{
+  "name": "Roam Pod",
+  "tl": 15,
+  "hull": {
+    "tons": 50,
+    "configuration": "streamlined",
+    "specialised": []
+  },
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 3,
+    "weeks": 6
+  },
+  "bridge": {
+    "kind": "standard",
+    "command": false,
+    "holographic": true
+  },
+  "sensors": "military",
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library",
+      "level": 0
+    },
+    {
+      "software": "intellect",
+      "level": 0
+    },
+    {
+      "software": "virtualCrew",
+      "level": 1
+    },
+    {
+      "software": "virtualCrew",
+      "level": 0
+    },
+    {
+      "software": "manoeuvre",
+      "level": 0
+    }
+  ],
+  "standardDesign": true,
+  "manoeuvre": {
+    "thrust": 6
+  },
+  "computer": {
+    "processing": 15,
+    "core": false
+  },
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "single",
+      "weapons": [
+        "sandcaster"
+      ],
+      "popUp": true
+    }
+  ],
+  "craft": [
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "passengers": {
+    "high": 0,
+    "middle": 0,
+    "low": 0
+  },
+  "staterooms": 4,
+  "commonAreaTons": 12,
+  "systems": [],
+  "version": 1,
+  "notes": "The ship is configured as an open bridge / common area with 2 state rooms on each side. One side is nornally the owners suite. 1 stateroom for crew or guests and 1 left as an office/workshop/galley.\n\nPlans created by COTS who require the upgraded sensors - Many others choose basic sensors which reduces cost, but not tonnage."
+}

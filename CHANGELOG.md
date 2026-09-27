@@ -5,6 +5,12 @@
 - The catalogue is in sections: warships, system defence, capital ships and
   civilian and support, the last two closed until opened.
 - Carriers are tagged in the catalogue with the number of fighters they bring.
+- Five new designs in the catalogue: the FOO3 special operations ship, the
+  Maul-class bombardment ship, the Roam Pod, the Tern-class fighter carrier
+  and its Wasp heavy fighters.
+- Orbital strike and bombardment weapons take High Guard's -8 and -12 against
+  ships that can manoeuvre, and nothing against a world's defences.
+- The Ship Designer's engine updated to the version with carried squadrons.
 - Mains are called Empires.
 - A new title screen in the style PlanetHex and the Traveller Ship Designer share,
   with links to both, release notes, and Mongoose Publishing's fair use notice.

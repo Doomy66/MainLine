@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "name": "Tern-class Fighter Carrier",
+  "tl": 12,
+  "military": true,
+  "standardDesign": true,
+  "hull": {
+    "tons": 5000,
+    "configuration": "standard"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "manoeuvre": 2,
+  "jump": 3,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 250,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 20
+  },
+  "sensors": "improved",
+  "weapons": [
+    {
+      "kind": "pointDefence",
+      "battery": "laser",
+      "type": "typeII",
+      "quantity": 3
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 5
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser",
+        "pulseLaser"
+      ],
+      "quantity": 5
+    }
+  ],
+  "craft": [
+    {
+      "label": "Wasp Heavy Fighter",
+      "quantity": 24,
+      "tons": 40,
+      "cost": 27.8,
+      "kind": "smallCraft",
+      "berth": "fullHangar",
+      "driveAndPlantTons": 6.4
+    },
+    {
+      "label": "Ship's Boat",
+      "tons": 30,
+      "cost": 7.58,
+      "kind": "smallCraft",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 20
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "flat": "medicalBay",
+      "quantity": 2
+    },
+    {
+      "flat": "briefingRoom",
+      "quantity": 2
+    },
+    {
+      "flat": "armoury",
+      "quantity": 2
+    },
+    {
+      "flat": "workshop",
+      "quantity": 2
+    }
+  ],
+  "staterooms": 50,
+  "doubleOccupancy": true,
+  "commonAreaTons": 50,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "jumpControl",
+      "level": 3
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    }
+  ],
+  "notes": "Fleet fighter carrier. Two squadrons of twelve Wasp heavy fighters, each in its own full hangar so it can be rearmed and repaired between sorties, and a ship's boat for liaison and rescue. Jump-3 lets it keep pace with a cruiser squadron; thrust 2 means it should never be where the fighting is. Point defence and a light turret battery are for whatever gets past the fighters."
+}

@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "name": "Wasp Heavy Fighter",
+  "tl": 12,
+  "military": true,
+  "standardDesign": true,
+  "hull": {
+    "tons": 40,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 12
+  },
+  "manoeuvre": 6,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 4,
+    "weeks": 12
+  },
+  "bridge": {
+    "kind": "cockpit"
+  },
+  "computer": {
+    "processing": 10
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "fixed",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser",
+        "pulseLaser"
+      ]
+    },
+    {
+      "kind": "turret",
+      "mount": "fixed",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "missileRack"
+      ]
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 96
+    }
+  ],
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    }
+  ],
+  "notes": "Carrier-borne strike fighter. Three pulse lasers for the knife fight and three missile racks with ninety-six rounds for everything else, behind as much crystaliron as a 40-ton hull will take. No bunk: the pilot lives aboard the carrier."
+}

@@ -132,7 +132,7 @@ export function defenceAttacks(world: World): Attack[] {
   const batteries =
     Math.max(0, population - 3) + (hasNavalBase(world) ? 3 : 0) + (hasScoutBase(world) ? 1 : 0);
   if (batteries === 0 || tl < 7) return [];
-  const base = { ap: 0, count: batteries, perSalvo: 1, heavy: false, laser: false, radiation: false, meson: false, ion: false };
+  const base = { ap: 0, count: batteries, perSalvo: 1, heavy: false, laser: false, radiation: false, meson: false, ion: false, vsShips: 0 };
   if (tl >= 14) return [{ ...base, label: "Meson battery", dice: 5, multiple: 10, ap: Infinity, heavy: true, meson: true }];
   // Barbette-sized at TL12-13: hard to crack, not a wall. The bay-sized meson
   // battery at TL14 and up is the deep-site meson gun of Traveller's setting.

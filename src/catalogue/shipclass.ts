@@ -46,6 +46,12 @@ export interface Attack {
   readonly meson: boolean;
   /** Ion weapons drain power rather than hole the hull, so they do half. */
   readonly ion: boolean;
+  /**
+   * The DM against a target that can manoeuvre: High Guard's Orbital Strike
+   * (-8) and Orbital Bombardment (-12), weapons built to hit the ground. None
+   * against a world's defences, which cannot dodge.
+   */
+  readonly vsShips: number;
 }
 
 export interface ShipClass {
@@ -133,6 +139,7 @@ function attackFrom(
     radiation: traits.includes("Radiation"),
     meson: /meson/i.test(label),
     ion: traits.includes("Ion"),
+    vsShips: traits.includes("Orbital Bombardment") ? -12 : traits.includes("Orbital Strike") ? -8 : 0,
     ...extra,
   };
 }
@@ -250,7 +257,10 @@ function softwareLevel(design: Design, name: string): number {
 /** Expected damage of one attack against unarmoured hull, for strength sums. */
 function expected(a: Attack): number {
   const perHit = (a.dice * 3.5) * (a.ion ? 0.5 : 1);
-  return perHit * a.multiple * a.count * a.perSalvo;
+  // A weapon built to hit the ground rarely hits a ship, so it counts for a
+  // fraction of its dice in a fight between fleets.
+  const againstShips = a.vsShips <= -12 ? 0.05 : a.vsShips <= -8 ? 0.2 : 1;
+  return perHit * a.multiple * a.count * a.perSalvo * againstShips;
 }
 
 export function shipClass(id: string, design: Design): ShipClass {
@@ -313,9 +323,11 @@ function hangarsOf(design: Design): { label: string; slots: number; tons: number
   const groups = new Map<string, { label: string; slots: number; tons: number }>();
   for (const c of design.craft ?? []) {
     if (c.kind !== "smallCraft" || !/fighter/i.test(c.label)) continue;
+    // A squadron is one entry with a quantity; older designs list each craft.
+    const count = c.quantity ?? 1;
     const held = groups.get(c.label);
-    if (held === undefined) groups.set(c.label, { label: c.label, slots: 1, tons: c.tons });
-    else held.slots++;
+    if (held === undefined) groups.set(c.label, { label: c.label, slots: count, tons: c.tons });
+    else held.slots += count;
   }
   return [...groups.values()];
 }

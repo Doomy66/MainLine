@@ -37,6 +37,11 @@ Every `.ship` here is built under Mongoose *High Guard Update 2022* and checked 
 | Gionetti Light Cruiser | Gionetti-Light-Cruiser.ship | https://wiki.travellerrpg.com/Gionetti_class_Light_Cruiser | Classic (Fighting Ships) | The meson spinal mount takes 60 of the 300 hardpoints, so the 200 triple missile turrets become 150 turrets plus 5 small missile bays. The 100-ton repulsor is a medium repulsor bay. No armour, as in the source. |
 | Arakoine Strike Cruiser | Arakoine-Strike-Cruiser.ship | https://wiki.travellerrpg.com/Arakoine_class_Strike_Cruiser | Classic (Fighting Ships) | Military hull and bonded superdense armour 6 (the source gives none). The 100 heavy fighters are priced as this catalogue's Kia heavy fighter. Two launch tubes. |
 | Azhanti High Lightning Frigate | Azhanti-High-Lightning-Frigate.ship | https://wiki.travellerrpg.com/Lightning_class_Frontier_Cruiser | Classic (AHL / Supplement 5) | Built at TL14, so no black globe (HG2022 TL15). Meson spinal mount at one multiple (the CT factor-N mount would not fit alongside full jump-5 fuel). The four 400-ton fuel shuttles are carried at an assumed MCr90 each. 150 marines in barracks. |
+| FOO3 | FOO3.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: a 300-ton TL16 special-operations ship. |
+| Maul-class Bombardment Ship | Maul-class-Bombardment-Ship.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: 2,000 tons, orbital strike mass driver and meson bays for bombardment. |
+| Roam Pod | Roam-Pod.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: a 50-ton private runabout. |
+| Tern-class Fighter Carrier | Tern-class-Fighter-Carrier.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: 5,000 tons, two squadrons of twelve Wasp heavy fighters. |
+| Wasp Heavy Fighter | Wasp-Heavy-Fighter.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: the Tern's 40-ton strike fighter. |
 
 ## Carried-craft prices
 

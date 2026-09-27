@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "name": "Maul-class Bombardment Ship",
+  "tl": 13,
+  "military": true,
+  "standardDesign": true,
+  "hull": {
+    "tons": 2000,
+    "configuration": "sphere",
+    "specialised": [
+      "reinforced"
+    ]
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 13
+  },
+  "manoeuvre": 3,
+  "jump": 2,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 122,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 25
+  },
+  "sensors": "improved",
+  "weapons": [
+    {
+      "kind": "bay",
+      "size": "medium",
+      "weapon": "orbitalStrikeMassDriver",
+      "quantity": 5
+    },
+    {
+      "kind": "bay",
+      "size": "medium",
+      "weapon": "mesonGun",
+      "quantity": 2
+    },
+    {
+      "kind": "pointDefence",
+      "battery": "laser",
+      "type": "typeII",
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "sandcaster",
+        "sandcaster",
+        "sandcaster"
+      ],
+      "quantity": 4
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 2
+    }
+  ],
+  "systems": [
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 10
+    },
+    {
+      "perTon": "repairDrones"
+    },
+    {
+      "flat": "medicalBay"
+    },
+    {
+      "flat": "armoury"
+    },
+    {
+      "flat": "workshop"
+    },
+    {
+      "flat": "briefingRoom"
+    }
+  ],
+  "staterooms": 25,
+  "doubleOccupancy": true,
+  "commonAreaTons": 25,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "jumpControl",
+      "level": 2
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "notes": "Orbital bombardment. Five orbital strike mass driver bays to level whatever the survey marks, and two meson bays for what is buried too deep for them. It does not land and does not fight fleets: it arrives once the system is cleared, parks in orbit, and works down the target list. Point defence, sandcasters and as much crystaliron as the Tech Level allows are for the planet shooting back."
+}

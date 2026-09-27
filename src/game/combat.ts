@@ -269,6 +269,8 @@ function attackDms(from: Combatant, target: Combatant, attack: Attack): { total:
     ["sensors", Math.max(-2, Math.min(2, from.sensorDm))],
     ["evade", -Math.min(target.evade, target.thrust)],
   ];
+  // Ground-attack weapons against anything that can dodge; a world's defences cannot.
+  if (attack.vsShips !== 0 && target.tons !== 1_000_000) parts.push(["orbital weapon", attack.vsShips]);
   if (attack.ordnance !== undefined) parts.push(["smart", 2]);
   else if (attack.heavy) parts.push(["small target", target.tons <= 100 ? -4 : target.tons <= 2000 ? -2 : 0]);
   const shown = parts.filter(([, v]) => v !== 0);

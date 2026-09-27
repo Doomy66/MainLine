@@ -1,0 +1,119 @@
+{
+  "name": "FOO3",
+  "tl": 16,
+  "hull": {
+    "tons": 300,
+    "configuration": "streamlined",
+    "stealth": "advanced",
+    "specialised": [
+      "reinforced"
+    ]
+  },
+  "powerPlant": {
+    "type": "fusion15",
+    "tons": 20,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard",
+    "holographic": true
+  },
+  "sensors": "advanced",
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "jumpControl",
+      "level": 3
+    },
+    {
+      "software": "intellect",
+      "level": 0
+    },
+    {
+      "software": "virtualGunner",
+      "level": 1
+    },
+    {
+      "software": "virtualCrew",
+      "level": 1
+    }
+  ],
+  "manoeuvre": {
+    "thrust": 6
+  },
+  "jump": {
+    "rating": 3
+  },
+  "computer": {
+    "processing": 35,
+    "core": false
+  },
+  "weapons": [
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "pulseLaser",
+        "missileRack",
+        "beamLaser"
+      ],
+      "popUp": true
+    }
+  ],
+  "ordnance": [
+    {
+      "missile": "standard",
+      "count": 12
+    }
+  ],
+  "craft": [
+    {
+      "label": "Air/Raft",
+      "tons": 4,
+      "cost": 0.25,
+      "kind": "vehicle",
+      "berth": "dockingSpace"
+    }
+  ],
+  "systems": [
+    {
+      "flat": "briefingRoom"
+    },
+    {
+      "flat": "sensorStation"
+    },
+    {
+      "flat": "militaryCountermeasuresSuite"
+    },
+    {
+      "flat": "dockingClampI"
+    },
+    {
+      "flat": "armoury"
+    },
+    {
+      "flat": "brig"
+    },
+    {
+      "flat": "breachingTube"
+    },
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "fuelProcessor",
+      "tons": 1
+    }
+  ],
+  "staterooms": 5,
+  "lowBerths": 3,
+  "commonAreaTons": 12,
+  "version": 1,
+  "armour": {
+    "type": "molecularBonded",
+    "protection": 10
+  },
+  "notes": "Its flatenned sphere shape and the fact that its used almost exclusivly by Special Operations gives the ship its FOO nickname. There are larger variants, but the 300t version is known as FOO3."
+}

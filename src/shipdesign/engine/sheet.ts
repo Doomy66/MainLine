@@ -202,6 +202,11 @@ export interface Sheet {
   /** Cr per month at skill 1. */
   readonly wageBill: number;
   readonly airlocks: number;
+  /**
+   * Tons of drives and power plant, which is what a mother ship carrying this
+   * as a craft counts towards its engineers. ShipSpec 4.10.2.1.
+   */
+  readonly driveAndPlantTons: number;
   readonly hardpoints: { readonly available: number; readonly used: number; readonly firmpoints: boolean };
   readonly software: {
     /** Everything but Jump Control, which is weighed on its own. ShipSpec 4.7.5. */
@@ -829,21 +834,25 @@ export function sheet(design: Design): Sheet {
   // Step 9, part one: carried craft and their berths. ShipSpec 4.11.3.
   let smallCraft = 0;
   for (const craft of design.craft ?? []) {
-    if (craft.kind === "smallCraft") smallCraft += 1;
+    const quantity = craft.quantity ?? 1;
+    const times = quantity === 1 ? "" : ` x${quantity}`;
+    if (craft.kind === "smallCraft") smallCraft += quantity;
     if (craft.berth !== "none") {
       const berth = craft.berth === "dockingSpace" ? PER_TON_SYSTEMS.dockingSpace : PER_TON_SYSTEMS.fullHangar;
       const factor = craft.berth === "dockingSpace" ? DOCKING_SPACE_FACTOR : FULL_HANGAR_FACTOR;
+      // Each craft has a berth of its own, rounded up on its own, so a
+      // squadron takes exactly what that many single craft would.
       const berthTons = Math.ceil(craft.tons * factor);
       // The book lists a berth beside the craft it holds, under Craft, not
       // among the optional systems. See the Scout's sheet, page 161.
       lines.push({
         section: "Craft",
-        label: `${berth.label} (${craft.tons} tons)`,
-        tons: berthTons,
-        cost: cr(berthTons * berth.costPerTon),
+        label: `${berth.label} (${craft.tons} tons)${times}`,
+        tons: berthTons * quantity,
+        cost: cr(berthTons * berth.costPerTon * quantity),
       });
     }
-    lines.push({ section: "Craft", label: craft.label, cost: cr(craft.cost) });
+    lines.push({ section: "Craft", label: `${craft.label}${times}`, cost: cr(craft.cost * quantity) });
   }
 
   // Systems the rules size themselves, so the designer need not measure them.
@@ -1146,7 +1155,10 @@ export function sheet(design: Design): Sheet {
     crew.push({ role: "pilot", label: CREW_ROLES.pilot.label, count: 1, salary: CREW_ROLES.pilot.salary });
   } else {
     // A carried craft contributes its own engine room, not its displacement.
-    const craftTons = (design.craft ?? []).reduce((sum, entry) => sum + (entry.driveAndPlantTons ?? 0), 0);
+    const craftTons = (design.craft ?? []).reduce(
+      (sum, entry) => sum + (entry.driveAndPlantTons ?? 0) * (entry.quantity ?? 1),
+      0,
+    );
     const inputs: CrewInputs = {
       hullTons,
       hasJump: jump !== undefined,
@@ -1182,8 +1194,14 @@ export function sheet(design: Design): Sheet {
   const berths =
     stateroomCount * (design.doubleOccupancy === true ? STATEROOM.doubleOccupants : STATEROOM.occupants) +
     systemBerths;
+  // A small craft is not lived aboard. Its crew and anyone it carries are
+  // going somewhere and sleep when they get there: the book gives its fighters,
+  // boats and shuttles no staterooms. The line is 2.2's, under 100 tons with no
+  // jump drive, not the crew table's, which takes in a 100-ton hull too: a
+  // 100-ton yacht is somewhere people live. ShipSpec 6.2.2.
+  const livedAboard = hullTons >= 100 || jump !== undefined;
   const awake = crewTotal + passengers.high + passengers.middle;
-  if (berths < awake) {
+  if (livedAboard && berths < awake) {
     warn(`${berths} ${berths === 1 ? "berth" : "berths"} for ${awake} people awake aboard.`, "6.2");
   }
   // A low passenger travels frozen, so the berths have to be there for them.
@@ -1224,6 +1242,7 @@ export function sheet(design: Design): Sheet {
     passengers,
     wageBill,
     airlocks,
+    driveAndPlantTons: tons(driveTons + plantTons),
     hardpoints: { available: pointsAvailable, used: mountsUsed, firmpoints: hullTons < 100 },
     software: {
       bandwidth,
