@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- A saved game picks up ships added to the catalogue since it began.
 - The catalogue is in sections: warships, system defence, capital ships and
   civilian and support, the last two closed until opened.
 - Carriers are tagged in the catalogue with the number of fighters they bring.
