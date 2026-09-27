@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Resting the pointer on a system shows a short card: its name and holder, starport, population, tech
+  level and any other Empire's fleets there. It appears anywhere over the hex, not just on the dot.
+- Fleets on the map are little ships. Other Empires' fleets head up and are ringed in red; a faint
+  dashed one is an old sighting.
 - A saved game picks up ships added to the catalogue since it began.
 - The catalogue is in sections: warships, system defence, capital ships and
   civilian and support, the last two closed until opened.

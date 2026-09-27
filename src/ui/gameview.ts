@@ -17,6 +17,7 @@ import type { Faction, Fleet } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import { h, kids, mcr } from "./dom";
 import { emblem } from "./emblems";
+import { describePopulation, STARPORTS } from "../sector/uwp";
 import { createMap, type FleetMark, type TransitMark } from "./map";
 import { empirePane, fleetPane, reportsPane, setupPane, shipyardPane, systemPane } from "./panes";
 
@@ -57,7 +58,8 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
   const pane = h("div", { class: "pane" });
   const help = h("div", { class: "map-help" }, "Wheel to zoom, drag to move, click a system.");
   const banner = h("div", { class: "mode-banner", style: "display:none" });
-  const mapBox = h("div", { class: "map" }, map.element, help, banner);
+  const tip = h("div", { class: "map-tip", style: "display:none" });
+  const mapBox = h("div", { class: "map" }, map.element, help, banner, tip);
   const side = h("div", { class: "side" }, tabs, pane);
   root.replaceChildren(h("div", { class: "game" }, bar, mapBox, side));
 
@@ -154,6 +156,76 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     }
   });
 
+  // What the map shows, kept for the hover tip.
+  let shownFleets: FleetMark[] = [];
+  let shownTransits: TransitMark[] = [];
+  let tipFor = "";
+
+  map.onHover((at, fleetId, x, y) => {
+    const key = at ?? (fleetId === null ? "" : `fleet ${fleetId}`);
+    if (key === "") {
+      tip.style.display = "none";
+      tipFor = "";
+      return;
+    }
+    if (key !== tipFor) {
+      tipFor = key;
+      tip.replaceChildren(...(at !== null ? worldTip(at) : fleetTip(fleetId!)));
+    }
+    tip.style.display = "block";
+    const box = mapBox.getBoundingClientRect();
+    const left = x - box.left + 16;
+    const top = y - box.top + 16;
+    tip.style.left = `${Math.min(left, box.width - tip.offsetWidth - 6)}px`;
+    tip.style.top = `${top + tip.offsetHeight > box.height - 6 ? y - box.top - tip.offsetHeight - 10 : top}px`;
+  });
+
+  /** A world at a glance: which it is, whose, its port, people and tech, and who else is there. */
+  function worldTip(at: string): HTMLElement[] {
+    const w = game.world(at);
+    const u = w.uwp;
+    const ownerId = game.knownOwner(ctx.me.id, at);
+    const owner = ownerId === null ? null : game.faction(ownerId);
+    const port = (STARPORTS[u.starport] ?? "").split(":")[0] ?? "";
+    const others = shownFleets.filter((f) => f.at === at && f.kind !== "own");
+    return [
+      h("div", { class: "tip-name" }, w.name, h("span", { class: "faint" }, ` ${at}`)),
+      h(
+        "div",
+        { class: "tip-owner" },
+        owner === null ? "Independent" : kids(emblem(owner, game.state.factions), owner.id === ctx.me.id ? `${owner.name} (yours)` : owner.name),
+      ),
+      h(
+        "dl",
+        {},
+        h("dt", {}, "Starport"), h("dd", {}, port === "" ? u.starport : `${u.starport}, ${port.toLowerCase()}`),
+        h("dt", {}, "Population"), h("dd", {}, describePopulation(u.population)),
+        h("dt", {}, "Tech level"), h("dd", {}, String(u.tl)),
+      ),
+      others.length === 0
+        ? null
+        : h(
+            "div",
+            { class: "tip-enemies" },
+            h("div", { class: "tip-head" }, others.every((f) => f.kind === "ghost") ? "Fleets reported here" : "Fleets here"),
+            ...others.map((f) => {
+              const who = game.faction(f.owner);
+              return h(
+                "div",
+                { class: f.kind === "ghost" ? "tip-fleet faint" : "tip-fleet" },
+                emblem(who, game.state.factions),
+                `${who.name}: ${ships(f.ships)}${f.kind === "ghost" && f.seen !== undefined ? `, seen day ${f.seen}` : ""}`,
+              );
+            }),
+          ),
+    ].filter((n) => n !== null);
+  }
+
+  function fleetTip(id: string): HTMLElement[] {
+    const mark = shownFleets.find((f) => f.id === id) ?? shownTransits.find((t) => t.id === id);
+    return mark === undefined ? [] : [h("div", {}, mark.title)];
+  }
+
   function overlay(): void {
     const me = ctx.me;
     const sees = visibleSystems(game, me.id);
@@ -186,6 +258,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
             id: f.id,
             at: f.system,
             colour: me.colour,
+            owner: me.id,
             kind: "own",
             ships: f.ships.length,
             title: `${f.name}: ${f.ships.length} ships${age > 0 ? `, as reported ${age} days ago` : ""}`,
@@ -193,7 +266,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         }
       } else if (!lagged && f.transit === null && sees.has(f.system)) {
         const owner = game.faction(f.owner);
-        fleets.push({ id: f.id, at: f.system, colour: owner.colour, kind: "enemy", ships: f.ships.length, title: `${owner.name}: ${f.ships.length} ships, ${Math.round(game.fleetTons(f)).toLocaleString()} t` });
+        fleets.push({ id: f.id, at: f.system, colour: owner.colour, owner: owner.id, kind: "enemy", ships: f.ships.length, title: `${owner.name}: ${f.ships.length} ships, ${Math.round(game.fleetTons(f)).toLocaleString()} t` });
       }
     }
     // What the capital has heard of other fleets: fresh news drawn solid, older
@@ -203,7 +276,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       if (!lagged && sees.has(s.system)) continue;
       const owner = game.faction(s.owner);
       const fresh = lagged && s.day >= game.state.day;
-      fleets.push({ id: s.fleetId, at: s.system, colour: owner.colour, kind: fresh ? "enemy" : "ghost", ships: s.ships, title: `${owner.name}: ${ships(s.ships)}, ${fresh ? "seen today" : `seen day ${s.day}`}` });
+      fleets.push({ id: s.fleetId, at: s.system, colour: owner.colour, owner: owner.id, kind: fresh ? "enemy" : "ghost", ships: s.ships, seen: s.day, title: `${owner.name}: ${ships(s.ships)}, ${fresh ? "seen today" : `seen day ${s.day}`}` });
     }
     let range = new Set<string>();
     let reach = new Set<string>();
@@ -227,6 +300,9 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     const battles = new Set(
       game.state.log.filter((e) => e.day === game.state.day && e.kind === "combat" && e.to.includes(me.id) && e.at !== undefined).map((e) => e.at!),
     );
+    shownFleets = fleets;
+    shownTransits = transits;
+    tipFor = "";
     map.update({ owners, capitals, selected: ctx.system, selectedFleet: ctx.fleet, fleets, transits, range, reach, route, sieges, battles, inPlay });
     if (ctx.choosingJump && sel !== undefined) {
       banner.style.display = "flex";

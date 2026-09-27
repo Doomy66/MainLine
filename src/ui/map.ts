@@ -49,13 +49,32 @@ function worldClass(world: World): string {
   return "m-world m-airless";
 }
 
+/** A little ship centred on x, y, its nose to the right or up. */
+function shipPoints(x: number, y: number, nose: "right" | "up"): string {
+  const shape = [
+    [11, 0],
+    [-3, -5],
+    [-9, -9],
+    [-6, 0],
+    [-9, 9],
+    [-3, 5],
+  ];
+  return shape
+    .map(([a, b]) => (nose === "right" ? `${x + a!},${y + b!}` : `${x + b!},${y - a!}`))
+    .join(" ");
+}
+
 export interface FleetMark {
   readonly id: string;
   readonly at: string;
   readonly colour: string;
+  /** The faction's id. */
+  readonly owner: string;
   /** Mine, somebody else's seen now, or somebody else's last seen some days ago. */
   readonly kind: "own" | "enemy" | "ghost";
   readonly ships: number;
+  /** The day it was seen there, for a ghost. */
+  readonly seen?: number;
   readonly title: string;
 }
 
@@ -95,6 +114,11 @@ export interface MapView {
   update(overlay: Overlay): void;
   onPickHex(handler: (at: string) => void): void;
   onPickFleet(handler: (id: string) => void): void;
+  /**
+   * The pointer is over a world's hex, or over a fleet's mark, or neither
+   * (both null). The position is the pointer's, in the page.
+   */
+  onHover(handler: (at: string | null, fleet: string | null, clientX: number, clientY: number) => void): void;
   centreOn(at: string, zoom?: number): void;
   resetView(): void;
 }
@@ -113,6 +137,8 @@ export function createMap(): MapView {
 
   const pickHex: ((at: string) => void)[] = [];
   const pickFleet: ((id: string) => void)[] = [];
+  const hover: ((at: string | null, fleet: string | null, clientX: number, clientY: number) => void)[] = [];
+  const worldAt = new Set<string>();
   let view: View = { zoom: 1, x: 0, y: 0 };
   let press: { x: number; y: number; from: { x: number; y: number }; moved: boolean } | null = null;
 
@@ -136,6 +162,8 @@ export function createMap(): MapView {
     grid.replaceChildren();
     worldLayer.replaceChildren();
     frames.replaceChildren();
+    worldAt.clear();
+    for (const w of list) worldAt.add(w.at);
     for (let row = 1; row <= SECTOR_ROWS; row++) {
       for (let col = 1; col <= SECTOR_COLS; col++) {
         const { x, y } = centreOf(col, row);
@@ -152,9 +180,6 @@ export function createMap(): MapView {
       const { x, y } = centreAt(w.at);
       const g = make("g", { class: inPlay.has(w.at) ? "m-hex" : "m-hex m-out" });
       g.dataset["at"] = w.at;
-      const title = make("title");
-      title.textContent = `${w.at} ${w.name} ${w.uwpText}${w.trade.length > 0 ? ` ${w.trade.join(" ")}` : ""}`;
-      g.append(title);
       const port = make("text", { class: "m-port", x, y: y - HEX_HIGH * 0.13 });
       port.textContent = w.uwp.starport;
       g.append(port);
@@ -236,9 +261,6 @@ export function createMap(): MapView {
       const py = a.y + (b.y - a.y) * t.progress;
       const g = make("g", { class: t.id === o.selectedFleet ? "m-fleet m-chosen" : "m-fleet" });
       g.append(make("circle", { cx: px, cy: py, r: 7, class: "m-jumpmark", style: `fill:${t.colour}` }));
-      const title = make("title");
-      title.textContent = t.title;
-      g.append(title);
       g.dataset["fleet"] = t.id;
       markLayer.append(g);
     }
@@ -250,17 +272,13 @@ export function createMap(): MapView {
       const n = stacks.get(key) ?? 0;
       stacks.set(key, n + 1);
       const c = centreAt(f.at);
-      const x = c.x + HEX_WIDE * 0.24 + n * 12;
+      const x = c.x + HEX_WIDE * 0.24 + n * 14;
       const y = f.kind === "own" ? c.y - HEX_HIGH * 0.02 : c.y + HEX_HIGH * 0.2;
       const g = make("g", { class: `m-fleet m-${f.kind}${f.id === o.selectedFleet ? " m-chosen" : ""}` });
-      const shape =
-        f.kind === "own"
-          ? make("polygon", { points: `${x - 8},${y + 7} ${x + 10},${y} ${x - 8},${y - 7}`, style: `fill:${f.colour}` })
-          : make("polygon", { points: `${x},${y - 8} ${x + 8},${y} ${x},${y + 8} ${x - 8},${y}`, style: f.kind === "ghost" ? `stroke:${f.colour}` : `fill:${f.colour}` });
-      g.append(shape);
-      const title = make("title");
-      title.textContent = f.title;
-      g.append(title);
+      // Everyone's fleets are little ships: yours head right, others head up,
+      // ringed in red, and a sighting days old is only an outline.
+      if (f.kind !== "own") g.append(make("circle", { class: "m-threat", cx: x, cy: y, r: 13 }));
+      g.append(make("polygon", { points: shipPoints(x, y, f.kind === "own" ? "right" : "up"), style: `fill:${f.colour}` }));
       g.dataset["fleet"] = f.id;
       markLayer.append(g);
     }
@@ -272,12 +290,31 @@ export function createMap(): MapView {
 
   new ResizeObserver(() => showView()).observe(svg);
 
+  let hovering: { at: string | null; fleet: string | null } = { at: null, fleet: null };
+  function hoverAt(event: PointerEvent | null): void {
+    let at: string | null = null;
+    let fleet: string | null = null;
+    if (event !== null && press?.moved !== true) {
+      const mark = (event.target as Element).closest(".m-fleet") as SVGElement | null;
+      fleet = mark?.dataset["fleet"] ?? null;
+      if (fleet === null) {
+        const p = pointIn(event, svg, boxFor(content(), view, panel()));
+        const hex = hexAtPoint(p.x, p.y);
+        at = hex !== null && worldAt.has(hex) ? hex : null;
+      }
+    }
+    if (at === hovering.at && fleet === hovering.fleet && at === null && fleet === null) return;
+    hovering = { at, fleet };
+    for (const h of hover) h(at, fleet, event?.clientX ?? 0, event?.clientY ?? 0);
+  }
+
   svg.addEventListener(
     "wheel",
     (event) => {
       event.preventDefault();
       view = zoomedAt(content(), view, panel(), Math.pow(0.999, event.deltaY), pointIn(event, svg, boxFor(content(), view, panel())), ZOOM);
       showView();
+      hoverAt(null);
     },
     { passive: false },
   );
@@ -286,6 +323,7 @@ export function createMap(): MapView {
     press = { x: event.clientX, y: event.clientY, from: { x: view.x, y: view.y }, moved: false };
   });
   svg.addEventListener("pointermove", (event) => {
+    hoverAt(event);
     if (press === null) return;
     if (Math.abs(event.clientX - press.x) + Math.abs(event.clientY - press.y) > 4) press.moved = true;
     if (!press.moved) return;
@@ -313,6 +351,7 @@ export function createMap(): MapView {
   });
   svg.addEventListener("pointerleave", () => {
     press = null;
+    hoverAt(null);
   });
 
   /** The hex whose centre is nearest a point of the drawing. */
@@ -336,6 +375,7 @@ export function createMap(): MapView {
     update,
     onPickHex: (h) => pickHex.push(h),
     onPickFleet: (h) => pickFleet.push(h),
+    onHover: (h) => hover.push(h),
     centreOn(at, zoom) {
       const p = centreAt(at);
       view = { zoom: zoom ?? Math.max(view.zoom, 2.4), x: p.x, y: p.y };
