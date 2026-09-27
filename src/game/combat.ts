@@ -217,17 +217,32 @@ function engagements(parties: Party[]): Map<Party, Party[]> {
   return out;
 }
 
+/** The tons a world's defences count as: a million, for they are a world. */
+const DEFENCE_TONS = 1_000_000;
+
+/**
+ * How big a target looks to a gunner choosing one. A world's defences count
+ * as no bigger than the largest ship beside them: sized as the world they
+ * are, they drew most of every fleet's fire and let the boats defending them
+ * fight on untouched.
+ */
+function sizeAsTarget(c: Combatant, live: readonly Combatant[]): number {
+  if (c.tons !== DEFENCE_TONS) return c.tons;
+  const ships = live.filter((x) => x.tons !== DEFENCE_TONS).map((x) => x.tons);
+  return ships.length === 0 ? c.tons : Math.max(...ships);
+}
+
 /** How much a target priority favours a target, as a weight multiplier. */
-function preference(priority: TargetPriority | undefined, c: Combatant, pool: Combatant[]): number {
+function preference(priority: TargetPriority | undefined, c: Combatant, pool: Combatant[], live: readonly Combatant[]): number {
   switch (priority) {
     case "warships":
       return c.attacks.length > 0 ? 4 : 1;
     case "unarmed":
       return c.attacks.length === 0 ? 6 : 1;
     case "largest":
-      return c.tons >= Math.max(...pool.map((x) => x.tons)) ? 6 : 1;
+      return sizeAsTarget(c, live) >= Math.max(...pool.map((x) => sizeAsTarget(x, live))) ? 6 : 1;
     case "smallest":
-      return c.tons <= Math.min(...pool.map((x) => x.tons)) ? 6 : 1;
+      return sizeAsTarget(c, live) <= Math.min(...pool.map((x) => sizeAsTarget(x, live))) ? 6 : 1;
     case "damaged":
       return 1 + 5 * (1 - Math.max(0, c.hull) / c.hullMax);
     default:
@@ -245,8 +260,11 @@ function pickTarget(
   if (live.length === 0) return undefined;
   // Heavy guns look for heavy targets; everything else goes by the fleet's
   // target priority, with bigger ships being easier to find.
-  const pool = attack.heavy && live.some((c) => c.tons > 2000) ? live.filter((c) => c.tons > 2000) : live;
-  const weights = pool.map((c) => Math.sqrt(Math.min(c.tons, 100_000)) * preference(priority, c, pool));
+  const size = (c: Combatant) => sizeAsTarget(c, live);
+  const pool = attack.heavy && live.some((c) => size(c) > 2000) ? live.filter((c) => size(c) > 2000) : live;
+  // Orbital weapons, poor against ships, are laid on the world's defences.
+  const orbital = (c: Combatant) => (attack.vsShips < 0 && c.tons === DEFENCE_TONS ? 6 : 1);
+  const weights = pool.map((c) => Math.sqrt(Math.min(size(c), 100_000)) * preference(priority, c, pool, live) * orbital(c));
   let r = rng.next() * weights.reduce((s, w) => s + w, 0);
   for (let i = 0; i < pool.length; i++) {
     r -= weights[i]!;
@@ -270,7 +288,7 @@ function attackDms(from: Combatant, target: Combatant, attack: Attack): { total:
     ["evade", -Math.min(target.evade, target.thrust)],
   ];
   // Ground-attack weapons against anything that can dodge; a world's defences cannot.
-  if (attack.vsShips !== 0 && target.tons !== 1_000_000) parts.push(["orbital weapon", attack.vsShips]);
+  if (attack.vsShips !== 0 && target.tons !== DEFENCE_TONS) parts.push(["orbital weapon", attack.vsShips]);
   if (attack.ordnance !== undefined) parts.push(["smart", 2]);
   else if (attack.heavy) parts.push(["small target", target.tons <= 100 ? -4 : target.tons <= 2000 ? -2 : 0]);
   const shown = parts.filter(([, v]) => v !== 0);
@@ -516,7 +534,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
     const attacks = defenceAttacks(world);
     const defences: Combatant = {
       label: `${world.name} defences`,
-      tons: 1_000_000,
+      tons: DEFENCE_TONS,
       hullMax: defenceMax(world),
       hull: ws.defence,
       armour: defenceArmour(world),
@@ -638,7 +656,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
         if (fleet.order?.kind === "move") fleet.order = null;
       }
     } else if (p.worldAt !== undefined) {
-      const batteries = p.combatants.find((c) => c.tons === 1_000_000);
+      const batteries = p.combatants.find((c) => c.tons === DEFENCE_TONS);
       if (batteries !== undefined) ws.defence = Math.max(0, Math.round(batteries.hull));
       ws.fought = game.state.day;
       const max = defenceMax(world);

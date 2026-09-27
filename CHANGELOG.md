@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- A world's defences no longer soak up a fleet's fire: gunners treat them as no bigger than the largest
+  ship defending the world, where before they counted as a million tons and drew two shots in three.
+  Orbital-strike and bombardment weapons still go for them first.
 - Carry on offered an old game once a game grew past about 5 MB, the most a browser's local storage
   holds: the autosave failed without a word. It now lives in the browser's database, which has room, and
   if a save is ever refused the top bar says so.
