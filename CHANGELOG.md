@@ -5,6 +5,9 @@
 - Mains are called Empires.
 - A new title screen in the style PlanetHex and the Traveller Ship Designer share,
   with links to both, release notes, and Mongoose Publishing's fair use notice.
+- **One header across the family.** The start screen's mark and name, and the
+  20px mark and gold name heading the working screens, the same size in
+  MainLine, PlanetHex and the Traveller Ship Designer.
 
 ## 0.4.0
 

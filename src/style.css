@@ -131,9 +131,12 @@ dl.props dd { margin: 0; }
   box-shadow: 0 0 0 1px rgba(224, 179, 65, 0.18), 0 8px 26px rgba(0, 0, 0, 0.45);
 }
 .title-card h1 {
-  font-size: 52px;
-  line-height: 1;
-  margin: 0;
+  font-size: clamp(34px, 7vw, 52px);
+  /* Room below for a descender, which the gold would otherwise stop short of,
+     and the same box in all three applications whether the name has one. */
+  line-height: 1.2;
+  padding-bottom: 0.08em;
+  margin: -6px 0 0;
   font-weight: 600;
   letter-spacing: 0.02em;
   background: linear-gradient(100deg, var(--text) 18%, var(--accent) 62%, #f4dfa6 100%);
@@ -172,7 +175,6 @@ dl.props dd { margin: 0; }
 .title-foot .faint { color: #6a7280; }
 @media (max-width: 640px) {
   .levels { grid-template-columns: minmax(0, 1fr); }
-  .title-card h1 { font-size: 42px; }
 }
 /* Handing the screen to the next player. */
 .handover-card {
@@ -233,8 +235,19 @@ dl.props dd { margin: 0; }
   background: var(--panel);
   border-bottom: 1px solid var(--line);
 }
-.bar .brand { font-weight: 700; letter-spacing: 0.04em; color: var(--accent); display: flex; align-items: center; gap: 7px; }
-.bar .brand img { border-radius: 5px; }
+/* The mark and the name, as MainLine, PlanetHex and the Traveller Ship Designer
+   all head their working screens. */
+.brand { display: inline-flex; align-items: center; gap: 8px; flex: none; margin: 0; }
+.brand img { display: block; width: 20px; height: 20px; border-radius: 5px; }
+.brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: linear-gradient(100deg, var(--text) 18%, var(--accent) 62%, #f4dfa6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .bar .who { font-weight: 600; }
 .bar .date { font-variant-numeric: tabular-nums; }
 .bar .credits { font-variant-numeric: tabular-nums; color: #f4dfa6; }

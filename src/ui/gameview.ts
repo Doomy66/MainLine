@@ -244,7 +244,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     const setup = s.phase === "setup";
     const over = s.phase === "over";
     bar.replaceChildren(...kids(
-      h("span", { class: "brand" }, h("img", { src: "./icon.svg", alt: "", width: 20, height: 20 }), h("span", {}, "MAINLINE")),
+      h("span", { class: "brand" }, h("img", { src: "./icon.svg", alt: "", width: 20, height: 20 }), h("span", { class: "brand-name" }, "MainLine")),
       h("span", { class: "muted sector-name" }, s.sector.name),
       h("span", { class: "date" }, setup ? "Commissioning" : `Day ${s.day} · ${imperialDate(s.day)}`),
       h("span", { class: "who" }, emblem(me, game.state.factions, 16), ` ${me.playerName} · ${me.name}`),
