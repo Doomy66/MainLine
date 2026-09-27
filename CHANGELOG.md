@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Big ships build much faster: time on the slips beyond a month is cut by modular building, as High
+  Guard allows. A 5,000-ton carrier takes about three months instead of a year and a half, an Azhanti
+  seven and a half instead of thirteen years; ships of a month or less are unchanged.
+- Ships of 1,000 tons or more take any spare slips at their yard, and build that much faster; a later
+  order takes a slip back. Their due days move to match, including for ships already on the slips.
 - Resting the pointer on a system shows a short card: its name and holder, starport, population, tech
   level and any other Empire's fleets there. It appears anywhere over the hex, not just on the dot.
 - Fleets on the map are little ships. Other Empires' fleets head up and are ringed in red; a faint

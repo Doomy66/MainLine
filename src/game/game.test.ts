@@ -165,6 +165,22 @@ describe("shipyards", () => {
     expect(d!.start).toBe(a!.done);
     expect(d!.done - d!.start!).toBe(a!.done - a!.start!);
   });
+
+  it("put a big ship on every spare slip, and give one back for a new order", () => {
+    const game = newGame({}, 1);
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const yard = game.state.sector.worlds.find((w) => w.uwp.starport === "A" && w.uwp.tl >= 12)!;
+    game.worldState(yard.at).owner = me.id;
+    me.credits = 10_000;
+    expect(orderBuild(game, me, "Hyperion-Escort-Carrier", yard.at)).toBe("");
+    const big = me.builds[0]!;
+    expect(big.done).toBe(1 + Math.ceil(big.work! / 3));
+    const alone = big.done;
+    expect(orderBuild(game, me, "Patrol-Corvette", yard.at)).toBe("");
+    expect(big.done).toBeGreaterThan(alone);
+  });
 });
 
 describe("losing a capital", () => {
@@ -192,10 +208,15 @@ describe("losing a capital", () => {
     // Nothing on its slips moves while the disorder lasts.
     const yard = game.ownedWorlds(victim.id).find((w) => w.uwp.starport === "A" || w.uwp.starport === "B");
     if (yard !== undefined) {
-      victim.builds.push({ classId: "Pinnace", at: yard.at, start: game.state.day, done: game.state.day + 7, name: "Test" });
-      const due = victim.builds[victim.builds.length - 1]!.done;
+      const build = { classId: "Pinnace", at: yard.at, name: "Test", placed: game.state.day - 1, work: 7, worked: 0, done: game.state.day + 7 };
+      victim.builds.push(build);
+      game.replanYard(yard.at);
+      const due = build.done;
       advanceDay(game);
-      expect(victim.builds[victim.builds.length - 1]!.done).toBe(due + 1);
+      expect(build.worked).toBe(0);
+      // The forecast knew of the disorder: work starts the day it ends, and takes a week.
+      expect(build.done).toBe(due);
+      expect(due).toBe(victim.disorderUntil! + 6);
     }
   });
 });

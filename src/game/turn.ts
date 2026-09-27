@@ -10,9 +10,9 @@
 import { aiStartingFleet } from "./ai";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
-import { buildDaysFor, canBuildAt, whyNotBuild, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, MODULAR_TONS, whyNotBuild, yardPrice } from "./rules";
 import { shipName } from "./names";
-import type { Faction } from "./types";
+import type { Build, Faction } from "./types";
 import { STANDING_PRESETS } from "./types";
 
 /** The computer's factions buy their first fleets as the game is made. */
@@ -58,17 +58,21 @@ export function orderBuild(game: Game, faction: Faction, classId: string, at: st
   const price = yardPrice(cls, owner === faction.id);
   if (price > faction.credits + 1e-9) return `The ${cls.name} costs MCr${price.toFixed(2)} here; the treasury has MCr${faction.credits.toFixed(2)}.`;
   faction.credits -= price;
-  const days = buildDaysFor(cls, game.state.options.buildSpeed);
-  const { start, done } = game.scheduleAt(at, days);
-  faction.builds.push({ classId, at, start, done, name: shipName(game.rng, game.shipNamesInUse()) });
   const today = game.state.day;
+  const work = buildDaysFor(cls, game.state.options.buildSpeed);
+  const build: Build = { classId, at, name: shipName(game.rng, game.shipNamesInUse()), placed: today, work, worked: 0, done: today + work };
+  faction.builds.push(build);
+  game.replanYard(at);
+  const start = build.start ?? today;
+  const done = build.done;
+  const sooner = cls.tons >= MODULAR_TONS ? " She takes any slip that comes free, so may be done sooner." : "";
   game.log({
     to: [faction.id],
     kind: "build",
     text:
       start > today
-        ? `The ${cls.name} is ordered at ${world.name}. Every slip is busy: work starts on day ${start} and she is due on day ${done}.`
-        : `The ${cls.name} is laid down at ${world.name}, due on day ${done}.`,
+        ? `The ${cls.name} is ordered at ${world.name}. Every slip is busy: work starts on day ${start} and she is due on day ${done}.${sooner}`
+        : `The ${cls.name} is laid down at ${world.name}, due on day ${done}.${sooner}`,
     at,
     firsthand: [faction.id],
   });

@@ -626,28 +626,33 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
   );
 
   const today = game.state.day;
-  const queue = me.builds.map((b) =>
-    h(
+  const queue = me.builds.map((b) => {
+    const on = game.slipsTomorrow(b.at).get(b) ?? 0;
+    return h(
       "tr",
       {},
       h("td", {}, b.name),
       h("td", {}, game.catalogue.get(b.classId).name),
       h("td", {}, game.world(b.at).name),
-      h("td", { class: "r num" }, (b.start ?? today) > today ? `waits to day ${b.start}` : "on the slips"),
+      h("td", { class: "r num" }, on === 0 ? `waits to day ${b.start}` : on > 1 ? `on ${on} slips` : "on the slips"),
       h("td", { class: "r num" }, `day ${b.done}`),
-    ),
-  );
+    );
+  });
   const slipLine = (() => {
     if (yard === undefined) return null;
     const total = slipsAt(yard);
-    const onSlips = game.buildsAt(yard.at).filter((b) => (b.start ?? today) <= today && b.done > today).length;
-    const waiting = game.buildsAt(yard.at).filter((b) => (b.start ?? today) > today).length;
-    const next = game.scheduleAt(yard.at, 0).start;
-    return h(
-      "p",
-      { class: "hint" },
-      `${total} slip${total === 1 ? "" : "s"}, ${onSlips} in use${waiting > 0 ? `, ${waiting} waiting` : ""}. ${next > today ? `The next slip comes free on day ${next}.` : "A slip is free now."}`,
-    );
+    const tomorrow = [...game.slipsTomorrow(yard.at).values()];
+    const onSlips = tomorrow.reduce((n, s) => n + s, 0);
+    const waiting = tomorrow.filter((s) => s === 0).length;
+    const next = game.scheduleAt(yard.at, 1).start;
+    const spare = tomorrow.reduce((n, s) => n + Math.max(0, s - 1), 0);
+    const now =
+      next > today
+        ? `The next slip comes free on day ${next}.`
+        : onSlips < total
+          ? "A slip is free now."
+          : `A new order takes back ${spare === 1 ? "the spare slip" : "a spare slip"} from a big ship.`;
+    return h("p", { class: "hint" }, `${total} slip${total === 1 ? "" : "s"}, ${onSlips} in use${waiting > 0 ? `, ${waiting} waiting` : ""}. ${now}`);
   })();
 
   return h(
@@ -712,9 +717,8 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
                   },
                 },
                 (() => {
-                  const days = buildDaysFor(cls, game.state.options.buildSpeed);
-                  const when = game.scheduleAt(yard.at, days);
-                  return when.start > game.state.day ? `Queue · day ${when.done}` : `Build · ${days}d`;
+                  const when = game.scheduleAt(yard.at, buildDaysFor(cls, game.state.options.buildSpeed), cls.tons);
+                  return when.start > game.state.day ? `Queue · day ${when.done}` : `Build · ${when.done - game.state.day}d`;
                 })(),
               );
             },

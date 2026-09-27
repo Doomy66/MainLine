@@ -148,13 +148,14 @@ function build(game: Game, faction: Faction): void {
   const wantGuard = guardNow < total / 5;
   const wealth = Math.min(0.8, Math.max(0, Math.log10(faction.credits / 150) * 0.6));
   let best: { cls: ShipClass; at: string; score: number; price: number } | null = null;
+  // A yard with a long queue is somewhere else's job.
+  const busy = new Set(yards.filter((w) => game.scheduleAt(w.at, 1).start > game.state.day + 14).map((w) => w.at));
   for (const w of yards) {
+    if (busy.has(w.at)) continue;
     for (const cls of classes) {
       const mine = game.worldState(w.at).owner === faction.id;
       const price = yardPrice(cls, mine);
       if (!cls.armed || price > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
-      // A yard with a long queue is somewhere else's job.
-      if (game.scheduleAt(w.at, 0).start > game.state.day + 14) continue;
       if (cls.jump < STRIKE_JUMP && !(wantGuard && w.at === faction.capital)) continue;
       const already = game.fleetsOf(faction.id).reduce((n, f) => n + f.ships.filter((sh) => sh.classId === cls.id).length, 0);
       // Slips are few, so a rich faction puts its money into bigger hulls
@@ -167,9 +168,9 @@ function build(game: Game, faction: Faction): void {
   // has instead, with boats from its own yards.
   if (best === null && faction.credits > 400) {
     for (const w of own) {
+      if (busy.has(w.at)) continue;
       for (const cls of classes) {
         if (!cls.armed || cls.jump > 0 || cls.cost > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
-        if (game.scheduleAt(w.at, 0).start > game.state.day + 14) continue;
         const score = (cls.strength / cls.cost) * Math.pow(cls.cost, wealth) * (0.9 + 0.2 * game.rng.next());
         if (best === null || score > best.score) best = { cls, at: w.at, score, price: cls.cost };
       }
@@ -177,8 +178,10 @@ function build(game: Game, faction: Faction): void {
   }
   if (best === null) return;
   faction.credits -= best.price;
-  const { start, done } = game.scheduleAt(best.at, buildDaysFor(best.cls, game.state.options.buildSpeed));
-  faction.builds.push({ classId: best.cls.id, at: best.at, start, done, name: shipName(game.rng, game.shipNamesInUse()) });
+  const work = buildDaysFor(best.cls, game.state.options.buildSpeed);
+  const today = game.state.day;
+  faction.builds.push({ classId: best.cls.id, at: best.at, name: shipName(game.rng, game.shipNamesInUse()), placed: today, work, worked: 0, done: today + work });
+  game.replanYard(best.at);
 }
 
 /** Fleets of one faction idle in one place become one fleet, guard kept apart. */

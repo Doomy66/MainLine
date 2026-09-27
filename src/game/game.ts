@@ -10,7 +10,8 @@ import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
 import { Rng } from "./rng";
 import { routeTo } from "./nav";
-import { jumpFuel, navySize, slipsAt, TENDER_JUMP } from "./rules";
+import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, slipsAt, TENDER_JUMP } from "./rules";
+import { forecast, shares, work, type Job } from "./yard";
 import type { Build, Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { colourTerritories, shipName } from "./names";
@@ -45,6 +46,18 @@ export class Game {
       const ws = state.worlds[w.at];
       if (ws !== undefined && ws.navy === undefined) ws.navy = this.freshNavy(w);
     }
+    // Games made before slips were shared out by the day: each ship on order
+    // is given her work, and what is done of it.
+    for (const f of state.factions) {
+      for (const b of f.builds) {
+        if (b.work !== undefined || !this.catalogue.has(b.classId)) continue;
+        const work = buildDaysFor(this.catalogue.get(b.classId), state.options.buildSpeed);
+        const begun = b.start !== undefined && b.start < state.day;
+        b.work = work;
+        b.worked = begun ? Math.min(work - 1, state.day - b.start!) : 0;
+        b.placed = b.start ?? state.day;
+      }
+    }
     if (state.colourScheme !== 2) {
       // Games made before colours were chosen by neighbourhood: recolour the
       // computer's factions by the worlds they hold now.
@@ -60,6 +73,7 @@ export class Game {
     }
     this.worlds = new Map(state.sector.worlds.map((w) => [w.at, w]));
     this.rng = new Rng(state.rng);
+    for (const at of new Set(state.factions.flatMap((f) => f.builds.map((b) => b.at)))) this.replanYard(at);
   }
 
   private readonly near = new Map<number, Map<string, string[]>>();
@@ -407,19 +421,77 @@ export class Game {
     return this.state.factions.flatMap((f) => f.builds.filter((b) => b.at === at));
   }
 
-  /**
-   * When a ship ordered today at a yard would start and finish. Each order takes
-   * the first slip to come free, in the order they were placed.
-   */
-  scheduleAt(at: string, days: number): { start: number; done: number } {
+  /** The ships on order at a yard, in the order they were placed, with their work as the slips see it. */
+  private jobsAt(at: string): { build: Build; job: Job }[] {
     const today = this.state.day;
-    const slips = slipsAt(this.world(at));
-    const ends = this.buildsAt(at)
-      .map((b) => b.done)
-      .filter((d) => d > today)
-      .sort((a, b) => a - b);
-    const start = ends.length < slips ? today : ends[ends.length - slips]!;
-    return { start, done: start + days };
+    return this.state.factions
+      .flatMap((f) =>
+        f.builds
+          .filter((b) => b.at === at)
+          .map((b) => ({
+            build: b,
+            job: {
+              work: b.work ?? 1,
+              worked: b.worked ?? 0,
+              placed: b.placed ?? today,
+              modular: this.catalogue.get(b.classId).tons >= MODULAR_TONS,
+              idleUntil: f.disorderUntil ?? 0,
+            },
+          })),
+      )
+      .sort((a, b) => a.job.placed - b.job.placed);
+  }
+
+  /**
+   * When a ship ordered today at a yard would start and finish, taking the
+   * first slip to come free and, if she is big, any spare ones.
+   */
+  scheduleAt(at: string, work: number, tons = 0): { start: number; done: number } {
+    const today = this.state.day;
+    const jobs = this.jobsAt(at).map((j) => j.job);
+    jobs.push({ work: Math.max(1, work), worked: 0, placed: today, modular: tons >= MODULAR_TONS, idleUntil: 0 });
+    return forecast(jobs, slipsAt(this.world(at)), today).at(-1)!;
+  }
+
+  /** Brings a yard's forecasts up to date: when each ship on order starts and is due. */
+  replanYard(at: string): void {
+    const today = this.state.day;
+    const jobs = this.jobsAt(at);
+    const plan = forecast(
+      jobs.map((j) => j.job),
+      slipsAt(this.world(at)),
+      today,
+    );
+    jobs.forEach(({ build }, i) => {
+      const p = plan[i]!;
+      if ((build.worked ?? 0) === 0) build.start = p.start;
+      build.done = p.done;
+    });
+  }
+
+  /** A day's work at a yard: every ship on order that has a slip moves on. */
+  workYard(at: string, day: number): void {
+    const jobs = this.jobsAt(at);
+    work(
+      jobs.map((j) => j.job),
+      slipsAt(this.world(at)),
+      day,
+    );
+    for (const { build, job } of jobs) {
+      if (job.worked > (build.worked ?? 0) && (build.worked ?? 0) === 0) build.start = day - 1;
+      build.worked = job.worked;
+    }
+  }
+
+  /** Slips each ship at a yard has tomorrow; a big one may have several. */
+  slipsTomorrow(at: string): Map<Build, number> {
+    const jobs = this.jobsAt(at);
+    const s = shares(
+      jobs.map((j) => j.job),
+      slipsAt(this.world(at)),
+      this.state.day + 1,
+    );
+    return new Map(jobs.map((j, i) => [j.build, s[i]!]));
   }
 
   /* The log --------------------------------------------------------------- */

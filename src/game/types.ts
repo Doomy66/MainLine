@@ -123,10 +123,17 @@ export interface Fleet {
 export interface Build {
   readonly classId: string;
   readonly at: string;
-  /** The day work begins: today, or when a slip at the yard comes free. */
-  readonly start?: number;
-  readonly done: number;
   readonly name: string;
+  /** The day she was ordered. */
+  placed?: number;
+  /** Slip-days of work she needs: her days on one slip. */
+  work?: number;
+  /** Slip-days done. */
+  worked?: number;
+  /** When work begins: today, or when a slip at the yard comes free. A forecast until then. */
+  start?: number;
+  /** When she is due: a forecast, which moves as slips come free or are taken. */
+  done: number;
 }
 
 /** An enemy fleet as last seen, which is all a faction knows of it once it has gone. */

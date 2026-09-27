@@ -46,7 +46,7 @@ import {
   TORPEDO_MCR,
   type FuelSource,
 } from "./rules";
-import type { Faction, Fleet, Loc, Order, Sighting } from "./types";
+import type { Build, Faction, Fleet, Loc, Order, Sighting } from "./types";
 import type { World } from "../sector/sec";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
@@ -370,14 +370,14 @@ function sieges(game: Game): void {
 
 function yards(game: Game): void {
   const day = game.state.day;
+  // A day's work on every slip; a faction in disorder keeps its slips, but
+  // nothing on them moves.
+  const at = new Set(game.state.factions.flatMap((f) => f.builds.map((b) => b.at)));
+  for (const yard of at) game.workYard(yard, day);
   for (const faction of game.state.factions) {
-    // In disorder nothing on the slips moves: every build slips a day.
-    if ((faction.disorderUntil ?? 0) > day) {
-      faction.builds = faction.builds.map((b) => ({ ...b, start: (b.start ?? day) + 1, done: b.done + 1 }));
-      continue;
-    }
-    const due = faction.builds.filter((b) => b.done <= day);
-    faction.builds = faction.builds.filter((b) => b.done > day);
+    const finished = (b: Build) => (b.worked ?? 0) >= (b.work ?? 0);
+    const due = faction.builds.filter(finished);
+    faction.builds = faction.builds.filter((b) => !finished(b));
     for (const b of due) {
       // A yard that has changed hands since the order keeps the ship.
       const owner = game.worldState(b.at).owner;
@@ -399,6 +399,7 @@ function yards(game: Game): void {
       });
     }
   }
+  for (const yard of at) game.replanYard(yard);
 }
 
 function economy(game: Game): void {

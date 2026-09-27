@@ -285,9 +285,24 @@ export function slipsAt(world: World): number {
   return SLIPS[world.uwp.starport] ?? 0;
 }
 
-/** Days a class takes on the slips, under the game's shipyard speed. */
+/** Ships this big, in tons, take any spare slips at their yard, built in modules on several at once. */
+export const MODULAR_TONS = 1000;
+/** Beyond this many days on the slips, a ship is built in modules at once. */
+export const MODULAR_FROM = 30;
+/** How hard modular building shortens the time beyond MODULAR_FROM: time grows as its power. */
+export const MODULAR_POWER = 0.4;
+
+/**
+ * Days a class takes on the slips, under the game's shipyard speed. The book's
+ * day per MCr would keep a capital ship on the slips for years; High Guard lets
+ * very large ships be built in modules side by side, cutting the time by up to
+ * 90%. So time beyond a month grows only as its 0.4th power: a corvette takes
+ * five weeks, a 5,000-ton carrier three months, an Azhanti seven and a half.
+ */
 export function buildDaysFor(cls: ShipClass, buildSpeed: number): number {
-  return Math.max(7, Math.ceil(cls.buildDays * buildSpeed));
+  const days = cls.buildDays * buildSpeed;
+  const modular = days <= MODULAR_FROM ? days : MODULAR_FROM * Math.pow(days / MODULAR_FROM, MODULAR_POWER);
+  return Math.max(7, Math.ceil(modular));
 }
 
 /** Share of a ship's hull repaired in a day at an owned starport, by class. */
