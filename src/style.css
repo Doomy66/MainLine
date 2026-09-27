@@ -384,3 +384,6 @@ dl.props dd { margin: 0; }
 .catalogue-group > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; text-transform: none; }
 .catalogue-group > summary:hover { color: var(--text); }
 .catalogue-group[open] > summary { color: var(--text); }
+
+/* A small label beside a class's name: a carrier, and how many fighters it brings. */
+.tag { display: inline-block; margin-left: 8px; padding: 1px 7px; border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 11px; line-height: 16px; vertical-align: 1px; white-space: nowrap; }

@@ -4,6 +4,7 @@
 
 - The catalogue is in sections: warships, system defence, capital ships and
   civilian and support, the last two closed until opened.
+- Carriers are tagged in the catalogue with the number of fighters they bring.
 - Mains are called Empires.
 - A new title screen in the style PlanetHex and the Traveller Ship Designer share,
   with links to both, release notes, and Mongoose Publishing's fair use notice.

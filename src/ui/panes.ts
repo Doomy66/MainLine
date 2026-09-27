@@ -569,6 +569,13 @@ function catalogueTable(ctx: Ctx, action: (cls: ShipClass) => HTMLElement, price
   );
 }
 
+/** A carrier's tag: how many fighters its hangars hold, which come with it. */
+function carrierTag(c: ShipClass): HTMLElement | null {
+  const fighters = c.hangars.reduce((n, hg) => n + hg.slots, 0);
+  if (fighters === 0) return null;
+  return h("span", { class: "tag", title: "Its fighters come with it, and jump in its hangars" }, `Carrier · ${fighters} fighters`);
+}
+
 function classRows(classes: readonly ShipClass[], action: (cls: ShipClass) => HTMLElement, price: (cls: ShipClass) => number, note: (cls: ShipClass) => string): HTMLElement {
   return h(
     "table",
@@ -583,6 +590,7 @@ function classRows(classes: readonly ShipClass[], action: (cls: ShipClass) => HT
           "td",
           {},
           h("span", { class: "goto", style: "cursor:pointer", onclick: () => showSheet(c) }, c.name),
+          carrierTag(c),
           h("div", { class: "hint" }, weaponsSummary(c.attacks)),
           why === "" ? null : h("div", { class: "hint warn" }, why),
         ),
