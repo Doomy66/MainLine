@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The catalogue keeps civilian and support ships in their own section, closed
+  until opened, so the warships come first.
+
 - Mains are called Empires.
 - A new title screen in the style PlanetHex and the Traveller Ship Designer share,
   with links to both, release notes, and Mongoose Publishing's fair use notice.

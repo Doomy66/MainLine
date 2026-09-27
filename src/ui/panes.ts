@@ -4,6 +4,7 @@
 
 import { ships } from "../game/game";
 import { idFor, parseDesign } from "../catalogue/catalogue";
+import { roleOf } from "../catalogue/roles";
 import type { Attack, ShipClass } from "../catalogue/shipclass";
 import { locExists } from "../game/day";
 import type { Game } from "../game/game";
@@ -531,8 +532,29 @@ function weaponsSummary(attacks: readonly Attack[]): string {
     .join(", ");
 }
 
+/** Whether the civilian and support section of the catalogue is open; closed until the player opens it. */
+let civilianOpen = false;
+
 function catalogueTable(ctx: Ctx, action: (cls: ShipClass) => HTMLElement, price: (cls: ShipClass) => number = (c) => c.cost, note: (cls: ShipClass) => string = () => ""): HTMLElement {
-  const classes = ctx.game.catalogue.all();
+  const all = ctx.game.catalogue.all();
+  const combat = all.filter((c) => roleOf(c) === "combat");
+  const civilian = all.filter((c) => roleOf(c) === "civilian");
+  const civil = h(
+    "details",
+    {
+      class: "catalogue-group",
+      open: civilianOpen,
+      ontoggle: (e: Event) => {
+        civilianOpen = (e.target as HTMLDetailsElement).open;
+      },
+    },
+    h("summary", {}, `Civilian and support (${civilian.length})`, h("span", { class: "hint" }, " traders, liners, scouts and utility craft")),
+    classRows(civilian, action, price, note),
+  );
+  return h("div", {}, classRows(combat, action, price, note), civilian.length > 0 ? civil : null);
+}
+
+function classRows(classes: readonly ShipClass[], action: (cls: ShipClass) => HTMLElement, price: (cls: ShipClass) => number, note: (cls: ShipClass) => string): HTMLElement {
   return h(
     "table",
     { class: "catalogue" },
