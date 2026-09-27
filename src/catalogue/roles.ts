@@ -7,7 +7,17 @@
 
 import type { ShipClass } from "./shipclass";
 
-export type Role = "combat" | "civilian";
+/**
+ * - warship: a starship built to fight.
+ * - defence: no jump drive; system defence boats and fighters, which need a
+ *   tender or a carrier to go anywhere.
+ * - capital: 5,000 tons and up, High Guard's capital ships.
+ * - civilian: traders, liners, scouts and utility craft.
+ */
+export type Role = "warship" | "defence" | "capital" | "civilian";
+
+/** High Guard's line between a starship and a capital ship, in tons. */
+export const CAPITAL_TONS = 5000;
 
 /** Traders, liners, scouts, survey and utility craft: of little use in a war. */
 const CIVILIAN: ReadonlySet<string> = new Set([
@@ -29,13 +39,15 @@ const CIVILIAN: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * A class's role. A bundled class is sorted by the list above; a design
- * imported during a game goes with its weapons: unarmed, or not military and
- * barely armed, it is civilian.
+ * A class's role. A bundled civilian is on the list above; anything else,
+ * bundled or imported, goes by its armament, then its size and its drive:
+ * unarmed, or not military and barely armed, it is civilian.
  */
 export function roleOf(cls: ShipClass): Role {
   if (CIVILIAN.has(cls.id)) return "civilian";
-  if (cls.design.military === true) return "combat";
-  if (!cls.armed) return "civilian";
-  return cls.strength < cls.tons * 0.1 ? "civilian" : "combat";
+  const fights = cls.design.military === true || (cls.armed && cls.strength >= cls.tons * 0.1);
+  if (!fights) return "civilian";
+  if (cls.tons >= CAPITAL_TONS) return "capital";
+  if (cls.jump === 0) return "defence";
+  return "warship";
 }

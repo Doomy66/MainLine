@@ -4,7 +4,7 @@
 
 import { ships } from "../game/game";
 import { idFor, parseDesign } from "../catalogue/catalogue";
-import { roleOf } from "../catalogue/roles";
+import { roleOf, type Role } from "../catalogue/roles";
 import type { Attack, ShipClass } from "../catalogue/shipclass";
 import { locExists } from "../game/day";
 import type { Game } from "../game/game";
@@ -532,26 +532,41 @@ function weaponsSummary(attacks: readonly Attack[]): string {
     .join(", ");
 }
 
-/** Whether the civilian and support section of the catalogue is open; closed until the player opens it. */
-let civilianOpen = false;
+/**
+ * The catalogue's sections, in order, and whether each is open. Warships and
+ * system defence start open; capital ships and civilians start closed. A
+ * section stays as the player left it for the rest of the session.
+ */
+const SECTIONS: readonly { role: Role; title: string; hint: string }[] = [
+  { role: "warship", title: "Warships", hint: "starships built to fight" },
+  { role: "defence", title: "System defence", hint: "no jump drive: tenders or a carrier to go anywhere" },
+  { role: "capital", title: "Capital ships", hint: "5,000 tons and up" },
+  { role: "civilian", title: "Civilian and support", hint: "traders, liners, scouts and utility craft" },
+];
+const sectionOpen: Record<Role, boolean> = { warship: true, defence: true, capital: false, civilian: false };
 
 function catalogueTable(ctx: Ctx, action: (cls: ShipClass) => HTMLElement, price: (cls: ShipClass) => number = (c) => c.cost, note: (cls: ShipClass) => string = () => ""): HTMLElement {
   const all = ctx.game.catalogue.all();
-  const combat = all.filter((c) => roleOf(c) === "combat");
-  const civilian = all.filter((c) => roleOf(c) === "civilian");
-  const civil = h(
-    "details",
-    {
-      class: "catalogue-group",
-      open: civilianOpen,
-      ontoggle: (e: Event) => {
-        civilianOpen = (e.target as HTMLDetailsElement).open;
-      },
-    },
-    h("summary", {}, `Civilian and support (${civilian.length})`, h("span", { class: "hint" }, " traders, liners, scouts and utility craft")),
-    classRows(civilian, action, price, note),
+  return h(
+    "div",
+    {},
+    SECTIONS.map((sec) => {
+      const classes = all.filter((c) => roleOf(c) === sec.role);
+      if (classes.length === 0) return null;
+      return h(
+        "details",
+        {
+          class: "catalogue-group",
+          open: sectionOpen[sec.role],
+          ontoggle: (e: Event) => {
+            sectionOpen[sec.role] = (e.target as HTMLDetailsElement).open;
+          },
+        },
+        h("summary", {}, `${sec.title} (${classes.length})`, h("span", { class: "hint" }, ` ${sec.hint}`)),
+        classRows(classes, action, price, note),
+      );
+    }),
   );
-  return h("div", {}, classRows(combat, action, price, note), civilian.length > 0 ? civil : null);
 }
 
 function classRows(classes: readonly ShipClass[], action: (cls: ShipClass) => HTMLElement, price: (cls: ShipClass) => number, note: (cls: ShipClass) => string): HTMLElement {
