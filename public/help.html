@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-    <title>Mainline help</title>
+    <title>MainLine help</title>
     <style>
       :root {
         --bg: #14161a;
@@ -29,6 +29,7 @@
       nav .top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; color: var(--accent); font-weight: 700; letter-spacing: 0.04em; }
       nav .top img { border-radius: 8px; }
       h1 { font-size: 34px; margin: 0 0 6px; }
+      blockquote { margin: 10px 0; padding: 4px 0 4px 14px; border-left: 2px solid var(--line, #2e333c); font-size: 12px; }
       h2 { font-size: 22px; margin: 44px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
       h3 { font-size: 16px; margin: 24px 0 6px; color: var(--accent); }
       p, li { color: #cfd4dc; }
@@ -52,7 +53,7 @@
   <body>
     <div class="page">
       <nav>
-        <div class="top"><img src="./icon.svg" alt="" width="32" height="32" />MAINLINE</div>
+        <div class="top"><img src="./icon.svg" alt="" width="32" height="32" />MainLine</div>
         <a href="#start">Your first game</a>
         <a href="#screen">The screen</a>
         <a href="#day">A day</a>
@@ -67,12 +68,13 @@
         <a href="#tips">Tips</a>
         <a href="#own">Your own sectors and ships</a>
         <a href="#terms">Terms</a>
+        <a href="#fair-use">Fair use</a>
         <a href="https://github.com/Doomy66/MainLine/issues/new" target="_blank" rel="noopener" style="margin-top: 14px">Suggestions</a>
         <a href="./">← Back to the game</a>
       </nav>
 
       <main>
-        <h1>How to play Mainline</h1>
+        <h1>How to play MainLine</h1>
         <p class="lede">
           You rule an Empire, a chain of worlds a jump-1 ship can cross, and every other Empire in the sector
           is ruled by somebody else. Most of them are the computer. Build a fleet, take worlds and hold on
@@ -480,9 +482,25 @@
           attach the <code>.ship</code> file from the Traveller Ship Designer, and say where the design comes from: your own, or a
           published ship you have rebuilt. Designs that are legal under the designer's rules and fill a gap go in for everybody.
         </p>
-        <p class="muted" style="margin-top: 40px">
-          An unofficial fan work. Traveller is a trademark of Mongoose Publishing. Sectors from PlanetHex, ships
-          from the Traveller Ship Designer.
+        <h2 id="fair-use">Fair use</h2>
+        <p>
+          MainLine is an unofficial, non-commercial fan work, free to play. It is made under Mongoose Publishing's
+          <a href="https://cdn.shopify.com/s/files/1/0609/6139/0839/files/Traveller_2300AD_Twilight_2000_Fair_Use_Policy_2025.pdf?v=1747130413" target="_blank" rel="noopener">Fair Use Policy</a>,
+          which asks for this notice:
+        </p>
+        <blockquote class="muted">
+          The Traveller, 2300AD, Twilight: 2000 and Dark Conspiracy games in all forms are owned by Mongoose Publishing.
+          Copyright 1977 - 2025 Mongoose Publishing. Traveller is a registered trademark of Mongoose Publishing. Mongoose
+          Publishing permits web sites and fanzines for this game, provided it contains this notice, that Mongoose
+          Publishing is notified, and subject to a withdrawal of permission on 90 days notice. The contents of this site
+          are for personal, non-commercial use only. Any use of Mongoose Publishing's copyrighted material or trademarks
+          anywhere on this web site and its files should not be viewed as a challenge to those copyrights or trademarks.
+          In addition, any program/articles/file on this site cannot be republished or distributed without the consent of
+          the author who contributed it.
+        </blockquote>
+        <p class="muted">
+          Sectors from <a href="https://doomy66.github.io/PlanetHex/" target="_blank" rel="noopener">PlanetHex</a>, ships from the
+          <a href="https://doomy66.github.io/Traveller-Ship-Design/" target="_blank" rel="noopener">Traveller Ship Designer</a>.
         </p>
       </main>
     </div>

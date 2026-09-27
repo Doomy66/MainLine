@@ -46,14 +46,6 @@ export function loadAutosave(): Game | null {
 }
 
 /** A line describing the autosave, for the title screen, or null where there is none. */
-export function autosaveSummary(): string | null {
-  const game = loadAutosave();
-  if (game === null) return null;
-  const s = game.state;
-  const who = game.humans().map((h) => `${h.playerName} (${h.name})`).join(", ");
-  return `${s.name}: ${s.sector.name}, day ${s.day}${who === "" ? "" : `, ${who}`}`;
-}
-
 export function download(game: Game): void {
   const blob = new Blob([serialise(game)], { type: "application/json" });
   const url = URL.createObjectURL(blob);

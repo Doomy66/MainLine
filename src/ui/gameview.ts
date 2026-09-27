@@ -322,7 +322,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       { class: "overlay" },
       h(
         "div",
-        { class: "title-card" },
+        { class: "handover-card" },
         h("p", {}, game.state.phase === "setup" ? "Commissioning the first fleets" : `Day ${game.state.day}`),
         h("h1", { style: "font-size:30px" }, next.playerName),
         h("p", {}, emblem(next, game.state.factions, 18), " ", next.name),

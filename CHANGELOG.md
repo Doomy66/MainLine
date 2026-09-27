@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Mains are called Empires.
+- A new title screen in the style PlanetHex and the Traveller Ship Designer share,
+  with links to both, release notes, and Mongoose Publishing's fair use notice.
 
 ## 0.4.0
 
