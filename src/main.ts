@@ -44,7 +44,7 @@ function title(message = ""): void {
         h(
           "p",
           {},
-          "A turn-based war of fleets across a Traveller sector. Each player holds a Main, a chain of worlds a jump-1 ship can cross, and the computer holds all the rest. One turn is a day; a jump is a week.",
+          "A turn-based war of fleets across a Traveller sector. Each player holds an Empire, a chain of worlds a jump-1 ship can cross, and the computer holds all the rest. One turn is a day; a jump is a week.",
         ),
         h(
           "div",
@@ -63,7 +63,7 @@ function title(message = ""): void {
                 "Carry on",
                 h("span", {}, saved),
               ),
-          h("button", { onclick: () => showSetup(root, (game) => { autosave(game); showGame(root, game, () => title()); }, () => title()) }, "New game", h("span", {}, "Pick a sector from PlanetHex, choose your Main, and buy your first fleet.")),
+          h("button", { onclick: () => showSetup(root, (game) => { autosave(game); showGame(root, game, () => title()); }, () => title()) }, "New game", h("span", {}, "Pick a sector from PlanetHex, choose your Empire, and buy your first fleet.")),
           h(
             "button",
             {

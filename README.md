@@ -1,8 +1,8 @@
 # Mainline
 
 A turn-based war of fleets across a Traveller sector. Each player starts as
-the ruler of a **Main**, a chain of worlds a jump-1 ship can cross. Every Main
-nobody takes is played by the computer. One turn is a day and a jump takes a
+the ruler of an **Empire**, a chain of worlds a jump-1 ship can cross. Every
+Empire nobody takes is played by the computer. One turn is a day and a jump takes a
 week, as it always has.
 
 **[Play it here.](https://doomy66.github.io/MainLine/)** It runs in the
@@ -37,9 +37,9 @@ of writing, this is 100% Claude generated to my exacting requirements.
 
 ## How it plays
 
-**Setting up.** Pick a sector and the subsectors in play. Every Main of at
-least four worlds becomes a faction; smaller Mains and lone worlds are
-independent and there to be taken. Players pick their Mains and share one
+**Setting up.** Pick a sector and the subsectors in play. Every chain of at
+least four worlds becomes an Empire; smaller chains and lone worlds are
+independent and there to be taken. Players pick their Empires and share one
 screen, taking turns. Each faction starts with credits in proportion to what
 its worlds are worth, or with equal shares if you choose, and spends them on a
 first fleet from the whole catalogue. A slider multiplies every opening
@@ -59,8 +59,8 @@ beyond range and the fleet plans a route, refuelling on the way:
 
 Unrefined fuel risks a rough jump that arrives late.
 
-**A Main is a trap for jump-1.** A Main is every world a jump-1 ship can
-reach, so a jump-1 ship can never leave its own. To take anybody else's
+**An Empire is a trap for jump-1.** An Empire starts as every world a jump-1
+ship can reach, so a jump-1 ship can never leave its own. To take anybody else's
 worlds you need jump-2 or better.
 
 **Standing orders.** Every fleet has standing orders for when it meets the

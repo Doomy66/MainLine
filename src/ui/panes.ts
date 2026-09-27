@@ -492,7 +492,7 @@ export function setupPane(ctx: Ctx): HTMLElement {
     h(
       "p",
       { class: "hint" },
-      `The treasury holds ${mcr(me.credits)}. Anything in the catalogue can be bought for the first fleet, whatever your worlds' tech level; it will be waiting at ${game.world(me.capital).name}. After this, ships are built at your own yards. A Main is every world a jump-1 ship can reach, so to take anyone else's worlds you will need jump-2 or better. Keep something back for fuel and reloads.`,
+      `The treasury holds ${mcr(me.credits)}. Anything in the catalogue can be bought for the first fleet, whatever your worlds' tech level; it will be waiting at ${game.world(me.capital).name}. After this, ships are built at your own yards. Your Empire starts as every world a jump-1 ship can reach, so to take anyone else's worlds you will need jump-2 or better. Keep something back for fuel and reloads.`,
     ),
     h("h2", {}, `Bought: ${home.length} ships, ${mcr(spent)}`),
     home.length === 0
@@ -699,7 +699,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
     "div",
     {},
     h("h3", {}, me.name),
-    h("p", { class: "hint" }, `${me.playerName}, ruling the ${me.main} Main from ${game.world(me.capital).name}.`),
+    h("p", { class: "hint" }, `${me.playerName}, ruling the ${me.main} Empire from ${game.world(me.capital).name}.`),
     h(
       "dl",
       { class: "props" },

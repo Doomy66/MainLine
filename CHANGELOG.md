@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Mains are called Empires.
+
 ## 0.4.0
 
 - Battle reports show every weapon's fire: what it needed to hit and why, what

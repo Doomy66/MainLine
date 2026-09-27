@@ -146,7 +146,7 @@ export function createGame(spec: NewGame): Game {
     game.log({
       to: [f.id],
       kind: "info",
-      text: `${f.name} rules the ${f.main} Main from ${game.world(f.capital).name}. The treasury holds MCr${f.credits} for a first fleet.`,
+      text: `${f.name} rules the ${f.main} Empire from ${game.world(f.capital).name}. The treasury holds MCr${f.credits} for a first fleet.`,
       at: f.capital,
     });
   }
