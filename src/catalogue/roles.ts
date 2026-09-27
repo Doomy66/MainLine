@@ -19,7 +19,7 @@ export type Role = "warship" | "defence" | "capital" | "civilian";
 /** High Guard's line between a starship and a capital ship, in tons. */
 export const CAPITAL_TONS = 5000;
 
-/** Traders, liners, scouts, survey and utility craft: of little use in a war. */
+/** Traders, liners, scouts, survey, utility and special operations craft: of little use in a war of fleets. */
 const CIVILIAN: ReadonlySet<string> = new Set([
   "Free-Trader",
   "Far-Trader",
@@ -36,6 +36,7 @@ const CIVILIAN: ReadonlySet<string> = new Set([
   "Hydrogen-Fleet-Tanker",
   "Ships-Boat",
   "Modular-Cutter",
+  "FOO3",
 ]);
 
 /**
