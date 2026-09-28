@@ -11,8 +11,9 @@ import type { GameState } from "./types";
 export const EXTENSION = ".game";
 const AUTOSAVE_KEY = "mainline.autosave";
 
+/** The game as JSON, without indentation: a long game's save is big enough. */
 export function serialise(game: Game): string {
-  return `${JSON.stringify(game.snapshot(), null, 1)}\n`;
+  return `${JSON.stringify(game.snapshot())}\n`;
 }
 
 export function parseGame(text: string): Game {

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Saves are about a tenth the size. Reports meant only for computer Empires, which nothing reads, are no
+  longer kept (they were nine tenths of a long game's save, most of it their battles, shot by shot), and
+  saves are written without indentation. Older saves shed them when loaded; your own reports are all kept.
 - Victory can be by population, and is by default: rule a share of the sector's people rather than of
   its peopled worlds. Games saved before the choice keep counting worlds.
 - The Empire tab can switch the victory rule between population and worlds at any time.

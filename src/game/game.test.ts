@@ -183,6 +183,22 @@ describe("shipyards", () => {
   });
 });
 
+describe("the log", () => {
+  it("keeps only what players read, and sheds the rest from older saves", () => {
+    const game = newGame({}, 1, "LOG");
+    game.state.phase = "play";
+    const me = game.humans()[0]!;
+    const ai = game.state.factions.filter((f) => !f.human).map((f) => f.id);
+    game.log({ to: [ai[0]!, ai[1]!], kind: "info", text: "Between the computers" });
+    game.log({ to: [me.id, ai[0]!], kind: "info", text: "Shared" });
+    expect(game.state.log.some((e) => e.text === "Between the computers")).toBe(false);
+    expect(game.state.log.find((e) => e.text === "Shared")!.to).toEqual([me.id]);
+    const saved = JSON.parse(serialise(game));
+    saved.log.push({ day: 0, to: [ai[0]], kind: "info", text: "Old news for a computer" });
+    expect(parseGame(JSON.stringify(saved)).state.log.some((e) => e.text === "Old news for a computer")).toBe(false);
+  });
+});
+
 describe("winning", () => {
   it("by population: ruling the share of the sector's people, however few its worlds", () => {
     const game = newGame({ victoryBy: "population", victoryShare: 0.3 }, 1, "WIN");

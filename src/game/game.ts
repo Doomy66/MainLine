@@ -75,6 +75,13 @@ export class Game {
     }
     this.worlds = new Map(state.sector.worlds.map((w) => [w.at, w]));
     this.rng = new Rng(state.rng);
+    // Games from before reports were kept for players only lose the rest.
+    if (state.factions.some((f) => f.human) && state.log.some((e) => this.readers(e.to).length < e.to.length)) {
+      state.log = state.log.flatMap((e) => {
+        const to = this.readers(e.to);
+        return to.length === 0 ? [] : [to.length === e.to.length ? e : { ...e, to: [...to] }];
+      });
+    }
     for (const at of new Set(state.factions.flatMap((f) => f.builds.map((b) => b.at)))) this.replanYard(at);
   }
 
@@ -541,8 +548,14 @@ export class Game {
   log(entry: Omit<LogEntry, "day" | "happened"> & { readonly firsthand?: readonly string[] }): void {
     const { firsthand = [], ...rest } = entry;
     const today = this.state.day;
+    // Only players read the reports: the computer's Empires act on the state
+    // itself. News for them alone would only swell the save (it was most of a
+    // long game's), so it is not kept, except in a game with no players at
+    // all, a simulation, where the log is all there is to read.
+    const readers = this.readers(entry.to);
+    if (readers.length === 0) return;
     const byLag = new Map<number, string[]>();
-    for (const id of entry.to) {
+    for (const id of readers) {
       const direct = firsthand.includes(id) && !this.fogged(id);
       const lag = entry.at === undefined || direct ? 0 : this.lag(id, entry.at);
       byLag.set(lag, [...(byLag.get(lag) ?? []), id]);
@@ -553,6 +566,12 @@ export class Game {
       const e = { ...rest, to, about };
       this.state.log.push(lag === 0 ? { ...e, day: today } : { ...e, day: today + lag, happened: today });
     }
+  }
+
+  /** Of the factions a report is for, those who read reports: the players, or everyone in a game without any. */
+  private readers(to: readonly string[]): readonly string[] {
+    const players = this.state.factions.filter((f) => f.human).map((f) => f.id);
+    return players.length === 0 ? to : to.filter((id) => players.includes(id));
   }
 
   /** Whether a faction sees its own fleets only by courier: full fog, for players. */
