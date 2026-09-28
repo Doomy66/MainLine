@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { bundledDesigns } from "../catalogue/catalogue";
 import { parseSec } from "../sector/sec";
 import { distanceBetween } from "../sector/hex";
+import { planAi } from "./ai";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
 import { routeTo } from "./nav";
@@ -180,6 +181,33 @@ describe("shipyards", () => {
     const alone = big.done;
     expect(orderBuild(game, me, "Patrol-Corvette", yard.at)).toBe("");
     expect(big.done).toBeGreaterThan(alone);
+  });
+});
+
+describe("the computer's character", () => {
+  it("differs between Empires of one personality, and is the same each time for an old save", () => {
+    const game = newGame({}, 0, "TEMPER");
+    const alike = game.state.factions.filter((f) => f.personality === game.state.factions[0]!.personality);
+    expect(new Set(alike.map((f) => JSON.stringify(f.temper))).size).toBe(alike.length);
+    const saved = JSON.parse(serialise(game));
+    for (const f of saved.factions) delete f.temper;
+    const again = parseGame(JSON.stringify(saved));
+    const twice = parseGame(JSON.stringify(saved));
+    expect(again.state.factions.map((f) => f.temper)).toEqual(twice.state.factions.map((f) => f.temper));
+  });
+
+  it("stops a fleet that has fought in one place three days to no end", () => {
+    const game = newGame({}, 1, "STANDOFF");
+    game.state.phase = "play";
+    game.state.day = 10;
+    const ai = game.state.factions.find((f) => !f.human)!;
+    const elsewhere = game.state.sector.worlds.find((w) => game.worldState(w.at).owner !== ai.id && w.pbg.giants > 0)!;
+    const f = game.newFleet(ai.id, elsewhere.at, "gg", [game.newShip("Patrol-Corvette")], "Strike");
+    f.order = { kind: "jump", route: [ai.capital] };
+    f.fighting = { at: f.system, loc: "gg", since: 7, last: 9 };
+    planAi(game, ai);
+    expect(f.standing.engage).toBe("none");
+    expect(f.order?.kind).toBe("jump");
   });
 });
 

@@ -12,7 +12,8 @@ import { Rng } from "./rng";
 import { routeTo } from "./nav";
 import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, people, slipsAt, TENDER_JUMP } from "./rules";
 import { forecast, shares, work, type Job } from "./yard";
-import type { Build, Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
+import { temperFromId } from "./temper";
+import type { Build, Crits, Faction, Temper, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { colourTerritories, shipName } from "./names";
 
@@ -43,6 +44,8 @@ export class Game {
     }
     this.catalogue = new Catalogue(new Map(Object.entries(state.designs)));
     this.worlds = new Map(state.sector.worlds.map((w) => [w.at, w]));
+    // Games made before Empires had characters: each is given one, the same every time.
+    for (const f of state.factions) (f as { temper?: Temper }).temper ??= temperFromId(f.personality, f.id);
     // Games made before worlds had planetary navies are given them, at full strength.
     for (const w of state.sector.worlds) {
       const ws = state.worlds[w.at];

@@ -11,6 +11,7 @@ import { Game } from "./game";
 import { colourTerritories, factionColour, polityName } from "./names";
 import { distanceBetween } from "../sector/hex";
 import { Rng, seedOf } from "./rng";
+import { temperFromId } from "./temper";
 import { defenceMax, income } from "./rules";
 import type { Faction, GameOptions, GameState, Personality } from "./types";
 
@@ -97,6 +98,7 @@ export function createGame(spec: NewGame): Game {
       credits: startingCredits(main, byHex, spec.options),
       alive: true,
       personality: rng.pick(PERSONALITIES),
+      temper: { aggression: 0, resolve: 0, expansion: 0, caution: 0 },
       intel: {},
       builds: [],
       news: {},
@@ -108,6 +110,8 @@ export function createGame(spec: NewGame): Game {
       waiting: false,
     });
   });
+  // Each Empire's character, varied from its personality by the game's seed.
+  for (const f of factions) f.temper = temperFromId(f.personality, `${spec.seed}|${f.id}`);
   // Humans give orders in the order they were listed.
   const humanOrder = new Map(spec.players.map((p, i) => [p.capital, i]));
   factions.sort((a, b) => {

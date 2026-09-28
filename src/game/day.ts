@@ -66,16 +66,14 @@ export function refuelLoc(game: Game, fleet: Fleet): Loc | null {
   const hostile = game.hostile(fleet.owner, game.worldState(fleet.system).owner);
   const perShip = fleet.ships.filter((s) => !game.carried(fleet, s)).map((s) => fuelSources(world, game.cls(s), hostile));
   if (perShip.some((sources) => sources.length === 0)) return null;
-  // One place every ship can use, preferring the best of what the first can.
-  for (const loc of ["main", "gg"] as Loc[]) {
-    if (perShip.every((sources) => sources.some((src) => src.loc === loc))) {
-      // Prefer refined fuel at a starport where there is some.
-      const refined = perShip.every((sources) => sources.some((src) => src.loc === loc && src.refined));
-      if (loc === "main" && !refined && perShip.every((s) => s.some((src) => src.loc === "gg"))) continue;
-      return loc;
-    }
-  }
-  return null;
+  // Places every ship can use, the best first: refined fuel at a starport,
+  // then the gas giant, then unrefined at the world.
+  const usable = (["main", "gg"] as Loc[]).filter((loc) => perShip.every((sources) => sources.some((src) => src.loc === loc)));
+  const refined = (loc: Loc) => perShip.every((sources) => sources.some((src) => src.loc === loc && src.refined));
+  const ranked = usable.sort((a, b) => Number(refined(b)) - Number(refined(a)) || (a === "gg" ? -1 : b === "gg" ? 1 : 0));
+  // A crew takes on fuel where nobody is waiting to fight it, if it can.
+  const quiet = ranked.find((loc) => !game.fleetsAt(fleet.system, loc).some((f) => game.hostile(f.owner, fleet.owner) && game.fleetArmed(f)));
+  return quiet ?? ranked[0] ?? null;
 }
 
 function notice(game: Game, owner: string, text: string, at?: string, wake = true): void {
@@ -731,6 +729,14 @@ export function advanceDay(game: Game): void {
     game.log({ to: report.factions, kind: "combat", text: report.headline, at: system, detail: report.lines, wake: true, firsthand: report.factions });
   }
   game.removeEmptyFleets();
+  // How long each computer fleet has been fighting where it is.
+  for (const fleet of s.fleets) {
+    if (fleet.transit !== null || game.faction(fleet.owner).human) continue;
+    if (!battled.has(`${fleet.system}|${fleet.loc}`)) continue;
+    const was = fleet.fighting;
+    const running = was !== undefined && was.at === fleet.system && was.loc === fleet.loc && was.last === day - 1;
+    fleet.fighting = { at: fleet.system, loc: fleet.loc, since: running ? was.since : day, last: day };
+  }
   const lost = new Map<string, { owner: string; system: string }>();
   const survivors = new Set(s.fleets.map((f) => f.id));
   for (const [id, was] of present) if (!survivors.has(id)) lost.set(id, was);

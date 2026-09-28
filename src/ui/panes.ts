@@ -28,6 +28,7 @@ import {
 } from "../game/rules";
 import { chooseFile } from "../game/save";
 import { buyStarting, orderBuild, sellStarting } from "../game/turn";
+import { describeTemper, oddsWanted, withdrawAt } from "../game/temper";
 import type { Build, Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
 import { LOC_NAMES, STANDING_PRESETS } from "../game/types";
 import { visibleSystems } from "../game/visibility";
@@ -890,7 +891,24 @@ export function empirePane(ctx: Ctx): HTMLElement {
         h(
           "tr",
           {},
-          h("td", { style: f.alive ? "" : "text-decoration:line-through;opacity:.5" }, emblem(f, game.state.factions), " ", f.name, f.human ? h("span", { class: "muted" }, ` (${f.playerName})`) : null),
+          h(
+            "td",
+            { style: f.alive ? "" : "text-decoration:line-through;opacity:.5" },
+            emblem(f, game.state.factions),
+            " ",
+            f.name,
+            f.human ? h("span", { class: "muted" }, ` (${f.playerName})`) : null,
+            f.human
+              ? null
+              : h(
+                  "div",
+                  {
+                    class: "hint",
+                    title: `Aggression ${f.temper.aggression}, resolve ${f.temper.resolve}, expansion ${f.temper.expansion}, caution ${f.temper.caution}: its fleets break off at ${Math.round(withdrawAt(f.temper) * 100)}% hull, and it attacks at odds of ${oddsWanted(f.temper).toFixed(1)} to 1`,
+                  },
+                  `${f.personality}: ${describeTemper(f.temper)}`,
+                ),
+          ),
           h("td", { class: "r num" }, n),
           h("td", { class: "r num", title: share(p, target.people) + " of the sector" }, describeHeadcount(p)),
           h("td", {}, h("button", { class: "small", onclick: () => ctx.selectSystem(f.capital, true) }, "Capital")),

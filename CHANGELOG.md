@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Each computer Empire has a character, varied from its personality: aggression, resolve, expansion and
+  caution. They set the odds it attacks at, when its fleets break off, which worlds it prizes and how much
+  it keeps at home. The Empire tab's standings describe each one.
+- No more endless stand-offs. Computer fleets fought for months at gas giants they had stopped at to
+  refuel, and a fleet that fights cannot refuel. A fleet now refuels where no enemy waits if it can; a
+  computer fleet that has fought three days in one place to no end keeps out of battle until on its way;
+  a siege that has not silenced the defences in five days is given up; fleets on the move no longer chase
+  ships across systems they pass through, and the computer builds no more armed civilian ships. In
+  simulations, runs of two weeks or more of daily battles in one place fell from over thirty to none.
 - Saves are about a tenth the size. Reports meant only for computer Empires, which nothing reads, are no
   longer kept (they were nine tenths of a long game's save, most of it their battles, shot by shot), and
   saves are written without indentation. Older saves shed them when loaded; your own reports are all kept.

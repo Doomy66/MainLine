@@ -124,6 +124,11 @@ export interface Fleet {
   transit: Transit | null;
   /** Jump tenders hired and alongside, carrying the ships with no jump drive. */
   tender?: boolean;
+  /**
+   * Days running it has fought in one place: a computer fleet that has fought
+   * there three days and got nowhere stops trying.
+   */
+  fighting?: { readonly at: string; readonly loc: Loc; readonly since: number; readonly last: number };
 }
 
 export interface Build {
@@ -205,6 +210,8 @@ export interface Faction {
   credits: number;
   alive: boolean;
   readonly personality: Personality;
+  /** The computer's character, which its admirals go by. Given to every Empire; players' go unused. */
+  temper: Temper;
   intel: Record<string, Sighting>;
   builds: Build[];
   /**
@@ -268,6 +275,18 @@ export interface LogEntry {
   readonly about?: readonly string[];
   /** Something a human sleeping until something happens should be woken for. */
   readonly wake?: boolean;
+}
+
+/** A computer Empire's character, each from 0 to 1. */
+export interface Temper {
+  /** Boldness: the odds it wants before it attacks, and how much it prizes rivals' worlds. */
+  aggression: number;
+  /** Staying power: how far down its fleets fight before they break off. */
+  resolve: number;
+  /** Land hunger: how much it prizes independent worlds. */
+  expansion: number;
+  /** Care for home: how much of its strength it keeps guarding the capital. */
+  caution: number;
 }
 
 export interface GameOptions {
