@@ -241,6 +241,10 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     const owner = ownerId === null ? null : game.faction(ownerId);
     const port = (STARPORTS[u.starport] ?? "").split(":")[0] ?? "";
     const others = shownFleets.filter((f) => f.at === at && f.kind !== "own");
+    const garrison = game
+      .fleetsSeenBy(ctx.me.id)
+      .filter((f) => f.transit === null && f.system === at && f.order?.kind === "garrison")
+      .reduce((n, f) => n + f.ships.length, 0);
     return [
       h("div", { class: "tip-name" }, w.name, h("span", { class: "faint" }, ` ${at}`)),
       h(
@@ -254,6 +258,8 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         h("dt", {}, "Starport"), h("dd", {}, port === "" ? u.starport : `${u.starport}, ${port.toLowerCase()}`),
         h("dt", {}, "Population"), h("dd", {}, describePopulation(u.population)),
         h("dt", {}, "Tech level"), h("dd", {}, String(u.tl)),
+        garrison > 0 ? h("dt", {}, "Garrison") : null,
+        garrison > 0 ? h("dd", {}, ships(garrison)) : null,
       ),
       others.length === 0
         ? null
@@ -306,7 +312,8 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
             colour: me.colour,
             title: `${f.name}: in jump to ${game.world(f.transit.to).name}, due day ${f.transit.arrive}${fogged ? ` (reported day ${game.state.day - age})` : ""}`,
           });
-        } else {
+        } else if (f.order?.kind !== "garrison") {
+          // A garrison is part of its world's defences, and off the map.
           fleets.push({
             id: f.id,
             at: f.system,

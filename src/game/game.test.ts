@@ -183,6 +183,29 @@ describe("shipyards", () => {
   });
 });
 
+describe("garrisons", () => {
+  it("join a world's defences for good, as one fleet, and go with the world", () => {
+    const game = newGame({}, 1, "GARRISON");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const at = me.capital;
+    const a = game.newFleet(me.id, at, "gg", [game.newShip("Patrol-Corvette")], "Stray");
+    const b = game.newFleet(me.id, at, "main", [game.newShip("Patrol-Corvette"), game.newShip("Patrol-Corvette")], "Lost boys");
+    for (const f of [a, b]) f.order = { kind: "garrison" };
+    advanceDay(game);
+    const held = game.fleetsOf(me.id).filter((f) => f.order?.kind === "garrison");
+    expect(held.length).toBe(1);
+    expect(held[0]!.loc).toBe("main");
+    expect(held[0]!.ships.length).toBe(3);
+    expect(held[0]!.name).toBe(`${game.world(at).name} Garrison`);
+    // The world goes, and its garrison with it.
+    game.worldState(at).owner = null;
+    advanceDay(game);
+    expect(game.fleetsOf(me.id).some((f) => f.order?.kind === "garrison")).toBe(false);
+  });
+});
+
 describe("losing a capital", () => {
   it("moves the government, throws the faction into disorder, and may lose it worlds", () => {
     const game = newGame({}, 1, "FALL");

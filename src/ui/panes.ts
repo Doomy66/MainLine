@@ -71,7 +71,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
   const heard = game.state.options.newsLag > 0 ? me.news : me.intel;
 
   const locBlocks = LOCS.filter((l) => locExists(game, at, l)).map((loc) => {
-    const mine = game.fleetsSeenBy(me.id).filter((f) => f.transit === null && f.system === at && f.loc === loc);
+    const mine = game.fleetsSeenBy(me.id).filter((f) => f.transit === null && f.system === at && f.loc === loc && f.order?.kind !== "garrison");
     const others = sees.has(at) ? game.fleetsAt(at, loc).filter((f) => f.owner !== me.id) : [];
     const here = [...mine, ...others];
     const ghosts = sees.has(at) ? [] : Object.values(heard).filter((s) => s.system === at && s.loc === loc && s.left === undefined);
@@ -143,6 +143,13 @@ export function systemPane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Belts"), h("dd", {}, String(w.pbg.belts)),
       h("dt", {}, "Worth"), h("dd", {}, `${mcr(income(w), 2)} a week`),
       h("dt", {}, "Defences"), h("dd", {}, max === 0 ? "None" : h("div", {}, `${Math.round(ws.defence)} of ${max}`, meter(ws.defence / max))),
+      ...(() => {
+        const garrison = game.fleetsSeenBy(me.id).filter((f) => f.transit === null && f.system === at && f.order?.kind === "garrison");
+        if (garrison.length === 0) return [];
+        const all = garrison.flatMap((f) => f.ships);
+        const probe = { ...garrison[0]!, ships: all };
+        return [h("dt", {}, "Garrison"), h("dd", {}, `${ships(all.length)}: ${summariseClasses(game, probe)}`)];
+      })(),
       h("dt", {}, "Navy"),
       h(
         "dd",
@@ -204,6 +211,8 @@ function orderText(game: Game, f: Fleet): string {
       return "Refuelling";
     case "repair":
       return "Repairing";
+    case "garrison":
+      return `Garrisoning ${game.world(f.system).name}`;
   }
 }
 
@@ -223,10 +232,14 @@ function fleetCard(ctx: Ctx, f: Fleet): HTMLElement {
 
 export function fleetPane(ctx: Ctx): HTMLElement {
   const { game, me } = ctx;
-  const mine = game.fleetsSeenBy(me.id).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  // A garrison is part of its world's defences, not a fleet to command.
+  const mine = game
+    .fleetsSeenBy(me.id)
+    .filter((f) => f.order?.kind !== "garrison")
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   // With nothing picked, the first fleet is: an empty pane is no use to anyone.
-  if ((ctx.fleet === null || game.fleetSeenBy(me.id, ctx.fleet) === undefined) && mine.length > 0) ctx.fleet = mine[0]!.id;
-  const selected = ctx.fleet === null ? undefined : game.fleetSeenBy(me.id, ctx.fleet);
+  if ((ctx.fleet === null || !mine.some((f) => f.id === ctx.fleet)) && mine.length > 0) ctx.fleet = mine[0]!.id;
+  const selected = ctx.fleet === null ? undefined : mine.find((f) => f.id === ctx.fleet);
   const detail = selected !== undefined ? fleetDetail(ctx, selected) : h("p", { class: "muted" }, mine.length === 0 ? "You have no fleets. Build some at a shipyard." : "Pick a fleet.");
   return h("div", {}, detail, h("h2", {}, `Your fleets (${mine.length})`), mine.map((f) => fleetCard(ctx, f)));
 }
@@ -352,6 +365,22 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
         h("button", { disabled: inJump || !fuelHere, title: fuelHere ? "" : "Not every ship can refuel here", onclick: () => set({ kind: "refuel" }, `${f.name} will refuel.`) }, "Refuel"),
         h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport you hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
         h("button", { disabled: f.order === null || inJump, onclick: () => set(null, `${f.name}'s orders are cancelled.`) }, "Cancel"),
+        inJump || game.worldState(here).owner !== f.owner
+          ? null
+          : h(
+              "button",
+              {
+                title: "Give these ships to this world's defences, for good: they guard its orbit, leave your fleets and the map, and take no more orders",
+                onclick: () => {
+                  const world = game.world(here).name;
+                  const ok = window.confirm(
+                    `${f.name}'s ${ships(f.ships.length)} will join ${world}'s defences for good. They will guard its orbit, but leave your fleets and the map, and can never be given orders again. They are lost if ${world} is. Go ahead?`,
+                  );
+                  if (ok) ctx.command(f, { order: { kind: "garrison" }, standing: { ...STANDING_PRESETS["Guard"]! } }, `${f.name} will join ${world}'s defences.`);
+                },
+              },
+              "Add to defences",
+            ),
       ),
       riders.length === 0 || inJump
         ? null

@@ -368,6 +368,31 @@ function sieges(game: Game): void {
   }
 }
 
+/**
+ * A world's garrisons are one fleet: any that joined today go into the one
+ * already there. A garrison is part of its world, and goes with it: on a world
+ * that is no longer its faction's, it stands down and is gone.
+ */
+function garrisons(game: Game): void {
+  const held = new Map<string, Fleet>();
+  for (const fleet of [...game.state.fleets]) {
+    if (fleet.transit !== null || fleet.order?.kind !== "garrison") continue;
+    if (game.worldState(fleet.system).owner !== fleet.owner) {
+      game.state.fleets = game.state.fleets.filter((f) => f !== fleet);
+      notice(game, fleet.owner, `The garrison of ${game.world(fleet.system).name}, ${ships(fleet.ships.length)}, stands down with the world lost.`, fleet.system);
+      continue;
+    }
+    const key = `${fleet.owner}|${fleet.system}`;
+    const first = held.get(key);
+    if (first === undefined) {
+      held.set(key, fleet);
+      fleet.name = `${game.world(fleet.system).name} Garrison`;
+    } else {
+      game.mergeFleets(first, fleet);
+    }
+  }
+}
+
 function yards(game: Game): void {
   const day = game.state.day;
   // A day's work on every slip; a faction in disorder keeps its slips, but
@@ -659,8 +684,12 @@ export function advanceDay(game: Game): void {
         }
         break;
       }
+      case "garrison":
+        fleet.loc = "main";
+        break;
     }
   }
+  garrisons(game);
 
   for (const fleet of s.fleets) {
     if (fleet.transit === null || fleet.transit.arrive > day) continue;

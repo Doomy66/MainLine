@@ -176,7 +176,7 @@ function shipCombatant(game: Game, ship: Ship): Combatant {
 
 /** Whether a fleet is where it means to be, rather than on its way somewhere. */
 export function besieging(fleet: Fleet): boolean {
-  return fleet.order === null || fleet.order.kind === "move";
+  return fleet.order === null || fleet.order.kind === "move" || fleet.order.kind === "garrison";
 }
 
 /** Whether party a opens fire on party b of its own accord. */

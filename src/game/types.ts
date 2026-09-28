@@ -96,7 +96,13 @@ export type Order =
    */
   | { readonly kind: "jump"; readonly route: string[]; readonly tender?: boolean }
   | { readonly kind: "refuel" }
-  | { readonly kind: "repair" };
+  | { readonly kind: "repair" }
+  /**
+   * Join the defences of a world the faction holds, for good: its ships guard
+   * the world's orbit with any other garrison there, off the map and beyond
+   * further orders, and go with the world if it is lost.
+   */
+  | { readonly kind: "garrison" };
 
 export interface Transit {
   readonly from: string;

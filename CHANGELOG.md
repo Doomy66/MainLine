@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add to defences: a fleet at one of your worlds can be given to its defences for good. It guards the
+  world's orbit with any garrison already there, leaves your fleets and the map, and is lost with the
+  world.
 - A world's defences no longer soak up a fleet's fire: gunners treat them as no bigger than the largest
   ship defending the world, where before they counted as a million tons and drew two shots in three.
   Orbital-strike and bombardment weapons still go for them first.
