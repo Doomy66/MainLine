@@ -880,6 +880,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Neutral"), h("dd", {}, `${neutral.worlds} independent worlds, ${describeHeadcount(neutral.people)} people (${share(neutral.people, target.people)})`),
     ),
     fogSettings(ctx),
+    victorySettings(ctx),
     h("h2", {}, "Standings"),
     h(
       "table",
@@ -915,6 +916,39 @@ export function empirePane(ctx: Ctx): HTMLElement {
         );
       }),
     ),
+  );
+}
+
+/** What winning counts, people or worlds: changeable at any time, like the fog. */
+function victorySettings(ctx: Ctx): HTMLElement {
+  const { game } = ctx;
+  const o = game.state.options;
+  const pct = Math.round(o.victoryShare * 100);
+  return h(
+    "div",
+    {},
+    h("h2", {}, "Victory"),
+    h(
+      "div",
+      { class: "standing" },
+      h("label", {}, "Victory by"),
+      h(
+        "select",
+        {
+          disabled: game.state.phase === "over",
+          onchange: (e: Event) => {
+            o.victoryBy = (e.target as HTMLSelectElement).value as "population" | "worlds";
+            const text = o.victoryBy === "population" ? `Victory now goes to whoever rules ${pct}% of the sector's people.` : `Victory now goes to whoever holds ${pct}% of the sector's peopled worlds.`;
+            game.log({ to: game.state.factions.map((f) => f.id), kind: "info", text, firsthand: game.state.factions.map((f) => f.id) });
+            ctx.say(text);
+            ctx.refresh();
+          },
+        },
+        h("option", { value: "population", selected: o.victoryBy === "population" }, `Population: rule ${pct}% of the sector's people`),
+        h("option", { value: "worlds", selected: o.victoryBy === "worlds" }, `Worlds: hold ${pct}% of its peopled worlds`),
+      ),
+    ),
+    h("p", { class: "hint" }, "This applies to every player, and can be changed at any time. An Empire that already has enough wins at the end of the day."),
   );
 }
 

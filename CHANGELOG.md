@@ -4,6 +4,7 @@
 
 - Victory can be by population, and is by default: rule a share of the sector's people rather than of
   its peopled worlds. Games saved before the choice keep counting worlds.
+- The Empire tab can switch the victory rule between population and worlds at any time.
 - The Empire tab shows your population and share of the sector, the standings by worlds and population,
   and the independent worlds' count and people.
 - The System tab shows a yard's slips: what is on each, on how many slips, and when she is due, with
