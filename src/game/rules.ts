@@ -276,6 +276,15 @@ export function yardPrice(cls: ShipClass, own: boolean): number {
 }
 
 /**
+ * How many people live on a world: the population digit's power of ten times
+ * the PBG's population multiplier (one where the sector gives none).
+ */
+export function people(world: World): number {
+  if (world.uwp.population === 0) return 0;
+  return Math.max(1, world.pbg.multiplier) * Math.pow(10, world.uwp.population);
+}
+
+/**
  * How many ships a yard can have on the slips at once, by starport class.
  * Orders beyond that wait their turn.
  */

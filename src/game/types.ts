@@ -271,8 +271,10 @@ export interface LogEntry {
 }
 
 export interface GameOptions {
-  /** Share of the populated worlds in play that wins the game. */
+  /** Share of the sector that wins the game: of its people, or of its peopled worlds. */
   victoryShare: number;
+  /** What the share is of. Games from before the choice count worlds. */
+  victoryBy: "population" | "worlds";
   startingCredits: "wealth" | "equal";
   /** Multiplies the starting treasury, one to five. Weekly income is untouched. */
   startingWealth: number;

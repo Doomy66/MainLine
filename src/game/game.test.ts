@@ -183,6 +183,32 @@ describe("shipyards", () => {
   });
 });
 
+describe("winning", () => {
+  it("by population: ruling the share of the sector's people, however few its worlds", () => {
+    const game = newGame({ victoryBy: "population", victoryShare: 0.3 }, 1, "WIN");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const target = game.victoryTarget();
+    const biggest = [...game.state.sector.worlds].sort((a, b) => b.uwp.population - a.uwp.population || b.pbg.multiplier - a.pbg.multiplier);
+    for (const w of biggest) {
+      if (game.holding(me.id).people >= target.need) break;
+      game.worldState(w.at).owner = me.id;
+    }
+    expect(game.holding(me.id).worlds).toBeLessThan(target.worlds * 0.3);
+    advanceDay(game);
+    expect(game.state.winner).toBe(me.id);
+  });
+
+  it("by worlds in games saved before the choice", () => {
+    const game = newGame({}, 1, "OLDWIN");
+    const saved = JSON.parse(serialise(game));
+    delete saved.options.victoryBy;
+    expect(parseGame(JSON.stringify(saved)).state.options.victoryBy).toBe("worlds");
+    expect(game.state.options.victoryBy).toBe("population");
+  });
+});
+
 describe("garrisons", () => {
   it("join a world's defences for good, as one fleet, and go with the world", () => {
     const game = newGame({}, 1, "GARRISON");

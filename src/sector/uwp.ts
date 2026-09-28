@@ -74,6 +74,18 @@ export function describeGovernment(code: number): string {
   return GOVERNMENTS[code] ?? "Other";
 }
 
+/** A head count in words: "4.2 billion", "30 thousand". */
+export function describeHeadcount(n: number): string {
+  const scales: [number, string][] = [[1e12, "trillion"], [1e9, "billion"], [1e6, "million"], [1e3, "thousand"]];
+  for (const [size, word] of scales) {
+    if (n >= size) {
+      const v = n / size;
+      return `${v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 100) / 100} ${word}`;
+    }
+  }
+  return String(Math.round(n));
+}
+
 /** People on the world, in words: population digit P means about 10^P. */
 export function describePopulation(code: number): string {
   if (code === 0) return "Uninhabited";

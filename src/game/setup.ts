@@ -16,6 +16,7 @@ import type { Faction, GameOptions, GameState, Personality } from "./types";
 
 export const DEFAULT_OPTIONS: GameOptions = {
   victoryShare: 0.5,
+  victoryBy: "population",
   startingCredits: "wealth",
   startingWealth: 1,
   buildSpeed: 0.25,

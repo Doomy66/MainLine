@@ -37,6 +37,7 @@ import {
   describeHydrographics,
   describePopulation,
   describeSize,
+  describeHeadcount,
   STARPORTS,
 } from "../sector/uwp";
 import { distanceBetween } from "../sector/hex";
@@ -844,11 +845,14 @@ export function empirePane(ctx: Ctx): HTMLElement {
   const worlds = game.ownedWorlds(me.id).sort((a, b) => income(b) - income(a));
   const inc = worlds.reduce((s, w) => s + income(w), 0);
   const upkeep = game.fleetsOf(me.id).reduce((s, f) => s + f.ships.reduce((t, sh) => t + game.cls(sh).upkeep, 0), 0);
-  const populated = game.state.sector.worlds.filter((w) => w.uwp.population > 0).length;
-  const need = Math.ceil(populated * game.state.options.victoryShare);
+  const target = game.victoryTarget();
+  const byPeople = target.by === "population";
+  const share = (n: number, of: number) => `${of === 0 ? 0 : Math.round((n / of) * 1000) / 10}%`;
+  const mineNow = game.holding(me.id);
+  const neutral = game.holding(null);
   const standings = game.state.factions
-    .map((f) => ({ f, worlds: game.ownedWorlds(f.id).filter((w) => w.uwp.population > 0).length }))
-    .sort((a, b) => b.worlds - a.worlds);
+    .map((f) => ({ f, ...game.holding(f.id) }))
+    .sort((a, b) => (byPeople ? b.people - a.people : b.worlds - a.worlds) || b.worlds - a.worlds);
   return h(
     "div",
     {},
@@ -863,17 +867,35 @@ export function empirePane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Income"), h("dd", {}, `${mcr(inc)} a week`),
       h("dt", {}, "Upkeep"), h("dd", {}, `${mcr(upkeep, 2)} a week`),
       h("dt", {}, "Fleet"), h("dd", {}, `${game.fleetsOf(me.id).reduce((n, f) => n + f.ships.length, 0)} ships in ${game.fleetsOf(me.id).length} fleets`),
-      h("dt", {}, "To win"), h("dd", {}, `Hold ${need} of the ${populated} peopled worlds`),
+      h("dt", {}, "Population"), h("dd", {}, `${describeHeadcount(mineNow.people)}, ${share(mineNow.people, target.people)} of the sector's ${describeHeadcount(target.people)}`),
+      h("dt", {}, "Worlds"), h("dd", {}, `${mineNow.worlds} of ${target.worlds} peopled worlds, ${share(mineNow.worlds, target.worlds)}`),
+      h("dt", {}, "To win"),
+      h(
+        "dd",
+        {},
+        byPeople
+          ? `Rule ${Math.round(game.state.options.victoryShare * 100)}% of the sector's people: ${describeHeadcount(target.need)}`
+          : `Hold ${target.need} of the ${target.worlds} peopled worlds`,
+      ),
+      h("dt", {}, "Neutral"), h("dd", {}, `${neutral.worlds} independent worlds, ${describeHeadcount(neutral.people)} people (${share(neutral.people, target.people)})`),
     ),
     fogSettings(ctx),
     h("h2", {}, "Standings"),
     h(
       "table",
       {},
-      h("tr", {}, h("th", {}, "Faction"), h("th", { class: "r" }, "Peopled worlds"), h("th", {})),
-      standings.slice(0, 40).map(({ f, worlds: n }) =>
-        h("tr", {}, h("td", { style: f.alive ? "" : "text-decoration:line-through;opacity:.5" }, emblem(f, game.state.factions), " ", f.name, f.human ? h("span", { class: "muted" }, ` (${f.playerName})`) : null), h("td", { class: "r num" }, n), h("td", {}, h("button", { class: "small", onclick: () => ctx.selectSystem(f.capital, true) }, "Capital"))),
+      h("tr", {}, h("th", {}, "Empire"), h("th", { class: "r" }, "Worlds"), h("th", { class: "r" }, "Population"), h("th", {})),
+      standings.slice(0, 40).map(({ f, worlds: n, people: p }) =>
+        h(
+          "tr",
+          {},
+          h("td", { style: f.alive ? "" : "text-decoration:line-through;opacity:.5" }, emblem(f, game.state.factions), " ", f.name, f.human ? h("span", { class: "muted" }, ` (${f.playerName})`) : null),
+          h("td", { class: "r num" }, n),
+          h("td", { class: "r num", title: share(p, target.people) + " of the sector" }, describeHeadcount(p)),
+          h("td", {}, h("button", { class: "small", onclick: () => ctx.selectSystem(f.capital, true) }, "Capital")),
+        ),
       ),
+      h("tr", { class: "muted" }, h("td", {}, "Neutral (independent)"), h("td", { class: "r num" }, neutral.worlds), h("td", { class: "r num", title: share(neutral.people, target.people) + " of the sector" }, describeHeadcount(neutral.people)), h("td", {})),
     ),
     h("h2", {}, `Your worlds (${worlds.length})`),
     h(

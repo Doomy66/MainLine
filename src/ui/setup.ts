@@ -48,6 +48,8 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
   let sectorKey = [...sectors.keys()][0] ?? "";
   let area = new Set(SUBSECTOR_LETTERS.split(""));
   const options: GameOptions = { ...DEFAULT_OPTIONS };
+  const victoryLabel = () =>
+    `Victory: ${options.victoryBy === "population" ? "rule" : "hold"} ${Math.round(options.victoryShare * 100)}% of the sector's ${options.victoryBy === "population" ? "people" : "peopled worlds"}`;
   const players: PlayerSlot[] = [{ name: "Player 1", capital: "" }];
   let active = 0;
   let gameName = "";
@@ -362,7 +364,20 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             gameName = (e.target as HTMLInputElement).value;
           },
         }),
-        h("label", {}, `Victory: hold ${Math.round(options.victoryShare * 100)}% of peopled worlds`),
+        h("label", {}, "Victory by"),
+        h(
+          "select",
+          {
+            onchange: (e: Event) => {
+              options.victoryBy = (e.target as HTMLSelectElement).value as "population" | "worlds";
+              const label = document.getElementById("victory-share");
+              if (label !== null) label.textContent = victoryLabel();
+            },
+          },
+          h("option", { value: "population", selected: options.victoryBy === "population" }, "Population: rule a share of the sector's people"),
+          h("option", { value: "worlds", selected: options.victoryBy === "worlds" }, "Worlds: hold a share of its peopled worlds"),
+        ),
+        h("label", { id: "victory-share" }, victoryLabel()),
         h("input", {
           type: "range",
           min: 20,
@@ -371,7 +386,8 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           value: Math.round(options.victoryShare * 100),
           oninput: (e: Event) => {
             options.victoryShare = Number((e.target as HTMLInputElement).value) / 100;
-            ((e.target as HTMLElement).previousElementSibling as HTMLElement).textContent = `Victory: hold ${Math.round(options.victoryShare * 100)}% of peopled worlds`;
+            const label = document.getElementById("victory-share");
+            if (label !== null) label.textContent = victoryLabel();
           },
         }),
         h("label", {}, "Starting treasury"),

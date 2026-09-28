@@ -10,7 +10,7 @@ import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
 import { Rng } from "./rng";
 import { routeTo } from "./nav";
-import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, slipsAt, TENDER_JUMP } from "./rules";
+import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, people, slipsAt, TENDER_JUMP } from "./rules";
 import { forecast, shares, work, type Job } from "./yard";
 import type { Build, Crits, Faction, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
@@ -30,8 +30,10 @@ export class Game {
     const opts = state.options as { newsLag?: number; fullFog?: boolean };
     if (opts.newsLag === undefined) opts.newsLag = 0;
     if (opts.fullFog === undefined) opts.fullFog = false;
-    const more = state.options as { startingWealth?: number };
+    const more = state.options as { startingWealth?: number; victoryBy?: "population" | "worlds" };
     if (more.startingWealth === undefined) more.startingWealth = 1;
+    // Games from before victory could be by population keep counting worlds.
+    if (more.victoryBy === undefined) more.victoryBy = "worlds";
     for (const f of state.factions) {
       f.news ??= { ...f.intel };
       f.inbox ??= [];
@@ -313,6 +315,27 @@ export class Game {
 
   newId(prefix: string): string {
     return `${prefix}${this.state.nextId++}`;
+  }
+
+  /** An Empire's share of the sector, or the independents' for null: peopled worlds held, and the people on them. */
+  holding(factionId: string | null): { worlds: number; people: number } {
+    let worlds = 0;
+    let folk = 0;
+    for (const w of this.state.sector.worlds) {
+      if (w.uwp.population === 0 || this.state.worlds[w.at]?.owner !== factionId) continue;
+      worlds++;
+      folk += people(w);
+    }
+    return { worlds, people: folk };
+  }
+
+  /** What winning takes: the sector's peopled worlds and people, and how much of the chosen one to hold. */
+  victoryTarget(): { by: "population" | "worlds"; worlds: number; people: number; need: number } {
+    const peopled = this.state.sector.worlds.filter((w) => w.uwp.population > 0);
+    const total = { worlds: peopled.length, people: peopled.reduce((s, w) => s + people(w), 0) };
+    const by = this.state.options.victoryBy;
+    const need = by === "population" ? total.people * this.state.options.victoryShare : Math.ceil(total.worlds * this.state.options.victoryShare);
+    return { by, ...total, need };
   }
 
   /** Names taken: every ship's, and every ship's on order, so two laid down together are not twins. */

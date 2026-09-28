@@ -48,6 +48,7 @@ import {
 } from "./rules";
 import type { Build, Faction, Fleet, Loc, Order, Sighting } from "./types";
 import type { World } from "../sector/sec";
+import { describeHeadcount } from "../sector/uwp";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
 
@@ -598,17 +599,21 @@ function endings(game: Game): void {
       });
     }
   }
-  const populated = s.sector.worlds.filter((w) => w.uwp.population > 0);
+  const target = game.victoryTarget();
   const alive = s.factions.filter((f) => f.alive);
   for (const f of alive) {
-    const held = populated.filter((w) => s.worlds[w.at]!.owner === f.id).length;
-    if (held >= Math.ceil(populated.length * s.options.victoryShare) || alive.length === 1) {
+    const held = game.holding(f.id);
+    const enough = target.by === "population" ? held.people >= target.need : held.worlds >= target.need;
+    if (enough || alive.length === 1) {
       s.winner = f.id;
       s.phase = "over";
       game.log({
         to: s.factions.map((x) => x.id),
         kind: "info",
-        text: `${f.name} holds ${held} of the ${populated.length} peopled worlds and has won.`,
+        text:
+          target.by === "population"
+            ? `${f.name} rules ${describeHeadcount(held.people)} of the sector's ${describeHeadcount(target.people)} people and has won.`
+            : `${f.name} holds ${held.worlds} of the ${target.worlds} peopled worlds and has won.`,
         wake: true,
         firsthand: s.factions.map((x) => x.id),
       });

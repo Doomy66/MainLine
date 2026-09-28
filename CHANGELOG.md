@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Victory can be by population, and is by default: rule a share of the sector's people rather than of
+  its peopled worlds. Games saved before the choice keep counting worlds.
+- The Empire tab shows your population and share of the sector, the standings by worlds and population,
+  and the independent worlds' count and people.
 - The System tab shows a yard's slips: what is on each, on how many slips, and when she is due, with
   free slips and orders waiting. Another Empire's ship at an independent yard shows only as taken.
 - Ships ordered together no longer share a name: names on order count as taken.
