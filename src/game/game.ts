@@ -315,8 +315,9 @@ export class Game {
     return `${prefix}${this.state.nextId++}`;
   }
 
+  /** Names taken: every ship's, and every ship's on order, so two laid down together are not twins. */
   shipNamesInUse(): Set<string> {
-    return new Set(this.state.fleets.flatMap((f) => f.ships.map((s) => s.name)));
+    return new Set([...this.state.fleets.flatMap((f) => f.ships.map((s) => s.name)), ...this.state.factions.flatMap((f) => f.builds.map((b) => b.name))]);
   }
 
   /** A new ship of a class, fuelled, armed and undamaged. */

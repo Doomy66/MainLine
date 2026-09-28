@@ -28,7 +28,7 @@ import {
 } from "../game/rules";
 import { chooseFile } from "../game/save";
 import { buyStarting, orderBuild, sellStarting } from "../game/turn";
-import type { Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
+import type { Build, Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
 import { LOC_NAMES, STANDING_PRESETS } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import {
@@ -170,6 +170,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
     ws.owner === null && w.uwp.starport === "A" && game.state.phase === "play"
       ? h("div", { class: "row", style: "margin-top:8px" }, h("button", { class: "small", onclick: () => { ctx.yard = at; ctx.setTab("yard"); } }, "Commission here (independent yard)"))
       : null,
+    yard && (ws.owner === me.id || ws.owner === null) ? slipsHere(ctx, at) : null,
     locBlocks,
     departed.length === 0
       ? null
@@ -193,6 +194,40 @@ function summariseClasses(game: Game, f: Fleet): string {
   const counts = new Map<string, number>();
   for (const s of f.ships) counts.set(game.cls(s).name, (counts.get(game.cls(s).name) ?? 0) + 1);
   return [...counts.entries()].map(([n, c]) => (c > 1 ? `${c}× ${n}` : n)).join(", ");
+}
+
+/**
+ * A yard's slips at a glance: what is on each and when she is due, and what
+ * waits for one. Only at yards the player may build at; another Empire's ship
+ * at an independent yard is shown as taken, not named.
+ */
+function slipsHere(ctx: Ctx, at: string): HTMLElement | null {
+  const { game, me } = ctx;
+  const total = slipsAt(game.world(at));
+  if (total === 0) return null;
+  const today = game.state.day;
+  const on = game.slipsTomorrow(at);
+  const ownerOf = (b: Build) => game.state.factions.find((f) => f.builds.includes(b));
+  const due = (b: Build) => `day ${b.done} (${b.done - today} ${b.done - today === 1 ? "day" : "days"})`;
+  const building = [...on].filter(([, n]) => n > 0);
+  const waiting = [...on].filter(([, n]) => n === 0);
+  const used = building.reduce((t, [, n]) => t + n, 0);
+  const what = (b: Build) => (ownerOf(b) === me ? `${game.catalogue.get(b.classId).name} ${b.name}` : "Another Empire's ship");
+  const rows = [
+    ...building.map(([b, n]) =>
+      h("tr", {}, h("td", {}, what(b)), h("td", { class: "muted" }, n === 1 ? "1 slip" : `${n} slips`), h("td", { class: "r num" }, ownerOf(b) === me ? due(b) : "")),
+    ),
+    ...Array.from({ length: Math.max(0, total - used) }, () => h("tr", {}, h("td", { class: "muted" }, "Free"), h("td", {}), h("td", {}))),
+    ...waiting.map(([b]) =>
+      h("tr", {}, h("td", {}, what(b)), h("td", { class: "muted" }, "waiting"), h("td", { class: "r num" }, ownerOf(b) === me ? `starts day ${b.start}, due ${due(b)}` : "")),
+    ),
+  ];
+  return h(
+    "div",
+    {},
+    h("h2", {}, `Shipyard: ${total} slip${total === 1 ? "" : "s"}, ${used} in use`),
+    h("table", { class: "slips" }, rows),
+  );
 }
 
 /* The fleets pane -------------------------------------------------------- */

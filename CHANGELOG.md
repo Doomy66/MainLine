@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The System tab shows a yard's slips: what is on each, on how many slips, and when she is due, with
+  free slips and orders waiting. Another Empire's ship at an independent yard shows only as taken.
+- Ships ordered together no longer share a name: names on order count as taken.
 - Add to defences: a fleet at one of your worlds can be given to its defences for good. It guards the
   world's orbit with any garrison already there, leaves your fleets and the map, and is lost with the
   world.
