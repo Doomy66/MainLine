@@ -217,6 +217,9 @@ function engagements(parties: Party[]): Map<Party, Party[]> {
   return out;
 }
 
+/** How much one battle moves the computer's idea of its enemies' armour. */
+const FOE_LEARNING = 0.15;
+
 /** The tons a world's defences count as: a million, for they are a world. */
 const DEFENCE_TONS = 1_000_000;
 
@@ -627,6 +630,22 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
     for (const [c, amount] of dealt) lines.push(`  ${c.label} takes ${amount} damage.`);
     if (hits.length === 0) lines.push("  No hits.");
     land(rng, hits, lines);
+  }
+
+  // What each computer Empire learns of its enemies' armour: a rough average of
+  // the ships it met, weighed by size, that moves only a little each battle.
+  for (const p of involved) {
+    if (p.side === null) continue;
+    const learner = game.faction(p.side);
+    if (learner.human) continue;
+    const met = involved
+      .filter((q) => q.side !== p.side && q.side !== null)
+      .flatMap((q) => q.combatants)
+      .filter((c) => c.tons < DEFENCE_TONS);
+    const tons = met.reduce((t, c) => t + c.tons, 0);
+    if (tons === 0) continue;
+    const seen = met.reduce((t, c) => t + c.armour * c.tons, 0) / tons;
+    learner.foeArmour = learner.foeArmour === undefined ? seen : learner.foeArmour * (1 - FOE_LEARNING) + seen * FOE_LEARNING;
   }
 
   // Write back what happened.

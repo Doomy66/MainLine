@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { bundledDesigns } from "../catalogue/catalogue";
+import { bundledDesigns, Catalogue } from "../catalogue/catalogue";
+import { damageAgainst } from "../catalogue/shipclass";
 import { parseSec } from "../sector/sec";
 import { distanceBetween } from "../sector/hex";
 import { planAi } from "./ai";
@@ -208,6 +209,17 @@ describe("the computer's character", () => {
     planAi(game, ai);
     expect(f.standing.engage).toBe("none");
     expect(f.order?.kind).toBe("jump");
+  });
+});
+
+describe("building for the enemy", () => {
+  it("knows light guns suffer against heavy armour and meson guns do not", () => {
+    const cat = new Catalogue(designs);
+    const kept = (id: string, armour: number) => damageAgainst(cat.get(id), armour) / damageAgainst(cat.get(id), 0);
+    // The Broadsword's beam lasers against a Dragon's armour 12, beside a Dragon's own particle bay.
+    expect(kept("Broadsword-Mercenary-Cruiser", 12)).toBeLessThan(kept("Dragon-System-Defence-Boat", 12));
+    expect(kept("Broadsword-Mercenary-Cruiser", 12)).toBeLessThan(0.5);
+    expect(kept("Broadsword-Mercenary-Cruiser", 0)).toBe(1);
   });
 });
 

@@ -263,6 +263,21 @@ function expected(a: Attack): number {
   return perHit * a.multiple * a.count * a.perSalvo * againstShips;
 }
 
+/**
+ * Rough damage a class's weapons do in a round against a hull with this much
+ * armour: each hit's dice and a little Effect, less what the armour stops,
+ * times its multiple. Meson weapons pass through; ground-attack weapons count
+ * for little against ships, as in its strength.
+ */
+export function damageAgainst(cls: ShipClass, armour: number): number {
+  return cls.attacks.reduce((sum, a) => {
+    const stopped = a.meson ? 0 : Math.max(0, armour - a.ap);
+    const perHit = Math.max(a.dice * 0.35, a.dice * 3.5 + 2 - stopped) * (a.ion ? 0.5 : 1);
+    const againstShips = a.vsShips <= -12 ? 0.05 : a.vsShips <= -8 ? 0.2 : 1;
+    return sum + perHit * a.multiple * a.count * a.perSalvo * againstShips;
+  }, 0);
+}
+
 export function shipClass(id: string, design: Design): ShipClass {
   const s = sheet(design);
   const config = HULL_CONFIGURATIONS[design.hull.configuration];

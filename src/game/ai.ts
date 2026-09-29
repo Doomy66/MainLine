@@ -12,7 +12,7 @@
  * would see, and gives orders a human could give.
  */
 
-import type { ShipClass } from "../catalogue/shipclass";
+import { damageAgainst, type ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
 import { jumpMap, pathIn, routeTo } from "./nav";
 import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, income, repairRate, yardPrice } from "./rules";
@@ -52,6 +52,27 @@ function travelling(faction: Faction): StandingOrders {
 /** Civilian and support ships are no use in a war of fleets, however armed. */
 function fighting(cls: ShipClass): boolean {
   return cls.armed && roleOf(cls) !== "civilian";
+}
+
+/**
+ * How well a class suits the enemies an Empire has met, beside the others: the
+ * share of its damage that would get through their armour, over the average
+ * share. Near 1 for most; low for light guns against heavy armour.
+ */
+function fitAgainst(cls: ShipClass, armour: number, average: number): number {
+  const open = damageAgainst(cls, 0);
+  if (open <= 0 || average <= 0) return 1;
+  return damageAgainst(cls, armour) / open / average;
+}
+
+/**
+ * How much an Empire lets what it has learned of enemy armour sway its yards:
+ * a little, more for a careful one. Enough that a laser boat fleet meeting
+ * armour-12 Dragons drifts towards heavier guns over time, not so much that it
+ * answers every design at once, which a player could not hope to match.
+ */
+function armourWeight(faction: Faction): number {
+  return 0.15 + 0.15 * faction.temper.caution;
 }
 
 /** Fighting value per MCr, the measure a yard order is chosen by. */
@@ -165,6 +186,12 @@ function build(game: Game, faction: Faction): void {
   const wantGuard = guardNow < total * guardShare(faction.temper) * 0.8;
   const wealth = Math.min(0.8, Math.max(0, Math.log10(faction.credits / 150) * 0.6));
   let best: { cls: ShipClass; at: string; score: number; price: number } | null = null;
+  // What it has learned of its enemies' armour tilts the choice a little.
+  const armour = faction.foeArmour;
+  const weight = armour === undefined ? 0 : armourWeight(faction);
+  const kept = armour === undefined ? [] : classes.filter(fighting).map((c) => (damageAgainst(c, 0) > 0 ? damageAgainst(c, armour) / damageAgainst(c, 0) : 1));
+  const average = kept.length === 0 ? 1 : kept.reduce((s, x) => s + x, 0) / kept.length;
+  const suits = (cls: ShipClass) => (armour === undefined ? 1 : 1 - weight + weight * Math.min(2, fitAgainst(cls, armour, average)));
   // A yard with a long queue is somewhere else's job.
   const busy = new Set(yards.filter((w) => game.scheduleAt(w.at, 1).start > game.state.day + 14).map((w) => w.at));
   for (const w of yards) {
@@ -177,7 +204,7 @@ function build(game: Game, faction: Faction): void {
       const already = game.fleetsOf(faction.id).reduce((n, f) => n + f.ships.filter((sh) => sh.classId === cls.id).length, 0);
       // Slips are few, so a rich faction puts its money into bigger hulls
       // rather than a queue of cheap ones.
-      const score = (cls.strength / price) * Math.pow(price, wealth) * Math.pow(0.9, already) * (0.9 + 0.2 * game.rng.next());
+      const score = (cls.strength / price) * Math.pow(price, wealth) * Math.pow(0.9, already) * suits(cls) * (0.9 + 0.2 * game.rng.next());
       if (best === null || score > best.score) best = { cls, at: w.at, score, price };
     }
   }
@@ -188,7 +215,7 @@ function build(game: Game, faction: Faction): void {
       if (busy.has(w.at)) continue;
       for (const cls of classes) {
         if (!fighting(cls) || cls.jump > 0 || cls.cost > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
-        const score = (cls.strength / cls.cost) * Math.pow(cls.cost, wealth) * (0.9 + 0.2 * game.rng.next());
+        const score = (cls.strength / cls.cost) * Math.pow(cls.cost, wealth) * suits(cls) * (0.9 + 0.2 * game.rng.next());
         if (best === null || score > best.score) best = { cls, at: w.at, score, price: cls.cost };
       }
     }

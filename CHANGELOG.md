@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The computer builds a little for its enemies: it keeps a rough, slow-moving average of the armour on
+  the enemy ships it has fought, and leans its yard orders towards weapons that get through it. The lean
+  is deliberately light; in head-to-head simulations it is a small edge, about a quarter of what acting on
+  it fully would give.
 - A victory screen: who won and how, the final standings as bars against the winning line, and your
   campaign in numbers, with your finest hour. It opens when the game ends, and from the top bar after.
 - Each computer Empire has a character, varied from its personality: aggression, resolve, expansion and
