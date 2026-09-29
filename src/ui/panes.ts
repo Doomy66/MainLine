@@ -29,6 +29,7 @@ import {
 import { chooseFile } from "../game/save";
 import { buyStarting, orderBuild, sellStarting } from "../game/turn";
 import { describeTemper, oddsWanted, withdrawAt } from "../game/temper";
+import { alerts, fleetStatus, type Alert, type FleetState, type FleetStatus } from "../game/attention";
 import type { Build, Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
 import { LOC_NAMES, STANDING_PRESETS } from "../game/types";
 import { visibleSystems } from "../game/visibility";
@@ -253,17 +254,93 @@ function orderText(game: Game, f: Fleet): string {
   }
 }
 
-function fleetCard(ctx: Ctx, f: Fleet): HTMLElement {
+/** The fleet list's search, sort and open sections, kept while the game is open. */
+const listView = { search: "", sort: "name" as "name" | "place" | "strength", open: { needs: true, busy: true, parked: false } as Record<FleetState, boolean> };
+
+const MARKS: Record<FleetStatus["mark"], string> = {
+  jump: "↗", move: "→", siege: "◎", fight: "✸", repair: "✚", fuel: "⛽", hurt: "!", hangar: "▢", idle: "?", home: "⌂", admiral: "★",
+};
+
+/**
+ * Every fleet, one line each, grouped by what it needs: those waiting on you,
+ * those busy, and those at rest at home. Searchable by name, place or class.
+ */
+function fleetList(ctx: Ctx, fleets: readonly Fleet[]): HTMLElement {
   const { game } = ctx;
-  const hull = game.fleetHullShare(f);
+  const q = listView.search.trim().toLowerCase();
+  const where = (f: Fleet) => game.world(f.transit?.to ?? f.system).name;
+  const shown = fleets.filter(
+    (f) => q === "" || f.name.toLowerCase().includes(q) || where(f).toLowerCase().includes(q) || f.ships.some((s) => game.cls(s).name.toLowerCase().includes(q)),
+  );
+  const by = {
+    name: (a: Fleet, b: Fleet) => a.name.localeCompare(b.name, undefined, { numeric: true }),
+    place: (a: Fleet, b: Fleet) => where(a).localeCompare(where(b)) || a.name.localeCompare(b.name, undefined, { numeric: true }),
+    strength: (a: Fleet, b: Fleet) => game.fleetStrength(b) - game.fleetStrength(a),
+  }[listView.sort];
+  const groups: { state: FleetState; title: string; fleets: Fleet[] }[] = [
+    { state: "needs", title: "Needs orders", fleets: [] },
+    { state: "busy", title: "Busy", fleets: [] },
+    { state: "parked", title: "At home", fleets: [] },
+  ];
+  const status = new Map(shown.map((f) => [f.id, fleetStatus(game, f)]));
+  for (const f of [...shown].sort(by)) groups.find((g) => g.state === status.get(f.id)!.state)!.fleets.push(f);
+  const search = h("input", {
+    type: "search",
+    placeholder: "Find a fleet, place or class",
+    value: listView.search,
+    style: "flex:1;min-width:0",
+    oninput: (e: Event) => {
+      listView.search = (e.target as HTMLInputElement).value;
+      const at = (e.target as HTMLInputElement).selectionStart;
+      ctx.refresh();
+      const again = document.querySelector<HTMLInputElement>(".fleet-search input");
+      again?.focus();
+      if (at !== null) again?.setSelectionRange(at, at);
+    },
+  });
   return h(
     "div",
-    { class: `card pick${ctx.fleet === f.id ? " chosen" : ""}`, onclick: () => ctx.selectFleet(f.id) },
-    h("div", { class: "fleet-head" }, h("span", { class: "name" }, f.name), h("span", { class: "muted" }, `${f.ships.length} ships`), h("span", { class: "spacer" }), h("span", { class: "muted num" }, `J${game.fleetJump(f)} M${game.fleetThrust(f)}`)),
-    h("div", { class: "hint" }, whereIs(game, f)),
-    h("div", { class: "hint" }, orderText(game, f)),
-    game.reportAge(ctx.me.id, f.id) > 0 ? h("div", { class: "hint warn" }, `As reported ${game.reportAge(ctx.me.id, f.id)} days ago`) : null,
-    meter(hull),
+    {},
+    h("h2", {}, `Your fleets (${fleets.length})`),
+    h(
+      "div",
+      { class: "row fleet-search" },
+      search,
+      h(
+        "select",
+        { onchange: (e: Event) => { listView.sort = (e.target as HTMLSelectElement).value as typeof listView.sort; ctx.refresh(); } },
+        (["name", "place", "strength"] as const).map((k) => h("option", { value: k, selected: listView.sort === k }, `By ${k}`)),
+      ),
+    ),
+    groups.map((g) =>
+      g.fleets.length === 0
+        ? null
+        : h(
+            "details",
+            {
+              class: `fleet-group ${g.state}`,
+              open: listView.open[g.state] || q !== "" || g.fleets.some((f) => f.id === ctx.fleet),
+              ontoggle: (e: Event) => { if (q === "") listView.open[g.state] = (e.target as HTMLDetailsElement).open; },
+            },
+            h("summary", {}, `${g.title} (${g.fleets.length})`),
+            h(
+              "table",
+              { class: "fleet-rows" },
+              g.fleets.map((f) => {
+                const st = status.get(f.id)!;
+                return h(
+                  "tr",
+                  { class: ctx.fleet === f.id ? "chosen" : "", onclick: () => ctx.selectFleet(f.id, true), title: st.text },
+                  h("td", { class: `mark ${st.mark}` }, MARKS[st.mark]),
+                  h("td", { class: "fname" }, f.name, h("div", { class: "hint" }, st.text)),
+                  h("td", { class: "r num" }, `${f.ships.length}`),
+                  h("td", { class: "r num muted" }, `${Math.round(game.fleetStrength(f))}`),
+                );
+              }),
+            ),
+          ),
+    ),
+    shown.length === 0 && q !== "" ? h("p", { class: "muted" }, "No fleet matches.") : null,
   );
 }
 
@@ -274,11 +351,13 @@ export function fleetPane(ctx: Ctx): HTMLElement {
     .fleetsSeenBy(me.id)
     .filter((f) => f.order?.kind !== "garrison")
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  // With nothing picked, the first fleet is: an empty pane is no use to anyone.
-  if ((ctx.fleet === null || !mine.some((f) => f.id === ctx.fleet)) && mine.length > 0) ctx.fleet = mine[0]!.id;
+  // With nothing picked, the first that needs orders is: an empty pane is no use to anyone.
+  if ((ctx.fleet === null || !mine.some((f) => f.id === ctx.fleet)) && mine.length > 0) {
+    ctx.fleet = (mine.find((f) => fleetStatus(game, f).state === "needs") ?? mine[0]!).id;
+  }
   const selected = ctx.fleet === null ? undefined : mine.find((f) => f.id === ctx.fleet);
   const detail = selected !== undefined ? fleetDetail(ctx, selected) : h("p", { class: "muted" }, mine.length === 0 ? "You have no fleets. Build some at a shipyard." : "Pick a fleet.");
-  return h("div", {}, detail, h("h2", {}, `Your fleets (${mine.length})`), mine.map((f) => fleetCard(ctx, f)));
+  return h("div", {}, detail, fleetList(ctx, mine));
 }
 
 function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
@@ -1023,6 +1102,37 @@ function fogSettings(ctx: Ctx): HTMLElement {
 
 /* Reports ---------------------------------------------------------------- */
 
+const ALERT_MARKS: Record<Alert["kind"], string> = { siege: "◎", enemy: "⚠", lost: "✸", fallen: "⚑", fleets: "?", slips: "⚒" };
+
+/** The day's to-do list, each line a way straight to the place or fleet. */
+function attentionPanel(ctx: Ctx, goto: (at: string) => void): HTMLElement | null {
+  if (ctx.game.state.phase !== "play") return null;
+  const list = alerts(ctx.game, ctx.me);
+  if (list.length === 0) return h("div", { class: "attention quiet" }, h("span", { class: "muted" }, "Nothing needs your attention today."));
+  return h(
+    "div",
+    { class: "attention" },
+    h("h2", {}, "Needs attention"),
+    list.map((a) =>
+      h(
+        "div",
+        {
+          class: `alert ${a.kind}`,
+          onclick: () => {
+            if (a.fleet !== undefined) ctx.selectFleet(a.fleet, true);
+            else if (a.yard !== undefined) {
+              ctx.yard = a.yard;
+              ctx.setTab("yard");
+            } else if (a.at !== undefined) goto(a.at);
+          },
+        },
+        h("span", { class: "amark" }, ALERT_MARKS[a.kind]),
+        withEmblems(a.text, ctx.game.state.factions),
+      ),
+    ),
+  );
+}
+
 export function reportsPane(ctx: Ctx, goto: (at: string) => void): HTMLElement {
   const { game, me } = ctx;
   const entries = game.logFor(me.id, 300);
@@ -1036,6 +1146,7 @@ export function reportsPane(ctx: Ctx, goto: (at: string) => void): HTMLElement {
   return h(
     "div",
     {},
+    attentionPanel(ctx, goto),
     [...byDay.entries()].map(([day, list]) =>
       h(
         "div",

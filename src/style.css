@@ -430,3 +430,31 @@ dl.props dd { margin: 0; }
 
 /* A small label beside a class's name: a carrier, and how many fighters it brings. */
 .tag { display: inline-block; margin-left: 8px; padding: 1px 7px; border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 11px; line-height: 16px; vertical-align: 1px; white-space: nowrap; }
+
+/* The fleet list: one line a fleet, grouped by what it needs. */
+.fleet-search { margin: 4px 0 8px; gap: 6px; }
+.fleet-group { margin: 0 0 8px; }
+.fleet-group > summary { cursor: pointer; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); padding: 4px 0; }
+.fleet-group.needs > summary { color: #f4dfa6; }
+.fleet-rows { width: 100%; border-collapse: collapse; }
+.fleet-rows tr { cursor: pointer; }
+.fleet-rows tr:hover td { background: rgba(255, 255, 255, 0.04); }
+.fleet-rows tr.chosen td { background: rgba(224, 179, 65, 0.12); }
+.fleet-rows td { padding: 3px 6px; border-top: 1px solid var(--line); vertical-align: top; font-size: 12.5px; }
+.fleet-rows td.fname { width: 100%; }
+.fleet-rows td.fname .hint { margin-top: 1px; }
+.fleet-rows td.mark { width: 18px; text-align: center; color: var(--muted); }
+.fleet-rows td.mark.hurt, .fleet-rows td.mark.fuel, .fleet-rows td.mark.hangar, .fleet-rows td.mark.idle { color: #f4dfa6; font-weight: 700; }
+.fleet-rows td.mark.siege, .fleet-rows td.mark.fight { color: var(--bad); }
+.fleet-rows td.mark.admiral { color: var(--accent); }
+.next-fleet { border-color: rgba(224, 179, 65, 0.6); color: #f4dfa6; }
+
+/* The day's to-do list, above the reports. */
+.attention { border: 1px solid rgba(224, 179, 65, 0.35); border-radius: 6px; padding: 6px 10px 8px; margin-bottom: 12px; background: rgba(224, 179, 65, 0.04); }
+.attention h2 { margin: 2px 0 4px; }
+.attention.quiet { padding: 6px 10px; border-color: var(--line); background: none; }
+.attention .alert { display: flex; gap: 8px; align-items: baseline; padding: 3px 2px; cursor: pointer; font-size: 12.5px; border-radius: 3px; }
+.attention .alert:hover { background: rgba(255, 255, 255, 0.05); }
+.attention .amark { width: 16px; text-align: center; flex: none; }
+.attention .alert.siege .amark, .attention .alert.enemy .amark, .attention .alert.lost .amark, .attention .alert.fallen .amark { color: var(--bad); }
+.attention .alert.fleets .amark, .attention .alert.slips .amark { color: #f4dfa6; }

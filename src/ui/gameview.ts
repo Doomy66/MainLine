@@ -18,6 +18,7 @@ import { visibleSystems } from "../game/visibility";
 import { h, kids, mcr } from "./dom";
 import { emblem } from "./emblems";
 import { showVictory } from "./victory";
+import { fleetStatus } from "../game/attention";
 import { describePopulation, STARPORTS } from "../sector/uwp";
 import { createMap, type FleetMark, type TransitMark } from "./map";
 import { empirePane, fleetPane, reportsPane, setupPane, shipyardPane, systemPane } from "./panes";
@@ -42,7 +43,9 @@ export interface Ctx {
   newFrom: number;
   refresh(): void;
   selectSystem(at: string | null, centre?: boolean): void;
-  selectFleet(id: string | null): void;
+  selectFleet(id: string | null, centre?: boolean): void;
+  /** The next fleet waiting on orders, after the one picked; or null when none is. */
+  nextFleet(): void;
   setTab(tab: Tab): void;
   say(text: string, bad?: boolean): void;
   /**
@@ -102,6 +105,9 @@ function sideResizer(screen: HTMLElement, grip: HTMLElement): void {
   });
 }
 
+/** The game screen's key handler, replaced whenever a game is shown. */
+let keys: (e: KeyboardEvent) => void = () => undefined;
+
 export function showGame(root: HTMLElement, game: Game, onQuit: () => void): void {
   const map = createMap();
   const bar = h("div", { class: "bar" });
@@ -144,14 +150,24 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       if (ctx.tab !== "fleets" || ctx.fleet === null) ctx.tab = "system";
       render();
     },
-    selectFleet(id) {
+    selectFleet(id, centre = false) {
       ctx.fleet = id;
       ctx.ships.clear();
       ctx.choosingJump = false;
       const f = id === null ? undefined : game.fleetSeenBy(ctx.me.id, id);
       if (f !== undefined) ctx.system = f.transit?.to ?? f.system;
+      if (f !== undefined && centre) map.centreOn(f.transit?.to ?? f.system);
       ctx.tab = "fleets";
       render();
+    },
+    nextFleet() {
+      const waiting = waitingFleets();
+      if (waiting.length === 0) {
+        ctx.say("No fleet is waiting on orders.");
+        return;
+      }
+      const i = waiting.findIndex((f) => f.id === ctx.fleet);
+      ctx.selectFleet(waiting[(i + 1) % waiting.length]!.id, true);
     },
     setTab(tab) {
       ctx.tab = tab;
@@ -374,6 +390,14 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     } else banner.style.display = "none";
   }
 
+  /** Fleets waiting on the player's orders, by name. */
+  function waitingFleets(): Fleet[] {
+    return game
+      .fleetsSeenBy(ctx.me.id)
+      .filter((f) => f.order?.kind !== "garrison" && fleetStatus(game, f).state === "needs")
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  }
+
   function renderBar(): void {
     const me = ctx.me;
     const s = game.state;
@@ -424,12 +448,22 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       ),
       setup || over
         ? null
-        : h("button", { onclick: () => finish(true), title: "Let the days pass until something happens that you should see (up to 30 days)" }, "Wait for news"),
+        : (() => {
+            const n = waitingFleets().length;
+            return h(
+              "button",
+              { class: n > 0 ? "small next-fleet" : "small", disabled: n === 0, onclick: () => ctx.nextFleet(), title: "Pick the next fleet waiting on orders, and show it on the map (key N)" },
+              n > 0 ? `Next fleet · ${n}` : "No fleets waiting",
+            );
+          })(),
+      setup || over
+        ? null
+        : h("button", { onclick: () => finish(true), title: "Let the days pass until something happens that you should see, up to 30 days (key W)" }, "Wait for news"),
       over
         ? h("button", { class: "primary", title: "The final standings and your campaign", onclick: () => victory() }, s.winner === null ? "Game over" : `${game.faction(s.winner).name} has won`)
         : h(
             "button",
-            { class: "primary", onclick: () => finish(false) },
+            { class: "primary", onclick: () => finish(false), title: "Key E" },
             setup ? "Done: sail" : humans.length > 1 && humans.some((f) => f !== me && !f.ready) ? "End turn" : "End day",
           ),
     ));
@@ -565,6 +599,30 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     renderPane();
     overlay();
   }
+
+  // Keys: N the next fleet waiting on orders, E end the day, W wait for news,
+  // 1 to 5 the tabs, Escape to stop choosing a jump.
+  document.removeEventListener("keydown", keys);
+  keys = (e: KeyboardEvent) => {
+    if (!root.isConnected) return;
+    const t = e.target as HTMLElement | null;
+    if (t !== null && (t.tagName === "INPUT" || t.tagName === "SELECT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector(".overlay, .modal") !== null) return;
+    const s = game.state;
+    const playing = s.phase === "play";
+    const tabs: Record<string, Tab> = { "1": "system", "2": "fleets", "3": "yard", "4": "empire", "5": "reports" };
+    const key = e.key.toLowerCase();
+    if (key === "n" && playing) ctx.nextFleet();
+    else if (key === "e" && s.phase !== "over") finish(false);
+    else if (key === "w" && playing) finish(true);
+    else if (tabs[key] !== undefined && !(s.phase === "setup" && key === "3")) ctx.setTab(tabs[key]!);
+    else if (key === "escape" && ctx.choosingJump) {
+      ctx.choosingJump = false;
+      render();
+    } else return;
+    e.preventDefault();
+  };
+  document.addEventListener("keydown", keys);
 
   const first = game.currentHuman() ?? game.humans()[0] ?? game.state.factions[0]!;
   ctx.me = first;

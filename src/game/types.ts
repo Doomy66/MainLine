@@ -129,6 +129,17 @@ export interface Fleet {
    * there three days and got nowhere stops trying.
    */
   fighting?: { readonly at: string; readonly loc: Loc; readonly since: number; readonly last: number };
+  /** A player's fleet handed to an admiral, who gives it its orders day by day. */
+  admiral?: Admiral;
+}
+
+/** What an admiral does with a fleet: take worlds, or defend them, working from a base. */
+export interface Admiral {
+  readonly mission: "conquer" | "defend";
+  /** How good the odds must be before it attacks, and how soon it breaks off. */
+  readonly style: "bold" | "steady" | "careful";
+  /** Where it works from: home for repairs, and the middle of the worlds it defends. */
+  readonly base: string;
 }
 
 export interface Build {
