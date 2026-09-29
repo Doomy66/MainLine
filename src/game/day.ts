@@ -584,6 +584,11 @@ function deliverOrders(game: Game): void {
 
 function endings(game: Game): void {
   const s = game.state;
+  // A player's high-water mark, for the end of the game.
+  for (const f of game.humans()) {
+    const worlds = game.holding(f.id).worlds;
+    if (f.peak === undefined || worlds > f.peak.worlds) f.peak = { worlds, day: s.day };
+  }
   for (const f of s.factions) {
     if (!f.alive) continue;
     const worlds = game.ownedWorlds(f.id).length;

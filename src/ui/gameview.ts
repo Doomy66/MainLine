@@ -17,6 +17,7 @@ import type { Faction, Fleet } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import { h, kids, mcr } from "./dom";
 import { emblem } from "./emblems";
+import { showVictory } from "./victory";
 import { describePopulation, STARPORTS } from "../sector/uwp";
 import { createMap, type FleetMark, type TransitMark } from "./map";
 import { empirePane, fleetPane, reportsPane, setupPane, shipyardPane, systemPane } from "./panes";
@@ -425,7 +426,7 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
         ? null
         : h("button", { onclick: () => finish(true), title: "Let the days pass until something happens that you should see (up to 30 days)" }, "Wait for news"),
       over
-        ? h("span", { class: "warn" }, s.winner === null ? "Game over" : `${game.faction(s.winner).name} has won`)
+        ? h("button", { class: "primary", title: "The final standings and your campaign", onclick: () => victory() }, s.winner === null ? "Game over" : `${game.faction(s.winner).name} has won`)
         : h(
             "button",
             { class: "primary", onclick: () => finish(false) },
@@ -438,8 +439,14 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     const before = game.state.day;
     const s = game.state;
     ctx.choosingJump = false;
+    const wasOver = s.phase === "over";
     const dayEnded = wait ? waitForEvents(game) : endTurn(game);
     keep();
+    if (!wasOver && s.phase === "over") {
+      render();
+      victory();
+      return;
+    }
     if (dayEnded && s.phase !== "setup") {
       status = s.day > before + 1 ? `${s.day - before} days passed.` : "";
     }
@@ -464,6 +471,17 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     readTo.set(me.id, game.state.day);
     ctx.system = me.capital;
     render();
+  }
+
+  function victory(): void {
+    showVictory(game, ctx.me, {
+      onSave: () => download(game),
+      onTitle: async () => {
+        window.clearTimeout(saveTimer);
+        await autosave(game);
+        onQuit();
+      },
+    });
   }
 
   function handover(next: Faction, then: () => void): void {
@@ -548,9 +566,12 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
     overlay();
   }
 
-  const first = game.currentHuman() ?? game.state.factions[0]!;
+  const first = game.currentHuman() ?? game.humans()[0] ?? game.state.factions[0]!;
   ctx.me = first;
-  if (game.humans().filter((f) => f.alive).length > 1) handover(first, begin);
+  if (game.state.phase === "over") {
+    begin();
+    victory();
+  } else if (game.humans().filter((f) => f.alive).length > 1) handover(first, begin);
   else begin();
   requestAnimationFrame(() => map.centreOn(first.capital, 1.8));
 }

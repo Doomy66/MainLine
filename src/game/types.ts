@@ -212,6 +212,8 @@ export interface Faction {
   readonly personality: Personality;
   /** The computer's character, which its admirals go by. Given to every Empire; players' go unused. */
   temper: Temper;
+  /** The most peopled worlds a player has held, and when: for the end of the game. */
+  peak?: { worlds: number; day: number };
   intel: Record<string, Sighting>;
   builds: Build[];
   /**

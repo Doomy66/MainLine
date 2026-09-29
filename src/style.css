@@ -332,6 +332,34 @@ dl.props dd { margin: 0; }
 }
 .sheet td { font-size: 12px; padding: 2px 6px; }
 
+/* The end of a game. */
+.victory { background: rgba(8, 9, 12, 0.82); }
+.victory-box { width: min(720px, calc(100vw - 32px)); padding: 26px 30px 22px; border-color: rgba(224, 179, 65, 0.45); box-shadow: 0 0 60px rgba(224, 179, 65, 0.12); }
+.victory-kicker { margin: 0; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.victory-head { display: flex; align-items: center; gap: 16px; margin: 6px 0 2px; }
+.victory-box h1 {
+  margin: 6px 0 2px;
+  font-size: 34px;
+  letter-spacing: 0.02em;
+  background: linear-gradient(100deg, var(--text) 18%, var(--accent) 62%, #f4dfa6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.victory-line { margin: 4px 0 14px; font-size: 15px; }
+.victory-bars { display: grid; gap: 5px; }
+.vbar { display: grid; grid-template-columns: minmax(0, 190px) minmax(0, 1fr) 132px; align-items: center; gap: 10px; font-size: 12.5px; }
+.vbar.me .vname { font-weight: 600; color: #f4dfa6; }
+.vname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+.vtrack { position: relative; height: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 3px; overflow: visible; }
+.vfill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; opacity: 0.85; }
+.vgoal { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--accent); }
+.vnum { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; text-align: right; }
+.victory-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; }
+.vstat .vbig { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.victory-best { margin-top: 12px; }
+@media (max-width: 560px) { .vbar { grid-template-columns: minmax(0, 1fr) auto; } .vtrack { grid-column: 1 / -1; grid-row: 2; } }
+
 /* The map ---------------------------------------------------------------- */
 
 .sectormap { width: 100%; height: 100%; display: block; cursor: grab; user-select: none; }

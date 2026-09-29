@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- A victory screen: who won and how, the final standings as bars against the winning line, and your
+  campaign in numbers, with your finest hour. It opens when the game ends, and from the top bar after.
 - Each computer Empire has a character, varied from its personality: aggression, resolve, expansion and
   caution. They set the odds it attacks at, when its fleets break off, which worlds it prizes and how much
   it keeps at home. The Empire tab's standings describe each one.
