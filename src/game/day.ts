@@ -20,7 +20,7 @@ import { planAdmirals, planAi } from "./ai";
 import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
 import { round, ships } from "./game";
-import { canRefuelAt } from "./nav";
+import { canRefuelAt, shareFuel, spareFuel } from "./nav";
 import {
   CAPTURED_DEFENCE,
   captureDays,
@@ -123,6 +123,14 @@ function stepJump(game: Game, fleet: Fleet, order: Extract<Order, { kind: "jump"
     if (loc !== null) {
       fleet.loc = loc;
       refuelling.add(fleet);
+      return;
+    }
+  }
+  // No fuel to be had here: a tanker, or ships with spare, can fill the rest for the jump.
+  if (driveOk && tanksOk && spareFuel(game, fleet, parsecs).spare >= spareFuel(game, fleet, parsecs).short - 0.01) {
+    const moved = shareFuel(game, fleet, parsecs);
+    if (moved > 0 && game.canJump(fleet, next).ok) {
+      notice(game, fleet.owner, `${fleet.name} shares ${round(moved, 0)} tons of fuel among its ships for the jump to ${game.world(next).name}.`, fleet.system, false);
       return;
     }
   }
@@ -675,7 +683,13 @@ export function advanceDay(game: Game): void {
       case "refuel": {
         const loc = refuelLoc(game, fleet);
         if (loc === null) {
-          notice(game, fleet.owner, `${fleet.name} has nowhere to refuel at ${game.world(fleet.system).name}.`, fleet.system);
+          // Nowhere here: what the fleet carries goes round instead.
+          const moved = shareFuel(game, fleet);
+          if (moved > 0) {
+            notice(game, fleet.owner, `${fleet.name} shares ${round(moved, 0)} tons of fuel among its ships at ${game.world(fleet.system).name}.`, fleet.system, false);
+          } else {
+            notice(game, fleet.owner, `${fleet.name} has nowhere to refuel at ${game.world(fleet.system).name}, and no fuel to spare among its ships.`, fleet.system);
+          }
           fleet.order = null;
         } else {
           fleet.loc = loc;

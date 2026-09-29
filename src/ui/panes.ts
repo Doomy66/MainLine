@@ -9,7 +9,7 @@ import type { Attack, ShipClass } from "../catalogue/shipclass";
 import { locExists } from "../game/day";
 import type { Game } from "../game/game";
 import type { Catalogue } from "../catalogue/catalogue";
-import { canRefuelAt } from "../game/nav";
+import { canRefuelAt, spareFuel } from "../game/nav";
 import {
   canBuildAt,
   captureDays,
@@ -383,6 +383,9 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
   const world = game.world(here);
   const hostile = game.hostile(f.owner, game.worldState(here).owner);
   const fuelHere = f.ships.every((s) => fuelSources(world, game.cls(s), hostile).length > 0);
+  // Fuel carried beyond what each ship keeps for its own jump, and how much the others lack.
+  const pooled = spareFuel(game, f);
+  const canShare = pooled.spare > 0.5 && pooled.short > 0.5;
   const repairHere = game.worldState(here).owner === f.owner && repairRate(world.uwp.starport) > 0;
 
   const moveButtons = LOCS.filter((l) => locExists(game, here, l)).map((l) =>
@@ -478,7 +481,15 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
           },
           "Jump…",
         ),
-        h("button", { disabled: inJump || !fuelHere, title: fuelHere ? "" : "Not every ship can refuel here", onclick: () => set({ kind: "refuel" }, `${f.name} will refuel.`) }, "Refuel"),
+        h(
+          "button",
+          {
+            disabled: inJump || !(fuelHere || canShare),
+            title: fuelHere ? "" : canShare ? "No fuel to be had here: the ships with fuel to spare will fill the others' tanks for a jump" : "Not every ship can refuel here, and none has fuel to spare",
+            onclick: () => set({ kind: "refuel" }, fuelHere ? `${f.name} will refuel.` : `${f.name} will share out the fuel it carries.`),
+          },
+          fuelHere || !canShare ? "Refuel" : "Share fuel",
+        ),
         h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport you hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
         h("button", { disabled: f.order === null || inJump, onclick: () => set(null, `${f.name}'s orders are cancelled.`) }, "Cancel"),
         inJump || game.worldState(here).owner !== f.owner
@@ -523,6 +534,9 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
         ? null
         : h("p", { class: "warn" }, "Not enough fuel to jump, and nowhere here to refuel."),
     ),
+    f.ships.length > 1 && pooled.spare > 0.5
+      ? h("p", { class: "hint" }, `Fuel to spare: ${Math.round(pooled.spare).toLocaleString()} tons beyond what each ship keeps for its own jump${pooled.short > 0.5 ? `; the ships short of it lack ${Math.round(pooled.short).toLocaleString()}` : ""}. Where there is no fuel to be had, Refuel shares it out, and a jump that needs it takes it.`)
+      : null,
     admiralPanel(ctx, f),
     standingOrders(ctx, f),
     h("h2", {}, "Ships"),

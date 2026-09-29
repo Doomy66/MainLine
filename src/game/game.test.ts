@@ -223,6 +223,27 @@ describe("building for the enemy", () => {
   });
 });
 
+describe("fuel", () => {
+  it("is shared within a fleet where there is none to be had, and carries it over the jump", () => {
+    const game = newGame({}, 1, "FUEL");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    // A system with no gas giant, no water and no starport that will sell.
+    const dry = game.state.sector.worlds.find((w) => w.pbg.giants === 0 && w.uwp.hydrographics === 0 && !"ABCD".includes(w.uwp.starport))!;
+    const next = game.neighbours(dry.at, 1).find((at) => at !== dry.at)!;
+    const tanker = game.newShip("Hydrogen-Fleet-Tanker");
+    const corvette = game.newShip("Patrol-Corvette");
+    corvette.fuel = 0;
+    const fleet = game.newFleet(me.id, dry.at, "deep", [tanker, corvette], "Thirsty");
+    fleet.order = { kind: "jump", route: [next] };
+    advanceDay(game);
+    expect(corvette.fuel).toBeGreaterThan(0);
+    advanceDay(game);
+    expect(fleet.transit?.to).toBe(next);
+  });
+});
+
 describe("admirals", () => {
   it("take worlds near their base, day after day, with nobody giving orders", () => {
     const game = newGame({}, 1, "ADMIRAL");

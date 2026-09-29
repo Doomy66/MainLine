@@ -21,6 +21,51 @@ export function canRefuelAt(game: Game, fleet: Fleet, at: string): boolean {
   return fleet.ships.every((s) => game.carried(fleet, s) || fuelSources(world, game.cls(s), hostile).length > 0);
 }
 
+/**
+ * The fuel a ship keeps for itself when a fleet shares fuel: enough for a jump
+ * of the fleet's planned length, or of its own drive's reach.
+ */
+export function fuelKept(game: Game, fleet: Fleet, ship: Fleet["ships"][number], parsecs?: number): number {
+  const c = game.cls(ship);
+  if (game.carried(fleet, ship) || c.jump === 0) return 0;
+  return Math.min(c.fuelCapacity, jumpFuel(c.tons, parsecs ?? c.jump));
+}
+
+/** Tons of fuel a fleet's ships hold beyond what each keeps for its own jump. */
+export function spareFuel(game: Game, fleet: Fleet, parsecs?: number): { spare: number; short: number } {
+  let spare = 0;
+  let short = 0;
+  for (const s of fleet.ships) {
+    const keep = fuelKept(game, fleet, s, parsecs);
+    if (s.fuel > keep) spare += s.fuel - keep;
+    else short += keep - s.fuel;
+  }
+  return { spare, short };
+}
+
+/**
+ * Pass fuel from ships with some to spare, a tanker above all, to ships short
+ * of it for a jump, within one fleet. Returns the tons passed.
+ */
+export function shareFuel(game: Game, fleet: Fleet, parsecs?: number): number {
+  const keep = (s: Fleet["ships"][number]) => fuelKept(game, fleet, s, parsecs);
+  const donors = fleet.ships.filter((s) => s.fuel > keep(s) + 0.01).sort((a, b) => b.fuel - keep(b) - (a.fuel - keep(a)));
+  let moved = 0;
+  for (const r of fleet.ships.filter((s) => s.fuel < keep(s) - 0.01)) {
+    for (const d of donors) {
+      const want = keep(r) - r.fuel;
+      if (want <= 0.01) break;
+      const give = Math.min(want, d.fuel - keep(d));
+      if (give <= 0.01) continue;
+      d.fuel -= give;
+      r.fuel += give;
+      moved += give;
+      if (d.unrefined && !game.cls(r).fuelProcessor) r.unrefined = true;
+    }
+  }
+  return moved;
+}
+
 /** Whether every ship's tanks hold enough for a jump of this many parsecs when full. */
 function tanksBigEnough(game: Game, fleet: Fleet, parsecs: number): boolean {
   return fleet.ships.every((s) => {

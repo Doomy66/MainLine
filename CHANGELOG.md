@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fuel is shared within a fleet where there is none to be had: ships with fuel beyond their own jump,
+  a Hydrogen Fleet Tanker above all, fill the tanks of those short of it. A jump that needs it takes it,
+  and Refuel becomes Share fuel in such a place. The fleet pane shows the fuel a fleet has to spare.
 - Admirals: hand a fleet to one, in the Fleets tab, and it gives itself orders every day, either taking
   worlds near a base you choose or defending your worlds near it, boldly, steadily or carefully. It
   refuels, mends when hurt, and says in your reports where it is going and why. Any order you give by
