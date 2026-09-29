@@ -5,7 +5,7 @@
  */
 
 import type { Game } from "./game";
-import { captureDays, slipsAt } from "./rules";
+import { captureDays } from "./rules";
 import type { Faction, Fleet } from "./types";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
@@ -138,18 +138,16 @@ export function alerts(game: Game, me: Faction): Alert[] {
     out.push({ kind: "fleets", fleet: waiting[0]!.id, text: waiting.length === 1 ? `${waiting[0]!.name} needs orders` : `${waiting.length} fleets need orders` });
   }
 
-  // Class A yards with slips standing empty, when there is money to fill them.
-  const free = game
+  // Class A yards with nothing on any slip, when there is money to use them.
+  const idle = game
     .ownedWorlds(me.id)
-    .filter((w) => w.uwp.starport === "A")
-    .map((w) => ({ w, free: slipsAt(w) - [...game.slipsTomorrow(w.at).values()].reduce((n, s) => n + s, 0) }))
-    .filter((x) => x.free > 0)
-    .sort((a, b) => b.w.uwp.tl - a.w.uwp.tl);
-  if (free.length > 0 && me.credits >= 100) {
+    .filter((w) => w.uwp.starport === "A" && game.buildsAt(w.at).length === 0)
+    .sort((a, b) => b.uwp.tl - a.uwp.tl);
+  if (idle.length > 0 && me.credits >= 100) {
     out.push({
       kind: "slips",
-      yard: free[0]!.w.at,
-      text: `Free slips at class A yards: ${free.slice(0, 4).map((x) => `${x.w.name} ${x.free}`).join(", ")}${free.length > 4 ? `, and ${free.length - 4} more` : ""}`,
+      yard: idle[0]!.at,
+      text: `Idle class A yard${idle.length === 1 ? "" : "s"}, nothing on the slips: ${idle.slice(0, 4).map((w) => w.name).join(", ")}${idle.length > 4 ? `, and ${idle.length - 4} more` : ""}`,
     });
   }
   return out;

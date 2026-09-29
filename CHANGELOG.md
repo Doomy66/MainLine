@@ -11,7 +11,7 @@
 - Next fleet: a button in the top bar, and the key N, picks the next fleet waiting on orders and shows it
   on the map. E ends the day, W waits for news, and 1 to 5 open the tabs.
 - Needs attention, at the top of the Reports tab: sieges of your worlds, enemies at them, the day's losses,
-  fleets waiting on orders and empty slips at your class A yards, each a click from the place.
+  fleets waiting on orders and class A yards with nothing on the slips, each a click from the place.
 - The computer builds a little for its enemies: it keeps a rough, slow-moving average of the armour on
   the enemy ships it has fought, and leans its yard orders towards weapons that get through it. The lean
   is deliberately light; in head-to-head simulations it is a small edge, about a quarter of what acting on
