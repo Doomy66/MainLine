@@ -13,12 +13,19 @@ import { routeTo } from "./nav";
 import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, people, slipsAt, TENDER_JUMP } from "./rules";
 import { forecast, shares, work, type Job } from "./yard";
 import { temperFromId } from "./temper";
-import type { Build, Crits, Faction, Temper, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
+import type { Admiral, Build, Crits, Faction, Temper, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { colourTerritories, shipName } from "./names";
 
 export function noCrits(): Crits {
   return { sensors: 0, thrust: 0, weapons: 0, armour: 0, jump: false, crew: 0, computer: 0 };
+}
+
+/** What an order from the player changes on a fleet. */
+export interface FleetChange {
+  readonly order?: Order | null;
+  readonly standing?: StandingOrders;
+  readonly admiral?: Admiral | null;
 }
 
 export class Game {
@@ -616,7 +623,7 @@ export class Game {
    * otherwise it goes by courier and lands when a courier would get there.
    * Returns the day it takes effect.
    */
-  command(factionId: string, fleetId: string, change: { order?: Order | null; standing?: StandingOrders }, text: string): number {
+  command(factionId: string, fleetId: string, change: FleetChange, text: string): number {
     const real = this.fleet(fleetId);
     const where = real === undefined ? null : real.transit?.to ?? real.system;
     const lag = !this.fogged(factionId) || where === null ? 0 : this.lag(factionId, where);
@@ -632,8 +639,13 @@ export class Game {
   }
 
   /** An order landing on a fleet. A jump is re-planned from wherever it is when the order arrives. */
-  applyCommand(fleet: Fleet, change: { order?: Order | null; standing?: StandingOrders }): void {
+  applyCommand(fleet: Fleet, change: FleetChange): void {
     if (change.standing !== undefined) fleet.standing = { ...change.standing };
+    // An admiral handed the fleet, or relieved; any order of the player's own relieves one.
+    if (change.admiral !== undefined) {
+      if (change.admiral === null) delete fleet.admiral;
+      else fleet.admiral = { ...change.admiral };
+    } else if (change.order !== undefined) delete fleet.admiral;
     if (change.order === undefined) return;
     const order = change.order;
     // Any order but another tendered jump sends hired tenders away.

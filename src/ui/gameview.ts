@@ -8,7 +8,7 @@
  */
 
 import { ships } from "../game/game";
-import type { Game } from "../game/game";
+import type { FleetChange, Game } from "../game/game";
 import { jumpMap, pathIn, inRange } from "../game/nav";
 import { imperialDate } from "../game/rules";
 import { autosave, chooseFile, download, parseGame } from "../game/save";
@@ -52,7 +52,7 @@ export interface Ctx {
    * Order one of your fleets. Under full fog it goes by courier; the text says
    * when it will land.
    */
-  command(fleet: Fleet, change: { order?: Fleet["order"]; standing?: Fleet["standing"] }, text: string): void;
+  command(fleet: Fleet, change: FleetChange, text: string): void;
 }
 
 const SIDE_WIDTH_KEY = "mainline.sideWidth";

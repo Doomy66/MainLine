@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Admirals: hand a fleet to one, in the Fleets tab, and it gives itself orders every day, either taking
+  worlds near a base you choose or defending your worlds near it, boldly, steadily or carefully. It
+  refuels, mends when hurt, and says in your reports where it is going and why. Any order you give by
+  hand relieves it.
 - The fleet list is one line a fleet, grouped into Needs orders, Busy and At home, with a search box and
   sorting by name, place or strength.
 - Next fleet: a button in the top bar, and the key N, picks the next fleet waiting on orders and shows it

@@ -29,8 +29,8 @@ import {
 import { chooseFile } from "../game/save";
 import { buyStarting, orderBuild, sellStarting } from "../game/turn";
 import { describeTemper, oddsWanted, withdrawAt } from "../game/temper";
-import { alerts, fleetStatus, type Alert, type FleetState, type FleetStatus } from "../game/attention";
-import type { Build, Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
+import { admiralText, alerts, fleetStatus, type Alert, type FleetState, type FleetStatus } from "../game/attention";
+import type { Admiral, Build, Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
 import { LOC_NAMES, STANDING_PRESETS } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import {
@@ -523,6 +523,7 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
         ? null
         : h("p", { class: "warn" }, "Not enough fuel to jump, and nowhere here to refuel."),
     ),
+    admiralPanel(ctx, f),
     standingOrders(ctx, f),
     h("h2", {}, "Ships"),
     h("table", { class: "ships" }, h("tr", {}, h("th", {}), h("th", {}, "Ship"), h("th", {}, "Hull"), h("th", {}, "Fuel"), h("th", {}, "Ord."), h("th", {}, "Damage")), shipRows),
@@ -585,6 +586,70 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
             others.map((o) => h("option", { value: o.id }, `${o.name} (${o.ships.length})`)),
           )
         : null,
+    ),
+  );
+}
+
+/**
+ * Hand a fleet to an admiral, who gives it its orders from then on: to take
+ * worlds near a base, or defend them; boldly, steadily or carefully. Any order
+ * given the fleet by hand relieves the admiral.
+ */
+function admiralPanel(ctx: Ctx, f: Fleet): HTMLElement | null {
+  const { game, me } = ctx;
+  if (game.state.phase !== "play" || f.order?.kind === "garrison") return null;
+  const a = f.admiral;
+  const now = f.transit?.to ?? f.system;
+  const base = a?.base ?? (game.worldState(now).owner === me.id ? now : me.capital);
+  const bases = game.ownedWorlds(me.id).sort((x, y) => x.name.localeCompare(y.name));
+  const hand = (next: Admiral | null, text: string) => ctx.command(f, { admiral: next }, text);
+  const current = { mission: a?.mission ?? "conquer", style: a?.style ?? "steady", base } as Admiral;
+  const set = (change: Partial<Admiral>) => {
+    const next = { ...current, ...change };
+    hand(next, `${f.name}'s admiral will be ${admiralText(game, { ...f, admiral: next })}.`);
+  };
+  return h(
+    "div",
+    { class: `admiral${a !== undefined ? " on" : ""}` },
+    h("h2", {}, "Admiral"),
+    h(
+      "div",
+      { class: "standing" },
+      h("label", {}, "Orders"),
+      h(
+        "select",
+        {
+          onchange: (e: Event) => {
+            const v = (e.target as HTMLSelectElement).value;
+            if (v === "none") hand(null, `${f.name}'s admiral is relieved: the fleet waits on your orders.`);
+            else set({ mission: v as Admiral["mission"] });
+          },
+        },
+        h("option", { value: "none", selected: a === undefined }, "None: you give the orders"),
+        h("option", { value: "conquer", selected: a?.mission === "conquer" }, "Take worlds near a base"),
+        h("option", { value: "defend", selected: a?.mission === "defend" }, "Defend the worlds near a base"),
+      ),
+      h("label", {}, "Style"),
+      h(
+        "select",
+        { disabled: a === undefined, onchange: (e: Event) => set({ style: (e.target as HTMLSelectElement).value as Admiral["style"] }) },
+        h("option", { value: "bold", selected: current.style === "bold" }, "Bold: attacks at even odds, fights on"),
+        h("option", { value: "steady", selected: current.style === "steady" }, "Steady"),
+        h("option", { value: "careful", selected: current.style === "careful" }, "Careful: wants two to one, breaks off early"),
+      ),
+      h("label", {}, "Base"),
+      h(
+        "select",
+        { disabled: a === undefined, onchange: (e: Event) => set({ base: (e.target as HTMLSelectElement).value }) },
+        bases.map((w) => h("option", { value: w.at, selected: w.at === base }, `${w.name}${w.at === me.capital ? " (capital)" : ""}`)),
+      ),
+    ),
+    h(
+      "p",
+      { class: "hint" },
+      a === undefined
+        ? "Hand the fleet to an admiral and it gives itself orders each day: it picks worlds it can beat near its base, refuels, mends when hurt, and comes back to base when there is nothing to do."
+        : `Admiral: ${admiralText(game, f)}. It gives the fleet its own orders; any order you give by hand relieves it.`,
     ),
   );
 }

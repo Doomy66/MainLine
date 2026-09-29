@@ -16,7 +16,7 @@
  */
 
 import { distanceBetween } from "../sector/hex";
-import { planAi } from "./ai";
+import { planAdmirals, planAi } from "./ai";
 import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
 import { round, ships } from "./game";
@@ -658,6 +658,7 @@ export function advanceDay(game: Game): void {
 
   deliverOrders(game);
   for (const f of s.factions) if (!f.human && f.alive) planAi(game, f);
+  for (const f of s.factions) if (f.human && f.alive) planAdmirals(game, f);
 
   const refuelling = new Set<Fleet>();
   for (const fleet of [...s.fleets]) {
@@ -736,7 +737,7 @@ export function advanceDay(game: Game): void {
   game.removeEmptyFleets();
   // How long each computer fleet has been fighting where it is.
   for (const fleet of s.fleets) {
-    if (fleet.transit !== null || game.faction(fleet.owner).human) continue;
+    if (fleet.transit !== null || (game.faction(fleet.owner).human && fleet.admiral === undefined)) continue;
     if (!battled.has(`${fleet.system}|${fleet.loc}`)) continue;
     const was = fleet.fighting;
     const running = was !== undefined && was.at === fleet.system && was.loc === fleet.loc && was.last === day - 1;

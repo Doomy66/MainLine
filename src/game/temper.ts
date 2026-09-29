@@ -15,6 +15,13 @@ const BASE: Readonly<Record<Personality, Temper>> = {
 
 const clamp = (n: number) => Math.round(Math.min(1, Math.max(0, n)) * 100) / 100;
 
+/** The character a player's admiral brings to a fleet, by the style chosen. */
+export const ADMIRAL_TEMPERS: Readonly<Record<"bold" | "steady" | "careful", Temper>> = {
+  bold: { aggression: 0.8, resolve: 0.65, expansion: 0.5, caution: 0.3 },
+  steady: { aggression: 0.5, resolve: 0.5, expansion: 0.5, caution: 0.5 },
+  careful: { aggression: 0.2, resolve: 0.35, expansion: 0.5, caution: 0.7 },
+};
+
 /** A character for a new Empire of a personality, varied by the dice. */
 export function temperFor(personality: Personality, rng: Rng): Temper {
   const b = BASE[personality];

@@ -202,6 +202,8 @@ export interface Command {
   /** A new order; null cancels. Left out, the order stands. */
   readonly order?: Order | null;
   readonly standing?: StandingOrders;
+  /** An admiral to take the fleet over; null relieves one. Left out, any admiral stays, unless an order comes. */
+  readonly admiral?: Admiral | null;
   /** What it says, for the list of orders in the post. */
   readonly text: string;
 }
