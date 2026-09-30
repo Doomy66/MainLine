@@ -214,10 +214,15 @@ function dockyard(game: Game, fleet: Fleet): void {
     }
   }
   if (fleet.order?.kind === "repair") {
-    const whole = fleet.ships.every((s) => s.damage === 0 && !s.crits.jump && s.crits.thrust === 0 && s.crits.weapons === 0);
-    if (whole) {
+    const hull = fleet.ships.every((s) => s.damage === 0);
+    const broken = fleet.ships.some((s) => s.crits.jump || s.crits.thrust > 0 || s.crits.weapons > 0);
+    if (hull && !broken) {
       fleet.order = null;
       notice(game, fleet.owner, `${fleet.name} is repaired at ${world.name}.`, fleet.system, false);
+    } else if (hull && !fixesCrits(port)) {
+      // A port that only patches hulls has done all it can.
+      fleet.order = null;
+      notice(game, fleet.owner, `${fleet.name}'s hulls are patched up at ${world.name}, but a class ${port} starport cannot fix damaged drives or weapons: that needs a class A to C starport.`, fleet.system);
     }
   }
 }

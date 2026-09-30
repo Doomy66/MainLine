@@ -258,6 +258,27 @@ describe("admirals", () => {
     expect(game.state.log.some((e) => e.to.includes(me.id) && /admiral heads for .*, because it looks a good target/.test(e.text))).toBe(true);
   });
 
+  it("do not sit repairing at a class D port that cannot fix what is broken", () => {
+    const game = newGame({}, 1, "MEND");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const port = game.state.sector.worlds.find((w) => w.uwp.starport === "D" && w.at !== me.capital)!;
+    game.worldState(port.at).owner = me.id;
+    const ship = game.newShip("Patrol-Corvette");
+    ship.crits.thrust = 1;
+    const fleet = game.newFleet(me.id, port.at, "main", [ship], "Limping");
+    // By hand: the order ends once the hull is whole, with word of why.
+    fleet.order = { kind: "repair" };
+    advanceDay(game);
+    expect(fleet.order).toBeNull();
+    expect(game.state.log.some((e) => /cannot fix damaged drives/.test(e.text))).toBe(true);
+    // Under an admiral: it does not put in here again for the drive.
+    game.applyCommand(fleet, { admiral: { mission: "defend", style: "steady", base: port.at } });
+    advanceDay(game);
+    expect(fleet.order?.kind === "repair" && fleet.system === port.at).toBe(false);
+  });
+
   it("are relieved by an order given by hand", () => {
     const game = newGame({}, 1, "RELIEF");
     const me = game.humans()[0]!;

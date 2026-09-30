@@ -15,7 +15,7 @@
 import { damageAgainst, type ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
 import { canRefuelAt, jumpMap, pathIn, routeTo } from "./nav";
-import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, income, repairRate, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, income, repairRate, yardPrice } from "./rules";
 import { distanceBetween } from "../sector/hex";
 import { visibleSystems } from "./visibility";
 import type { Faction, Fleet, StandingOrders, Temper } from "./types";
@@ -189,9 +189,16 @@ function knownThreat(game: Game, faction: Faction, at: string, sees: ReadonlySet
   return Math.max(seen, guess);
 }
 
-function nearestRepairYard(game: Game, fleet: Fleet): string[] | null | "here" {
-  const good = (at: string) =>
-    game.worldState(at).owner === fleet.owner && repairRate(game.world(at).uwp.starport) > 0;
+/**
+ * The nearest world of its own that can mend a fleet: any starport that
+ * repairs hulls, or, for broken drives, one of class A to C, the only ones
+ * that fix them.
+ */
+function nearestRepairYard(game: Game, fleet: Fleet, broken: boolean): string[] | null | "here" {
+  const good = (at: string) => {
+    const port = game.world(at).uwp.starport;
+    return game.worldState(at).owner === fleet.owner && repairRate(port) > 0 && (!broken || fixesCrits(port));
+  };
   if (good(fleet.system)) return "here";
   const map = jumpMap(game, fleet);
   let best: { at: string; hops: number } | null = null;
@@ -304,14 +311,19 @@ function gather(game: Game, faction: Faction): void {
 
 /** Hurt: go and mend. Returns whether the fleet was sent. */
 function mend(game: Game, fleet: Fleet): boolean {
-  const hurt = game.fleetHullShare(fleet) < 0.6 || fleet.ships.some((s) => s.crits.jump || s.crits.thrust > 0);
-  if (!hurt) return false;
+  const battered = game.fleetHullShare(fleet) < 0.6;
+  const broken = fleet.ships.some((s) => s.crits.jump || s.crits.thrust > 0);
+  if (!battered && !broken) return false;
   const damage = fleet.ships.some((s) => s.crits.jump)
     ? "a jump drive is damaged"
     : fleet.ships.some((s) => s.crits.thrust > 0)
       ? "a drive is damaged"
       : `the fleet is badly hurt (hull at ${Math.round(game.fleetHullShare(fleet) * 100)}%)`;
-  const yard = nearestRepairYard(game, fleet);
+  // Broken drives want a yard that can fix them; if none is in reach, a
+  // battered hull can still be patched at the nearest that repairs at all.
+  let yard = broken ? nearestRepairYard(game, fleet, true) : null;
+  if (yard === null && battered) yard = nearestRepairYard(game, fleet, false);
+  if (yard === null) return false;
   if (yard === "here") {
     fleet.order = { kind: "repair" };
     because(fleet, `puts in for repairs at ${game.world(fleet.system).name}, because ${damage}.`);

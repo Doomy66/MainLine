@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- A Repair order at a class D port ends once the hulls are whole, with word that damaged drives and
+  weapons need a class A to C starport, instead of going on for ever; admirals, and the computer's
+  fleets, take broken drives to a yard that can fix them.
 - Admirals say why: every change an admiral makes to its fleet's orders is in the reports with the reason,
   in plain words: a good target, an enemy sighted, the odds, low fuel, damage, a siege that is not
   working, a fight that has got nowhere, nothing in sight.
