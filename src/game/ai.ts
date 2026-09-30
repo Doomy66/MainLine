@@ -18,7 +18,7 @@ import { canRefuelAt, jumpMap, pathIn, routeTo } from "./nav";
 import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, income, repairRate, yardPrice } from "./rules";
 import { distanceBetween } from "../sector/hex";
 import { visibleSystems } from "./visibility";
-import type { Faction, Fleet, Order, StandingOrders, Temper } from "./types";
+import type { Faction, Fleet, StandingOrders, Temper } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { ADMIRAL_TEMPERS, guardShare, nerve, oddsWanted, prize, travelOrders, withdrawAt } from "./temper";
 import { roleOf } from "../catalogue/roles";
@@ -66,6 +66,23 @@ interface Commander {
 
 function staffOf(faction: Faction): Commander {
   return { temper: faction.temper, home: faction.capital };
+}
+
+/**
+ * Why a fleet's commander did what it did today, in a few words a player can
+ * check: what it saw, and the numbers it went by. An admiral reports it.
+ */
+const reasons = new Map<Fleet, string>();
+function because(fleet: Fleet, why: string): void {
+  reasons.set(fleet, why);
+}
+
+/** How the odds look, in a few words. */
+function odds(mine: number, against: number): string {
+  if (against <= 0) return "nothing stands in the way";
+  const r = mine / against;
+  const rough = r >= 10 ? "" : ` (about ${r.toFixed(1)} to 1)`;
+  return `${r >= 3 ? "the odds are good" : r >= 1.6 ? "the odds look fair" : "the odds are close, but worth it"}${rough}`;
 }
 
 /** Civilian and support ships are no use in a war of fleets, however armed. */
@@ -289,14 +306,21 @@ function gather(game: Game, faction: Faction): void {
 function mend(game: Game, fleet: Fleet): boolean {
   const hurt = game.fleetHullShare(fleet) < 0.6 || fleet.ships.some((s) => s.crits.jump || s.crits.thrust > 0);
   if (!hurt) return false;
+  const damage = fleet.ships.some((s) => s.crits.jump)
+    ? "a jump drive is damaged"
+    : fleet.ships.some((s) => s.crits.thrust > 0)
+      ? "a drive is damaged"
+      : `the fleet is badly hurt (hull at ${Math.round(game.fleetHullShare(fleet) * 100)}%)`;
   const yard = nearestRepairYard(game, fleet);
   if (yard === "here") {
     fleet.order = { kind: "repair" };
+    because(fleet, `puts in for repairs at ${game.world(fleet.system).name}, because ${damage}.`);
     return true;
   }
   if (yard !== null) {
     fleet.standing = orders("Avoid battle");
     fleet.order = { kind: "jump", route: yard };
+    because(fleet, `heads for ${game.world(yard.at(-1)!).name}, the nearest yard, to mend, because ${damage}.`);
     return true;
   }
   return false;
@@ -314,6 +338,7 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
     if (mine >= against * nerve(by.temper)) {
       fleet.standing = ordersWith(by.temper, "Seek and destroy");
       if (fleet.loc !== "main") fleet.order = { kind: "move", to: "main" };
+      because(fleet, `attacks ${game.world(fleet.system).name}, because ${odds(mine, against)}.`);
       return;
     }
   }
@@ -321,13 +346,15 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
   // Short of fuel for anything: fill up.
   if (game.fleetRange(fleet) < game.fleetJump(fleet)) {
     fleet.order = { kind: "refuel" };
+    because(fleet, `takes on fuel at ${game.world(fleet.system).name}, because the tanks are low.`);
     return;
   }
 
   // Somewhere worth taking.
   const map = jumpMap(game, fleet);
   const margin = oddsWanted(by.temper);
-  let best: { at: string; score: number } | null = null;
+  let best: { at: string; score: number; need: number } | null = null;
+  let looked = 0;
   for (const [at, step] of map) {
     if (step.hops > MAX_HOPS) continue;
     if (by.near !== undefined && distanceBetween(by.near.at, at) > by.near.parsecs) continue;
@@ -335,35 +362,44 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
     if (ws.owner === faction.id) continue;
     const world = game.world(at);
     const need = defenceStrength(game, at) + knownThreat(game, faction, at, sees);
+    looked++;
     if (mine < need * margin) continue;
     let value = income(world) * 3 + (world.uwp.population > 0 ? 2 : 0.2);
     value *= prize(by.temper, ws.owner !== null);
     if (ws.owner !== null && game.faction(ws.owner).capital === at) value *= 1.5;
     const score = value / Math.pow(step.hops + 1, 1.3);
-    if (best === null || score > best.score) best = { at, score };
+    if (best === null || score > best.score) best = { at, score, need };
   }
   if (best !== null) {
     const route = pathIn(map, fleet.system, best.at);
     if (route !== null) {
       fleet.standing = travelling(by.temper);
       fleet.order = { kind: "jump", route };
+      const world = game.world(best.at);
+      const owner = game.worldState(best.at).owner;
+      const r = best.need <= 0 ? Infinity : mine / best.need;
+      const held = owner === null ? "an independent world" : game.faction(owner).capital === best.at ? `${game.faction(owner).name}'s capital` : `a ${game.faction(owner).name} world`;
+      const looks = r >= 3 ? "lightly held" : r >= 1.6 ? "within our strength" : "a hard fight, but worth it";
+      because(fleet, `heads for ${world.name}, because it looks a good target: ${held}, worth MCr${income(world).toFixed(1)} a week, and ${looks}.`);
       return;
     }
   }
 
   // Nothing it can take: home, to wait for more.
-  goHome(game, fleet, by);
+  goHome(game, fleet, by, looked === 0 ? "there is nothing within reach to take" : "there is nothing within reach it can beat");
 }
 
-function goHome(game: Game, fleet: Fleet, by: Commander): void {
+function goHome(game: Game, fleet: Fleet, by: Commander, why: string): void {
   if (fleet.system !== by.home) {
     const route = routeTo(game, fleet, by.home);
     if (route !== null) {
       fleet.standing = travelling(by.temper);
       fleet.order = { kind: "jump", route };
+      because(fleet, `heads home to ${game.world(by.home).name} to wait, because ${why}.`);
     }
   } else if (fleet.loc !== "main") {
     fleet.order = { kind: "move", to: "main" };
+    because(fleet, `waits in orbit at ${game.world(by.home).name}, because ${why}.`);
   }
 }
 
@@ -436,12 +472,15 @@ function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: 
       if (route !== null) {
         fleet.standing = travelling(by.temper);
         fleet.order = { kind: "jump", route };
+        because(fleet, `gives up the siege of ${game.world(fleet.system).name} and heads home, because its defences are holding out.`);
         continue;
       }
     }
     fleet.standing = orders("Avoid battle");
     // Fuel first, where it is quiet, then on its way.
     if (fleet.order === null && game.fleetRange(fleet) < game.fleetJump(fleet)) fleet.order = { kind: "refuel" };
+    const where = { main: "in orbit", gg: "at the gas giant", belt: "in the belt", deep: "at the jump point" }[fleet.loc];
+    because(fleet, `pulls back from the fighting ${where} at ${game.world(fleet.system).name}, because ${f.last - f.since + 1} days of it have got nowhere.`);
   }
 }
 
@@ -471,27 +510,35 @@ function defend(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
     .map((w) => ({ at: w.at, threat: knownThreat(game, faction, w.at, sees), value: income(w) + (game.worldState(w.at).siege !== null ? 100 : 0) }))
     .filter((t) => t.threat > 0 && mine >= t.threat * nerve(by.temper))
     .sort((a, b) => b.value - a.value);
+  const plight = (at: string) => (game.worldState(at).siege !== null ? ", under siege" : "");
   for (const t of threats) {
     if (t.at === fleet.system) {
       fleet.standing = ordersWith(by.temper, "Patrol");
+      because(fleet, `stands and fights at ${game.world(t.at).name}, because the enemy is here${plight(t.at)} and ${odds(mine, t.threat)}.`);
       return;
     }
     if (game.fleetRange(fleet) < game.fleetJump(fleet)) {
       fleet.order = { kind: "refuel" };
+      because(fleet, `takes on fuel at ${game.world(fleet.system).name} before going to ${game.world(t.at).name}'s aid, because the tanks are low.`);
       return;
     }
     const route = routeTo(game, fleet, t.at);
     if (route === null || route.length > 3) continue;
     fleet.standing = ordersWith(by.temper, "Patrol");
     fleet.order = { kind: "jump", route };
+    because(fleet, `goes to ${game.world(t.at).name}'s aid, because an enemy was sighted there${plight(t.at)} and ${odds(mine, t.threat)}.`);
     return;
   }
   if (game.fleetRange(fleet) < game.fleetJump(fleet) && fleet.system !== by.home) {
     fleet.order = { kind: "refuel" };
+    because(fleet, `takes on fuel at ${game.world(fleet.system).name}, because the tanks are low.`);
     return;
   }
-  if (fleet.system === by.home) fleet.standing = ordersWith(by.temper, "Guard");
-  goHome(game, fleet, by);
+  if (fleet.system === by.home) {
+    fleet.standing = ordersWith(by.temper, "Guard");
+    because(fleet, `stands guard at ${game.world(by.home).name}, because no enemy is in sight.`);
+  }
+  goHome(game, fleet, by, "no enemy is in sight");
 }
 
 /**
@@ -510,6 +557,10 @@ export function planAdmirals(game: Game, faction: Faction): void {
       admiralNotice(game, f, `${lost} is lost; ${f.name}'s admiral now works from ${game.world(faction.capital).name}.`);
     }
   }
+  // What each fleet was doing, so only a change is news.
+  const doing = (f: Fleet) => JSON.stringify([f.order, f.standing.engage, f.standing.besiege, f.standing.evade, f.standing.intercept]);
+  const before = new Map(fleets.map((f) => [f, doing(f)]));
+  reasons.clear();
   standOff(game, faction, fleets, admiralOf);
   for (const fleet of fleets) {
     if (fleet.transit !== null || fleet.order !== null) continue;
@@ -527,19 +578,16 @@ export function planAdmirals(game: Game, faction: Faction): void {
       continue;
     }
     const by = admiralOf(fleet);
-    const hurt = game.fleetHullShare(fleet) < 0.6 || fleet.ships.some((s) => s.crits.jump || s.crits.thrust > 0);
     if (fleet.admiral!.mission === "conquer") strike(game, faction, fleet, sees, by);
     else defend(game, faction, fleet, sees, by);
-    // The planners have just set it: read it afresh.
-    const o = fleet.order as Order | null;
-    if (o?.kind === "jump" && o.route.length > 0) {
-      const to = o.route[o.route.length - 1]!;
-      const why = hurt ? "to mend" : to === by.home ? "back to base" : game.worldState(to).owner === faction.id ? "to meet the enemy there" : "to take it";
-      admiralNotice(game, fleet, `${fleet.name}'s admiral: bound for ${game.world(to).name}, ${why}.`);
-    } else if (o?.kind === "repair") {
-      admiralNotice(game, fleet, `${fleet.name}'s admiral puts in for repairs at ${game.world(fleet.system).name}.`);
-    }
   }
+  // Every change an admiral made today is news, with the reason for it.
+  for (const fleet of fleets) {
+    if (doing(fleet) === before.get(fleet)) continue;
+    const why = reasons.get(fleet);
+    admiralNotice(game, fleet, why === undefined ? `${fleet.name}'s admiral changes its orders.` : `${fleet.name}'s admiral ${why}`);
+  }
+  reasons.clear();
 }
 
 function admiralNotice(game: Game, fleet: Fleet, text: string): void {

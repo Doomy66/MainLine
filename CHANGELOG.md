@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Admirals say why: every change an admiral makes to its fleet's orders is in the reports with the reason,
+  in plain words: a good target, an enemy sighted, the odds, low fuel, damage, a siege that is not
+  working, a fight that has got nowhere, nothing in sight.
 - Fuel is shared within a fleet where there is none to be had: ships with fuel beyond their own jump,
   a Hydrogen Fleet Tanker above all, fill the tanks of those short of it. A jump that needs it takes it,
   and Refuel becomes Share fuel in such a place. The fleet pane shows the fuel a fleet has to spare.

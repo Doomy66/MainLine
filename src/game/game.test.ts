@@ -255,7 +255,7 @@ describe("admirals", () => {
     game.applyCommand(fleet, { admiral: { mission: "conquer", style: "bold", base: me.capital } });
     for (let i = 0; i < 90; i++) advanceDay(game);
     expect(game.ownedWorlds(me.id).length).toBeGreaterThan(before);
-    expect(game.state.log.some((e) => e.to.includes(me.id) && /admiral: bound for/.test(e.text))).toBe(true);
+    expect(game.state.log.some((e) => e.to.includes(me.id) && /admiral heads for .*, because it looks a good target/.test(e.text))).toBe(true);
   });
 
   it("are relieved by an order given by hand", () => {
