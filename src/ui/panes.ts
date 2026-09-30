@@ -1206,7 +1206,8 @@ function attentionPanel(ctx: Ctx, goto: (at: string) => void): HTMLElement | nul
           },
         },
         h("span", { class: "amark" }, ALERT_MARKS[a.kind]),
-        withEmblems(a.text, ctx.game.state.factions),
+        // One span, so the text wraps as a sentence rather than in columns.
+        h("span", { class: "atext" }, withEmblems(a.text, ctx.game.state.factions)),
       ),
     ),
   );
