@@ -96,7 +96,7 @@
   ],
   "craft": [
     {
-      "label": "Heavy Fighter",
+      "label": "Kia Heavy Fighter",
       "tons": 50,
       "cost": 36.185,
       "kind": "smallCraft",

@@ -72,6 +72,14 @@ describe("jump tenders", () => {
     expect(game.logFor(me.id).some((e) => /cannot hire jump tenders/.test(e.text))).toBe(true);
   });
 
+  it("fill each carrier's hangars with the fighter its design names and pays for", () => {
+    const { game } = setup();
+    const fighters = (carrier: string) => new Set(game.commission(carrier).slice(1).map((s) => game.cls(s).name));
+    expect(fighters("Arakoine-Strike-Cruiser")).toEqual(new Set(["Kia Heavy Fighter"]));
+    expect(fighters("Tern-class-Fighter-Carrier")).toEqual(new Set(["Wasp Heavy Fighter"]));
+    expect(fighters("Hyperion-Escort-Carrier")).toEqual(new Set(["Snub"]));
+  });
+
   it("are not needed by fighters in a carrier's hangars, which come with the carrier", () => {
     const { game, me } = setup();
     const ships = game.commission("Hyperion-Escort-Carrier");
