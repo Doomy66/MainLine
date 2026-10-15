@@ -1,25 +1,30 @@
 {
-  "version": 1,
   "name": "Wasp Heavy Fighter",
   "tl": 12,
+  "version": 1,
   "military": true,
   "standardDesign": true,
   "hull": {
     "tons": 40,
-    "configuration": "streamlined"
+    "configuration": "streamlined",
+    "stealth": "enhanced",
+    "specialised": []
   },
   "armour": {
     "type": "crystaliron",
     "protection": 12
   },
-  "manoeuvre": 6,
+  "manoeuvre": {
+    "thrust": 6,
+    "concealed": false
+  },
   "powerPlant": {
     "type": "fusion12",
-    "tons": 4,
-    "weeks": 12
+    "tons": 3,
+    "weeks": 4
   },
   "bridge": {
-    "kind": "cockpit"
+    "kind": "dualCockpit"
   },
   "computer": {
     "processing": 10
@@ -45,6 +50,18 @@
     {
       "missile": "standard",
       "count": 96
+    },
+    {
+      "missile": "fragmentation",
+      "count": 24
+    },
+    {
+      "missile": "decoy",
+      "count": 20
+    },
+    {
+      "missile": "longRange",
+      "count": 36
     }
   ],
   "software": [
@@ -56,5 +73,646 @@
       "level": 2
     }
   ],
-  "notes": "Carrier-borne strike fighter. A pulse laser for the knife fight and a missile rack with ninety-six rounds for everything else, one on each of its two firmpoints, behind as much crystaliron as a 40-ton hull will take. No bunk: the pilot lives aboard the carrier."
+  "notes": "Carrier-borne strike fighter. A pulse laser for the knife fight and a missile rack with ninety-six rounds for everything else, one on each of its two firmpoints, behind as much crystaliron as a 40-ton hull will take. No bunk: the pilot lives aboard the carrier. Refitted: a dual cockpit seats a gunner, the cargo space carries fragmentation, decoy and long-range missiles, and enhanced stealth hides the hull.",
+  "floorPlan": {
+    "version": 2,
+    "decks": [
+      {
+        "name": "Deck 1",
+        "cells": {
+          "3,2": "ordnance:0",
+          "3.5,2": "ordnance:0",
+          "3,2.5": "ordnance:0",
+          "3.5,2.5": "ordnance:0",
+          "4,2": "ordnance:0",
+          "4.5,2": "ordnance:0",
+          "4,2.5": "ordnance:0",
+          "4.5,2.5": "ordnance:0",
+          "4,1": "ordnance:0",
+          "4.5,1": "ordnance:0",
+          "4,1.5": "ordnance:0",
+          "4.5,1.5": "ordnance:0",
+          "5,2": "ordnance:0",
+          "5.5,2": "ordnance:0",
+          "5,2.5": "ordnance:0",
+          "5.5,2.5": "ordnance:0",
+          "5,1": "ordnance:0",
+          "5.5,1": "ordnance:0",
+          "5,1.5": "ordnance:0",
+          "5.5,1.5": "ordnance:0",
+          "4,0": "ordnance:0",
+          "4.5,0": "ordnance:0",
+          "4,0.5": "ordnance:0",
+          "4.5,0.5": "ordnance:0",
+          "4,-1": "ordnance:0",
+          "4.5,-1": "ordnance:0",
+          "4,-0.5": "ordnance:0",
+          "4.5,-0.5": "ordnance:0",
+          "5,-1": "ordnance:0",
+          "5.5,-1": "ordnance:0",
+          "5,-0.5": "ordnance:0",
+          "5.5,-0.5": "ordnance:0",
+          "5,0": "ordnance:0",
+          "5.5,0": "ordnance:0",
+          "5,0.5": "ordnance:0",
+          "5.5,0.5": "ordnance:0",
+          "3,3": "~corridor",
+          "3.5,3": "~corridor",
+          "3,3.5": "~corridor",
+          "3.5,3.5": "~corridor",
+          "4,3": "cargo",
+          "4.5,3": "cargo",
+          "4,3.5": "cargo",
+          "4.5,3.5": "cargo",
+          "5.5,3.5": "manoeuvre",
+          "5.5,3": "manoeuvre",
+          "5,3": "manoeuvre",
+          "5,3.5": "manoeuvre",
+          "3,1": "ordnance:0",
+          "3.5,1": "ordnance:0",
+          "3,1.5": "ordnance:0",
+          "3.5,1.5": "ordnance:0",
+          "-0.5,2.5": "bridge",
+          "-0.5,3": "bridge",
+          "-0.5,3.5": "bridge",
+          "-0.5,4": "bridge",
+          "-1,4": "bridge",
+          "0,4": "bridge",
+          "0,4.5": "bridge",
+          "0.5,4.5": "bridge",
+          "0.5,4": "bridge",
+          "0.5,3.5": "bridge",
+          "0.5,3": "bridge",
+          "0.5,2.5": "bridge",
+          "0.5,2": "bridge",
+          "0,2": "bridge",
+          "-1,3.5": "bridge",
+          "0,3.5": "bridge",
+          "-1,3": "bridge",
+          "0,3": "bridge",
+          "-1,2.5": "bridge",
+          "0,2.5": "bridge",
+          "1,3": "~corridor",
+          "1,3.5": "~corridor",
+          "1.5,3.5": "~corridor",
+          "2,3.5": "~corridor",
+          "2,3": "~corridor",
+          "2.5,3": "~corridor",
+          "2.5,3.5": "~corridor",
+          "1.5,3": "~corridor",
+          "3,0": "ordnance:0",
+          "3.5,0": "ordnance:0",
+          "3,0.5": "ordnance:0",
+          "3.5,0.5": "ordnance:0",
+          "3,-1": "ordnance:0",
+          "3.5,-1": "ordnance:0",
+          "3,-0.5": "ordnance:0",
+          "3.5,-0.5": "ordnance:0",
+          "3.5,4": "powerPlant",
+          "3.5,4.5": "powerPlant",
+          "3.5,5": "powerPlant",
+          "3.5,5.5": "powerPlant",
+          "3,5.5": "powerPlant",
+          "2.5,5.5": "powerPlant",
+          "2.5,5": "powerPlant",
+          "2.5,4.5": "powerPlant",
+          "2.5,4": "powerPlant",
+          "2,4": "powerPlant",
+          "1.5,4": "powerPlant",
+          "1.5,4.5": "powerPlant",
+          "1.5,5": "powerPlant",
+          "1.5,5.5": "powerPlant",
+          "1,5.5": "powerPlant",
+          "1,5": "powerPlant",
+          "1,4.5": "powerPlant",
+          "1,4": "powerPlant",
+          "2,4.5": "powerPlant",
+          "2,5": "powerPlant",
+          "2,5.5": "powerPlant",
+          "3,5": "powerPlant",
+          "3,4.5": "powerPlant",
+          "3,4": "powerPlant",
+          "5.5,4.5": "ordnance:3",
+          "5.5,4": "ordnance:3",
+          "5,4": "ordnance:3",
+          "4.5,4": "ordnance:3",
+          "4.5,4.5": "ordnance:3",
+          "4.5,5": "ordnance:3",
+          "4.5,5.5": "ordnance:3",
+          "4.5,6": "ordnance:3",
+          "4.5,6.5": "ordnance:3",
+          "4,6.5": "ordnance:3",
+          "5,6.5": "ordnance:3",
+          "5.5,6.5": "ordnance:3",
+          "5.5,6": "ordnance:3",
+          "5.5,5.5": "ordnance:3",
+          "4,6": "ordnance:3",
+          "5,6": "ordnance:3",
+          "4,5.5": "ordnance:3",
+          "5,5.5": "ordnance:3",
+          "4,5": "ordnance:3",
+          "5,5": "ordnance:3",
+          "4,4.5": "ordnance:3",
+          "4,4": "ordnance:3",
+          "5.5,5": "ordnance:3",
+          "5,4.5": "ordnance:3",
+          "3,6": "ordnance:1",
+          "3.5,6": "ordnance:1",
+          "3,6.5": "ordnance:1",
+          "3.5,6.5": "ordnance:1",
+          "3,7": "ordnance:1",
+          "3.5,7": "ordnance:1",
+          "3,7.5": "ordnance:1",
+          "3.5,7.5": "ordnance:1",
+          "4,7": "ordnance:1",
+          "4.5,7": "ordnance:1",
+          "4,7.5": "ordnance:1",
+          "4.5,7.5": "ordnance:1",
+          "5,7": "ordnance:1",
+          "5.5,7": "ordnance:1",
+          "5,7.5": "ordnance:1",
+          "5.5,7.5": "ordnance:1",
+          "1,1": "sensors",
+          "1,1.5": "sensors",
+          "1,2": "sensors",
+          "1,2.5": "sensors",
+          "1.5,2.5": "sensors",
+          "2,2.5": "sensors",
+          "2,2": "sensors",
+          "2,1.5": "sensors",
+          "2,1": "sensors",
+          "2.5,1": "sensors",
+          "2.5,1.5": "sensors",
+          "2.5,2": "sensors",
+          "2.5,2.5": "sensors",
+          "1.5,2": "sensors",
+          "1.5,1.5": "sensors",
+          "1.5,1": "sensors",
+          "7,4.5": "manoeuvre",
+          "7,4": "manoeuvre",
+          "6.5,4": "fuel",
+          "6,4": "fuel",
+          "6,4.5": "fuel",
+          "7.5,4": "manoeuvre",
+          "6.5,4.5": "fuel",
+          "7.5,4.5": "manoeuvre",
+          "6,3": "manoeuvre",
+          "6,2.5": "fuel",
+          "6,2": "fuel",
+          "6.5,2": "fuel",
+          "7,2": "manoeuvre",
+          "7,2.5": "manoeuvre",
+          "7,3": "manoeuvre",
+          "7,3.5": "manoeuvre",
+          "6.5,3.5": "manoeuvre",
+          "7.5,3.5": "manoeuvre",
+          "7.5,3": "manoeuvre",
+          "7.5,2.5": "manoeuvre",
+          "7.5,2": "manoeuvre",
+          "6.5,2.5": "fuel",
+          "6.5,3": "manoeuvre",
+          "6,3.5": "manoeuvre",
+          "6,5.5": "ordnance:2",
+          "6,5": "ordnance:2",
+          "6.5,5": "ordnance:2",
+          "7,5": "ordnance:2",
+          "7,5.5": "ordnance:2",
+          "7,6": "ordnance:2",
+          "7,6.5": "ordnance:2",
+          "6.5,6.5": "ordnance:2",
+          "6,6.5": "ordnance:2",
+          "7.5,6.5": "ordnance:2",
+          "6.5,6": "ordnance:2",
+          "7.5,6": "ordnance:2",
+          "7.5,5.5": "ordnance:2",
+          "7.5,5": "ordnance:2",
+          "6,6": "ordnance:2",
+          "6.5,5.5": "ordnance:2",
+          "6,0": "ordnance:0",
+          "6.5,0": "ordnance:0",
+          "6,0.5": "ordnance:0",
+          "6.5,0.5": "ordnance:0",
+          "7,0": "ordnance:0",
+          "7.5,0": "ordnance:0",
+          "7,0.5": "ordnance:0",
+          "7.5,0.5": "ordnance:0",
+          "7,1": "ordnance:0",
+          "7.5,1": "ordnance:0",
+          "7,1.5": "ordnance:0",
+          "7.5,1.5": "ordnance:0",
+          "6,1": "ordnance:0",
+          "6.5,1": "ordnance:0",
+          "6,1.5": "ordnance:0",
+          "6.5,1.5": "ordnance:0"
+        }
+      },
+      {
+        "name": "Deck 2",
+        "cells": {
+          "3,1": "weapon:1",
+          "3,1.5": "weapon:1",
+          "3.5,1.5": "weapon:1",
+          "4,1.5": "weapon:1",
+          "4,1": "weapon:1",
+          "4.5,1": "weapon:1",
+          "4.5,1.5": "weapon:1",
+          "3.5,1": "weapon:1",
+          "3,5": "weapon:0",
+          "3,5.5": "weapon:0",
+          "3.5,5.5": "weapon:0",
+          "4,5.5": "weapon:0",
+          "4,5": "weapon:0",
+          "4.5,5": "weapon:0",
+          "4.5,5.5": "weapon:0",
+          "3.5,5": "weapon:0"
+        }
+      }
+    ],
+    "fixtures": [
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 3,
+        "y": 6,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 5,
+        "y": 6,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 7,
+        "y": 5,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 5,
+        "y": -1,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 6,
+        "y": 0,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 3,
+        "y": -1,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 3,
+        "y": 0,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 7,
+        "y": 0,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 5,
+        "y": 1,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 3,
+        "y": 2,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 3,
+        "y": 1,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 6,
+        "y": 5,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": -1,
+        "y": 2.5,
+        "symbol": "bridge-station"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 90,
+        "deck": 0,
+        "x": 5,
+        "y": 3,
+        "symbol": "sheet-panel-3"
+      },
+      {
+        "kind": "open",
+        "edge": "w",
+        "deck": 0,
+        "x": 4,
+        "y": 3
+      },
+      {
+        "kind": "symbol",
+        "rotation": 90,
+        "deck": 0,
+        "x": 3,
+        "y": 4,
+        "symbol": "sheet-panel-1"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 4,
+        "y": 4,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 5,
+        "y": 4,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 0,
+        "deck": 0,
+        "x": 4,
+        "y": 6,
+        "symbol": "sheet-probe-tube"
+      },
+      {
+        "kind": "open",
+        "edge": "w",
+        "deck": 0,
+        "x": 4,
+        "y": 6
+      },
+      {
+        "kind": "open",
+        "edge": "n",
+        "deck": 0,
+        "x": 4,
+        "y": 7,
+        "length": 2
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 3,
+        "y": 3,
+        "symbol": "sheet-hatch-updown"
+      },
+      {
+        "kind": "open",
+        "edge": "w",
+        "deck": 0,
+        "x": 6,
+        "y": 5,
+        "length": 2
+      },
+      {
+        "kind": "iris",
+        "edge": "n",
+        "deck": 0,
+        "x": 6,
+        "y": 0
+      },
+      {
+        "kind": "iris",
+        "edge": "n",
+        "deck": 0,
+        "x": 6,
+        "y": 7
+      },
+      {
+        "kind": "iris",
+        "edge": "n",
+        "deck": 0,
+        "x": 2,
+        "y": 3
+      },
+      {
+        "kind": "iris",
+        "edge": "n",
+        "deck": 0,
+        "x": 2,
+        "y": 4
+      },
+      {
+        "kind": "iris",
+        "edge": "n",
+        "deck": 0,
+        "x": 4,
+        "y": 4
+      },
+      {
+        "kind": "iris",
+        "edge": "n",
+        "deck": 0,
+        "x": 4,
+        "y": 3
+      },
+      {
+        "kind": "iris",
+        "edge": "w",
+        "deck": 0,
+        "x": 5,
+        "y": 3
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 8,
+        "y": 3,
+        "symbol": "nozzle-ribbed"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 8,
+        "y": 4,
+        "symbol": "nozzle"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 8,
+        "y": 2,
+        "symbol": "nozzle"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 90,
+        "deck": 0,
+        "x": 1,
+        "y": 4,
+        "symbol": "machinery-5"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 180,
+        "deck": 0,
+        "x": 6,
+        "y": 3,
+        "symbol": "machinery-8"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 3,
+        "y": 5,
+        "flip": true,
+        "symbol": "machinery-1"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 7,
+        "y": 2,
+        "symbol": "machinery-2"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 7,
+        "y": 4,
+        "symbol": "machinery-2"
+      },
+      {
+        "kind": "symbol",
+        "rotation": 270,
+        "deck": 0,
+        "x": 1,
+        "y": 1,
+        "symbol": "machinery-6"
+      },
+      {
+        "kind": "symbol",
+        "deck": 1,
+        "x": 3,
+        "y": 5,
+        "rotation": 0,
+        "symbol": "mining-laser"
+      },
+      {
+        "kind": "symbol",
+        "deck": 1,
+        "x": 2.5,
+        "y": 1,
+        "rotation": 270,
+        "symbol": "sheet-missile-tube"
+      },
+      {
+        "kind": "symbol",
+        "deck": 1,
+        "x": 3,
+        "y": 3,
+        "rotation": 270,
+        "symbol": "sheet-hatch-up"
+      }
+    ],
+    "tiles": [],
+    "remembered": {
+      "manoeuvre": {
+        "label": "Thrust 6",
+        "tons": 2.4
+      },
+      "powerPlant": {
+        "label": "Fusion (TL12), Power 45",
+        "tons": 3
+      },
+      "fuel": {
+        "label": "4 weeks of operation",
+        "tons": 1
+      },
+      "bridge": {
+        "label": "Dual Cockpit",
+        "tons": 2.5
+      },
+      "computer": {
+        "label": "Computer/10",
+        "tons": 0
+      },
+      "sensors": {
+        "label": "Military Grade",
+        "tons": 2
+      },
+      "weapon:0": {
+        "label": "Fixed Mount (Pulse Laser)",
+        "tons": 0
+      },
+      "weapon:1": {
+        "label": "Fixed Mount (Missile Rack)",
+        "tons": 0
+      },
+      "ordnance:0": {
+        "label": "Standard Missile x96",
+        "tons": 8
+      },
+      "ordnance:1": {
+        "label": "Fragmentation Missile x24",
+        "tons": 2
+      },
+      "ordnance:2": {
+        "label": "Decoy Missile x20",
+        "tons": 1.667
+      },
+      "ordnance:3": {
+        "label": "Long Range Missile x36",
+        "tons": 3
+      },
+      "cargo": {
+        "label": "Cargo",
+        "tons": 0.033
+      }
+    }
+  },
+  "systems": []
 }

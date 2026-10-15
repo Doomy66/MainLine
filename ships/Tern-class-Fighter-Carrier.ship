@@ -59,7 +59,7 @@
       "label": "Wasp Heavy Fighter",
       "quantity": 24,
       "tons": 40,
-      "cost": 24.3,
+      "cost": 43.305,
       "kind": "smallCraft",
       "berth": "fullHangar",
       "driveAndPlantTons": 6.4

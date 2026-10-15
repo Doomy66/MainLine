@@ -41,13 +41,13 @@ Every `.ship` here is built under Mongoose *High Guard Update 2022* and checked 
 | Maul-class Bombardment Ship | Maul-class-Bombardment-Ship.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: 2,000 tons, orbital strike mass driver and meson bays for bombardment. |
 | Roam Pod | Roam-Pod.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: a 50-ton private runabout. |
 | Tern-class Fighter Carrier | Tern-class-Fighter-Carrier.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: 5,000 tons, two squadrons of twelve Wasp heavy fighters. |
-| Wasp Heavy Fighter | Wasp-Heavy-Fighter.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: the Tern's 40-ton strike fighter. |
+| Wasp Heavy Fighter | Wasp-Heavy-Fighter.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: the Tern's 40-ton strike fighter, refitted with a dual cockpit for a gunner, enhanced stealth and more missiles in place of cargo, MCr43.305. The file carries the designer's floor plan, which the game does not read. |
 | Snub | Snub.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: a 20-ton TL9 fighter. Thrust 1 is all a TL9 manoeuvre drive gives, so a reaction booster adds thrust 5 for two hours of combat. |
 | Snub 2 | Snub-2.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: the Snub rebuilt at TL12, with a thrust 6 manoeuvre drive and crystaliron. |
 
 ## Firmpoints
 
-A firmpoint holds one weapon, and only one firmpoint on a ship may be upgraded to a single turret (High Guard page 18). The engine did not check either until 2026-10-15, and four small craft broke the rule. The Snub and Snub 2, with one firmpoint, keep a missile rack, since a firmpoint cuts a beam weapon to Close range and leaves a missile its reach. The Wasp keeps one pulse laser and one missile rack. The Kia's missile rack moves to a fixed mount beside its fusion gun turret. The Hyperion, Tern and Arakoine pay the new prices for them.
+A firmpoint holds one weapon, and only one firmpoint on a ship may be upgraded to a single turret (High Guard page 18). The engine did not check either until 2026-10-15, and four small craft broke the rule. The Snub and Snub 2, with one firmpoint, keep a missile rack, since a firmpoint cuts a beam weapon to Close range and leaves a missile its reach. The Wasp keeps one pulse laser and one missile rack, and has since been refitted with a dual cockpit, stealth and more missiles; the Tern pays its MCr43.305. The Kia's missile rack moves to a fixed mount beside its fusion gun turret. The Hyperion, Tern and Arakoine pay the new prices for them.
 
 ## Carried craft
 

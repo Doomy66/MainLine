@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The Wasp heavy fighter is refitted: a dual cockpit seats a gunner, enhanced stealth makes it harder to find,
+  and its cargo space carries more missiles. It costs more, and so does the Tern carrier with its 24 Wasps.
 - Small craft carry one weapon to a firmpoint, as High Guard says, and only one may be a turret. The Snub
   and Snub 2 fly with a missile rack, the Wasp with a pulse laser and a missile rack, and the Kia keeps its
   fusion gun turret with its missile rack fixed. They cost a little less, and so do the carriers that buy them.
