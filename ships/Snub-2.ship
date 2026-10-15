@@ -30,8 +30,6 @@
       "kind": "turret",
       "mount": "fixed",
       "weapons": [
-        "pulseLaser",
-        "pulseLaser",
         "missileRack"
       ]
     }
@@ -51,5 +49,5 @@
       "count": 24
     }
   ],
-  "notes": "The Snub rebuilt at TL12: a proper thrust 6 manoeuvre drive in place of the booster, so it can stay out as long as its pilot can, crystaliron instead of titanium steel, military sensors, and a second pulse laser."
+  "notes": "The Snub rebuilt at TL12: a proper thrust 6 manoeuvre drive in place of the booster, so it can stay out as long as its pilot can, crystaliron instead of titanium steel, military sensors, and twice the missiles for its one firmpoint's rack."
 }

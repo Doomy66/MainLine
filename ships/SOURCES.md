@@ -9,7 +9,7 @@ Every `.ship` here is built under Mongoose *High Guard Update 2022* and checked 
 | Patrol Corvette | Patrol-Corvette.ship | High Guard 2022 sample ship | Mongoose 2e | Already in the repo; not changed. |
 | Destroyer Escort | Destroyer-Escort.ship | High Guard 2022 sample ship | Mongoose 2e | Already in the repo; not changed. |
 | Rampart Light Fighter | Rampart-Light-Fighter.ship | https://wiki.travellerrpg.com/Rampart_class_Light_Fighter | Classic (High Guard) | The source lists no weapons; one fixed pulse laser added. |
-| Kia Heavy Fighter | Kia-Heavy-Fighter.ship | https://wiki.travellerrpg.com/Kia_class_Heavy_Fighter | Classic (FASA ACS vol. 1) | The source mentions a fusion gun and missiles; set as one single turret of each on its two firmpoints. Armour 12 stands in for "heavily armoured". |
+| Kia Heavy Fighter | Kia-Heavy-Fighter.ship | https://wiki.travellerrpg.com/Kia_class_Heavy_Fighter | Classic (FASA ACS vol. 1) | The source mentions a fusion gun and missiles; set as the fusion gun in a single turret and the missile rack in a fixed mount on its two firmpoints, since only one firmpoint may be upgraded to a turret. Armour 12 stands in for "heavily armoured". |
 | Ship's Boat | Ships-Boat.ship | https://wiki.travellerrpg.com/Ship%27s_Boat | Classic | TL raised from 9 to 12 because Thrust 6 needs TL12 under HG2022. Acceleration seats added for passengers. |
 | Pinnace | Pinnace.ship | https://wiki.travellerrpg.com/Pinnace | Classic | TL raised from 9 to 11 because Thrust 5 needs TL11. One pulse laser turret, as the source typically fits. |
 | Modular Cutter | Modular-Cutter.ship | https://wiki.travellerrpg.com/Modular_Cutter | Classic | The 30-ton module is modelled as a 60% modular hull, with the module bay counted in cargo. |
@@ -45,8 +45,12 @@ Every `.ship` here is built under Mongoose *High Guard Update 2022* and checked 
 | Snub | Snub.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: a 20-ton TL9 fighter. Thrust 1 is all a TL9 manoeuvre drive gives, so a reaction booster adds thrust 5 for two hours of combat. |
 | Snub 2 | Snub-2.ship | Steve Burrows, made in the Traveller Ship Designer | Mongoose 2e | Own design: the Snub rebuilt at TL12, with a thrust 6 manoeuvre drive and crystaliron. |
 
+## Firmpoints
+
+A firmpoint holds one weapon, and only one firmpoint on a ship may be upgraded to a single turret (High Guard page 18). The engine did not check either until 2026-10-15, and four small craft broke the rule. The Snub and Snub 2, with one firmpoint, keep a missile rack, since a firmpoint cuts a beam weapon to Close range and leaves a missile its reach. The Wasp keeps one pulse laser and one missile rack. The Kia's missile rack moves to a fixed mount beside its fusion gun turret. The Hyperion, Tern and Arakoine pay the new prices for them.
+
 ## Carried craft
 
 Identical craft are one line with a number: the Arakoine's hundred heavy fighters are one line, not a hundred.
 
-A ship carrying craft from this catalogue pays that craft's full price, its total before any discount: Ship's Boat MCr11.59, Pinnace MCr15.66, Modular Cutter MCr18.19, Rampart Light Fighter MCr14.108, Kia Heavy Fighter MCr36.285, Snub MCr7.66. The carrying ship's own standard design discount then covers its craft with the rest of it, so taking the craft's discounted price as well would discount it twice. The Patrol Corvette's ship's boat and the Destroyer Escort's pinnace keep the prices the book prints for them. The 20-ton launch (MCr3.6), 20-ton gig (MCr5.5), 95-ton shuttle (MCr25) and 400-ton fuel shuttle (MCr90) are assumed prices; none of them has a sheet here.
+A ship carrying craft from this catalogue pays that craft's full price, its total before any discount: Ship's Boat MCr11.59, Pinnace MCr15.66, Modular Cutter MCr18.19, Rampart Light Fighter MCr14.108, Kia Heavy Fighter MCr36.185, Snub MCr6.66. The carrying ship's own standard design discount then covers its craft with the rest of it, so taking the craft's discounted price as well would discount it twice. The Patrol Corvette's ship's boat and the Destroyer Escort's pinnace keep the prices the book prints for them. The 20-ton launch (MCr3.6), 20-ton gig (MCr5.5), 95-ton shuttle (MCr25) and 400-ton fuel shuttle (MCr90) are assumed prices; none of them has a sheet here.

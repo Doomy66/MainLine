@@ -30,8 +30,6 @@
       "kind": "turret",
       "mount": "fixed",
       "weapons": [
-        "pulseLaser",
-        "pulseLaser",
         "pulseLaser"
       ]
     },
@@ -39,8 +37,6 @@
       "kind": "turret",
       "mount": "fixed",
       "weapons": [
-        "missileRack",
-        "missileRack",
         "missileRack"
       ]
     }
@@ -60,5 +56,5 @@
       "level": 2
     }
   ],
-  "notes": "Carrier-borne strike fighter. Three pulse lasers for the knife fight and three missile racks with ninety-six rounds for everything else, behind as much crystaliron as a 40-ton hull will take. No bunk: the pilot lives aboard the carrier."
+  "notes": "Carrier-borne strike fighter. A pulse laser for the knife fight and a missile rack with ninety-six rounds for everything else, one on each of its two firmpoints, behind as much crystaliron as a 40-ton hull will take. No bunk: the pilot lives aboard the carrier."
 }

@@ -276,4 +276,10 @@ export interface Design {
   readonly commonAreaTons?: number;
   readonly passengers?: PassengerChoice;
   readonly software?: readonly SoftwareChoice[];
+  /**
+   * The ship's floor plan, if it has one. Nothing in the engine reads it and
+   * the engine does not know its shape: FloorPlanSpec owns it, and checks it
+   * when it is loaded. ShipSpec 3.5.
+   */
+  readonly floorPlan?: unknown;
 }

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Small craft carry one weapon to a firmpoint, as High Guard says, and only one may be a turret. The Snub
+  and Snub 2 fly with a missile rack, the Wasp with a pulse laser and a missile rack, and the Kia keeps its
+  fusion gun turret with its missile rack fixed. They cost a little less, and so do the carriers that buy them.
 - A Repair order at a class D port ends once the hulls are whole, with word that damaged drives and
   weapons need a class A to C starport, instead of going on for ever; admirals, and the computer's
   fleets, take broken drives to a yard that can fix them.

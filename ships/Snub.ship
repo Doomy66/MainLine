@@ -34,7 +34,6 @@
       "kind": "turret",
       "mount": "fixed",
       "weapons": [
-        "pulseLaser",
         "missileRack"
       ]
     }
@@ -50,5 +49,5 @@
       "count": 12
     }
   ],
-  "notes": "The fighter a TL9 navy can build. Its manoeuvre drive only cruises; a reaction booster gives it thrust 6 for two hours of combat, and then it has to go home. One pulse laser and a missile rack in a fixed mount, and a cockpit: the pilot lives aboard the carrier."
+  "notes": "The fighter a TL9 navy can build. Its manoeuvre drive only cruises; a reaction booster gives it thrust 6 for two hours of combat, and then it has to go home. Its one firmpoint carries a missile rack in a fixed mount, since a firmpoint would cut a laser to close range, and a cockpit: the pilot lives aboard the carrier."
 }

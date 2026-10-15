@@ -35,7 +35,7 @@
     },
     {
       "kind": "turret",
-      "mount": "single",
+      "mount": "fixed",
       "weapons": [
         "missileRack"
       ]

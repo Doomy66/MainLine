@@ -129,6 +129,13 @@ import type { Customisation, Design } from "./design";
 
 /** A line of the sheet. ShipSpec 5.2. */
 export interface SheetLine {
+  /**
+   * Which part of the design the line is, taken from the design's structure
+   * rather than its label, so it stays the same when the figures change:
+   * "Thrust 6" and "Thrust 5" are both `manoeuvre`. A floor plan uses it to
+   * remember which squares belong to what. ShipSpec 5.2.2.
+   */
+  readonly key: string;
   readonly section: string;
   readonly label: string;
   /** Omitted where the component takes no space, as the book prints a dash. */
@@ -138,6 +145,8 @@ export interface SheetLine {
   readonly power?: number;
   /** Software only. Power and bandwidth never appear on the same line. */
   readonly bandwidth?: number;
+  /** How many identical things the line stands for, where that is more than one. ShipSpec 5.2.3. */
+  readonly count?: number;
 }
 
 export interface PowerEntry {
@@ -308,6 +317,7 @@ export function sheet(design: Design): Sheet {
     ...structureLabels,
   ];
   lines.push({
+    key: "hull",
     section: "Hull",
     label: hullDetail.join(", "),
     ...(structureTons > 0 ? { tons: tons(structureTons) } : {}),
@@ -319,7 +329,7 @@ export function sheet(design: Design): Sheet {
   for (const option of design.hull.options ?? []) {
     const rule = HULL_OPTIONS[option];
     if (design.tl < rule.tl) fail(`${rule.label} is TL${rule.tl}.`, "4.1.6");
-    lines.push({ section: "Hull Options", label: rule.label, cost: cr(rule.costPerHullTon * hullTons) });
+    lines.push({ key: `hullOption:${option}`, section: "Hull Options", label: rule.label, cost: cr(rule.costPerHullTon * hullTons) });
   }
   if (design.hull.stealth !== undefined) {
     const rule = STEALTH_TYPES[design.hull.stealth];
@@ -329,6 +339,7 @@ export function sheet(design: Design): Sheet {
     }
     const stealthTons = hullTons * rule.tonnage;
     lines.push({
+      key: "stealth",
       section: "Hull Options",
       label: rule.label,
       ...(stealthTons > 0 ? { tons: tons(stealthTons) } : {}),
@@ -353,13 +364,14 @@ export function sheet(design: Design): Sheet {
       fail(`${rule.label} at TL${design.tl} allows Protection ${maximum}, not ${armourProtection}.`, "4.2.2");
     }
     lines.push({
+      key: "armour",
       section: "Armour",
       label: `${rule.label}, Armour: ${armourProtection}`,
       tons: tons(armourTons),
       cost: cr(armourTons * rule.costPerTon),
     });
   } else if (armourProtection > 0) {
-    lines.push({ section: "Armour", label: `${config.label}, Armour: ${armourProtection}` });
+    lines.push({ key: "armour", section: "Armour", label: `${config.label}, Armour: ${armourProtection}` });
   }
 
   // Customising Ships, pages 71-73. A component built off its own Tech Level
@@ -412,6 +424,7 @@ export function sheet(design: Design): Sheet {
           ? hullTons * MANOEUVRE_POWER_THRUST_0
           : hullTons * MANOEUVRE_POWER_PER_THRUST * rule.rating) * custom.power;
       lines.push({
+        key: "manoeuvre",
         power: tons(manoeuvrePower),
         section: "M-Drive",
         label: `${concealed ? `${CONCEALED_MANOEUVRE_DRIVE.label} ` : ""}Thrust ${rule.rating}${manoeuvre.sizedForTons === undefined ? "" : ` (${manoeuvre.sizedForTons} tons)`}${custom.label === "" ? "" : ` (${custom.label})`}`,
@@ -434,6 +447,7 @@ export function sheet(design: Design): Sheet {
       reactionFuelFactor = custom.fuel;
       driveTons += t;
       lines.push({
+        key: "reaction",
         section: "R-Drive",
         label: `Reaction Thrust ${rule.rating}${custom.label === "" ? "" : ` (${custom.label})`}`,
         tons: tons(t),
@@ -458,6 +472,7 @@ export function sheet(design: Design): Sheet {
       driveTons += t;
       jumpPower = hullTons * JUMP_POWER_PER_RATING * rule.rating * custom.power;
       lines.push({
+        key: "jump",
         power: tons(jumpPower),
         section: "J-Drive",
         label: `Jump ${rule.rating}${jump.sizedForTons === undefined ? "" : ` (${jump.sizedForTons} tons)`}${custom.label === "" ? "" : ` (${custom.label})`}`,
@@ -485,6 +500,7 @@ export function sheet(design: Design): Sheet {
         "4.3.6",
       );
       lines.push({
+        key: "highBurn",
         section: "R-Drive",
         label: `${HIGH_BURN_THRUSTER.label} (Thrust ${rule.rating})`,
         tons: tons(t),
@@ -506,6 +522,7 @@ export function sheet(design: Design): Sheet {
   }
   const powerAvailable = plantBaseTons * plant.powerPerTon * plantCustom.powerOutput;
   lines.push({
+    key: "powerPlant",
     section: "Power Plant",
     label: `${plant.label}, Power ${tons(powerAvailable)}${plantCustom.label === "" ? "" : ` (${plantCustom.label})`}`,
     tons: tons(plantTons),
@@ -553,7 +570,7 @@ export function sheet(design: Design): Sheet {
     jump === undefined ? undefined : `J-${fuelledJump}`,
     `${design.powerPlant.weeks} weeks of operation`,
   ].filter((part): part is string => part !== undefined);
-  lines.push({ section: "Fuel Tanks", label: fuelDetail.join(", "), tons: tons(totalFuel) });
+  lines.push({ key: "fuel", section: "Fuel Tanks", label: fuelDetail.join(", "), tons: tons(totalFuel) });
 
   // Step 5: the bridge. ShipSpec 4.6.
   const cockpit = design.bridge.kind === "cockpit" || design.bridge.kind === "dualCockpit";
@@ -592,7 +609,7 @@ export function sheet(design: Design): Sheet {
     bridgeCostTotal += COMMAND_BRIDGE.cost;
     bridgeLabel += ", command";
   }
-  lines.push({ section: "Bridge", label: bridgeLabel, tons: tons(bridgeTons), cost: cr(bridgeCostTotal) });
+  lines.push({ key: "bridge", section: "Bridge", label: bridgeLabel, tons: tons(bridgeTons), cost: cr(bridgeCostTotal) });
 
   // Step 6: the computer. ShipSpec 4.7.
   let processing = 0;
@@ -614,6 +631,7 @@ export function sheet(design: Design): Sheet {
       // Processing goes in the same column and the two can be read against
       // each other. ShipSpec 10.7.
       lines.push({
+        key: "computer",
         section: "Computer",
         label: `${rule.label}${suffix}`,
         cost: cr(rule.cost * factor),
@@ -627,6 +645,7 @@ export function sheet(design: Design): Sheet {
   const sensor = SENSORS[sensorGrade];
   if (design.tl < sensor.tl) fail(`${sensor.label} sensors are TL${sensor.tl}.`, "4.8");
   lines.push({
+    key: "sensors",
     section: "Sensors",
     label: sensor.label,
     ...(sensor.tons > 0 ? { tons: sensor.tons } : {}),
@@ -637,6 +656,7 @@ export function sheet(design: Design): Sheet {
   // Step 8: weapons. ShipSpec 4.9.
   const onFirmpoints = hullTons < TONS_PER_HARDPOINT;
   let mountsUsed = 0;
+  let singleTurretsOnFirmpoints = 0;
   let weaponPower = 0;
   const armed = { ...NO_WEAPONS } as {
     armedTurrets: number;
@@ -647,10 +667,14 @@ export function sheet(design: Design): Sheet {
     spinalTons: number;
     screens: number;
   };
+  // The weapon line being installed, set at the top of each pass of the loop below.
+  let weaponKey = "";
   const install = (label: string, t: number, c: number, p: number, points: number, quantity: number) => {
     mountsUsed += points * quantity;
     weaponPower += p * quantity;
     lines.push({
+      key: weaponKey,
+      ...(quantity > 1 ? { count: quantity } : {}),
       section: "Weapons",
       label: `${label}${quantity > 1 ? ` x${quantity}` : ""}`,
       ...(t > 0 ? { tons: tons(t * quantity) } : {}),
@@ -659,8 +683,9 @@ export function sheet(design: Design): Sheet {
     });
   };
 
-  for (const choice of design.weapons ?? []) {
+  for (const [at, choice] of (design.weapons ?? []).entries()) {
     const quantity = "quantity" in choice ? (choice.quantity ?? 1) : 1;
+    weaponKey = `weapon:${at}`;
 
     if (choice.kind === "turret") {
       const rule = MOUNTS[choice.mount];
@@ -672,6 +697,9 @@ export function sheet(design: Design): Sheet {
       if (onFirmpoints && choice.mount !== "fixed" && choice.mount !== "single") {
         fail("A firmpoint takes a fixed mount or a single turret, nothing larger.", "4.9.1");
       }
+      // Page 18: a firmpoint holds one weapon, and only one may be a single turret.
+      if (onFirmpoints && carried.length > 1) fail(`A firmpoint holds one weapon, not ${carried.length}.`, "4.9.1");
+      if (onFirmpoints && choice.mount === "single") singleTurretsOnFirmpoints += quantity;
       let mountTons = rule.tons;
       let mountCost = rule.cost;
       // An empty mount draws no power: the Scout carries an empty double turret
@@ -794,6 +822,7 @@ export function sheet(design: Design): Sheet {
   const extraCapacitors = design.extraCapacitorTons ?? 0;
   if (extraCapacitors > 0) {
     lines.push({
+      key: "capacitors",
       section: "Weapons",
       label: CAPACITORS.label,
       tons: tons(extraCapacitors),
@@ -803,7 +832,7 @@ export function sheet(design: Design): Sheet {
 
   // Ordnance beyond what the launchers hold. ShipSpec 4.9.5.
   let ordnanceCost = 0;
-  for (const choice of design.ordnance ?? []) {
+  for (const [at, choice] of (design.ordnance ?? []).entries()) {
     const [rule, perTon] =
       "missile" in choice
         ? [MISSILES[choice.missile], MISSILES_PER_TON]
@@ -817,12 +846,16 @@ export function sheet(design: Design): Sheet {
     // Destroyer Escort's total only works that way. ShipSpec 4.9.5.1.
     ordnanceCost += bundles * rule.cost;
     lines.push({
+      key: `ordnance:${at}`,
       section: "Ammunition",
       label: `${rule.label} x${choice.count}`,
       tons: tons(bundles),
     });
   }
 
+  if (singleTurretsOnFirmpoints > 1) {
+    fail(`Only one firmpoint may be upgraded to a single turret, not ${singleTurretsOnFirmpoints}.`, "4.9.1");
+  }
   const pointsAvailable = onFirmpoints ? firmpoints(hullTons) : hardpoints(hullTons);
   if (mountsUsed > pointsAvailable) {
     fail(`${mountsUsed} mounts against ${pointsAvailable} ${onFirmpoints ? "firmpoints" : "hardpoints"}.`, "4.9.1");
@@ -833,8 +866,9 @@ export function sheet(design: Design): Sheet {
 
   // Step 9, part one: carried craft and their berths. ShipSpec 4.11.3.
   let smallCraft = 0;
-  for (const craft of design.craft ?? []) {
+  for (const [at, craft] of (design.craft ?? []).entries()) {
     const quantity = craft.quantity ?? 1;
+    const many = quantity > 1 ? { count: quantity } : {};
     const times = quantity === 1 ? "" : ` x${quantity}`;
     if (craft.kind === "smallCraft") smallCraft += quantity;
     if (craft.berth !== "none") {
@@ -846,13 +880,15 @@ export function sheet(design: Design): Sheet {
       // The book lists a berth beside the craft it holds, under Craft, not
       // among the optional systems. See the Scout's sheet, page 161.
       lines.push({
+        key: `craft:${at}:berth`,
+        ...many,
         section: "Craft",
         label: `${berth.label} (${craft.tons} tons)${times}`,
         tons: berthTons * quantity,
         cost: cr(berthTons * berth.costPerTon * quantity),
       });
     }
-    lines.push({ section: "Craft", label: `${craft.label}${times}`, cost: cr(craft.cost * quantity) });
+    lines.push({ key: `craft:${at}`, ...many, section: "Craft", label: `${craft.label}${times}`, cost: cr(craft.cost * quantity) });
   }
 
   // Systems the rules size themselves, so the designer need not measure them.
@@ -882,13 +918,16 @@ export function sheet(design: Design): Sheet {
   // A cargo crane is sized from the cargo it serves, which is not known until
   // everything else has been counted, so its line is filled in below.
   let craneLine: number | undefined;
+  let craneKey = "";
   // Places for a person bought among the optional systems: a high or luxury
   // stateroom, barracks, cabin space. ShipSpec 4.12.4.
   let systemBerths = 0;
-  for (const choice of design.systems ?? []) {
+  for (const [at, choice] of (design.systems ?? []).entries()) {
+    const key = `system:${at}`;
     if ("fuelScoops" in choice) {
       const free = config.streamlined === "yes";
       lines.push({
+        key,
         section: "Systems",
         label: FUEL_SCOOPS.label,
         ...(free ? {} : { cost: FUEL_SCOOPS.cost }),
@@ -905,6 +944,8 @@ export function sheet(design: Design): Sheet {
       const entryPower = (rule.power ?? 0) * quantity;
       if (entryPower > 0) systemPowerEntries.push({ label: rule.label, power: entryPower });
       lines.push({
+        key,
+        ...(quantity > 1 ? { count: quantity } : {}),
         section: "Systems",
         label,
         tons: tons(rule.tons * quantity),
@@ -918,7 +959,8 @@ export function sheet(design: Design): Sheet {
       if (rule.tl !== undefined && design.tl < rule.tl) fail(`${rule.label} is TL${rule.tl}.`, "4.11.1");
       if (choice.tons === undefined && choice.perTon === "cargoCrane") {
         craneLine = lines.length;
-        lines.push({ section: "Systems", label: rule.label, tons: 0, cost: 0 });
+        craneKey = key;
+        lines.push({ key, section: "Systems", label: rule.label, tons: 0, cost: 0 });
         continue;
       }
       const chosen = choice.tons ?? sizedByRule(choice.perTon);
@@ -940,6 +982,7 @@ export function sheet(design: Design): Sheet {
       const detail =
         choice.perTon === "fuelProcessor" ? ` (${systemTons * FUEL_PROCESSOR_TONS_PER_DAY} tons/day)` : "";
       lines.push({
+        key,
         section: "Systems",
         label: `${rule.label}${detail}`,
         tons: tons(systemTons),
@@ -955,6 +998,7 @@ export function sheet(design: Design): Sheet {
         rule.hullTonsPerPower === undefined ? 0 : Math.ceil(hullTons / rule.hullTonsPerPower);
       if (entryPower > 0) systemPowerEntries.push({ label: rule.label, power: entryPower });
       lines.push({
+        key,
         section: "Systems",
         label: rule.label,
         cost: cr(hullTons * rule.costPerHullTon),
@@ -979,13 +1023,14 @@ export function sheet(design: Design): Sheet {
         coating * rule.coatingPower * (awkward ? SOLAR_COATING_AWKWARD_HULL_FACTOR : 1);
       if (coating > 0) {
         if (coatingPower > 0) systemPowerEntries.push({ label: `${rule.label} Coating`, power: tons(-coatingPower) });
-        lines.push({ section: "Systems", label: `${rule.label} Coating x${coating}`, cost: cr(coating * rule.cost) });
+        lines.push({ key: `${key}:coating`, section: "Systems", label: `${rule.label} Coating x${coating}`, cost: cr(coating * rule.cost) });
       }
       if (panels > 0) {
         if (rule.panelPower > 0) {
           systemPowerEntries.push({ label: `${rule.label} Panels`, power: tons(-panels * rule.panelPower) });
         }
         lines.push({
+          key: `${key}:panels`,
           section: "Systems",
           label: `${rule.label} Panels x${panels}`,
           tons: tons(panels),
@@ -999,6 +1044,7 @@ export function sheet(design: Design): Sheet {
       systemPowerEntries.push({ label: custom.label, power: custom.power });
     }
     lines.push({
+      key,
       section: "Systems",
       label: custom.label,
       ...(custom.tons !== undefined ? { tons: custom.tons } : {}),
@@ -1011,6 +1057,8 @@ export function sheet(design: Design): Sheet {
   const stateroomCount = design.staterooms ?? 0;
   if (stateroomCount > 0) {
     lines.push({
+      key: "staterooms",
+      ...(stateroomCount > 1 ? { count: stateroomCount } : {}),
       section: "Staterooms",
       label: `Standard x${stateroomCount}${design.doubleOccupancy === true ? " (double occupancy)" : ""}`,
       tons: tons(stateroomCount * STATEROOM.tons),
@@ -1022,6 +1070,8 @@ export function sheet(design: Design): Sheet {
   if (lowBerthCount > 0) {
     lowBerthPower = Math.ceil(lowBerthCount / LOW_BERTH.berthsPerPower);
     lines.push({
+      key: "lowBerths",
+      ...(lowBerthCount > 1 ? { count: lowBerthCount } : {}),
       section: "Staterooms",
       label: `Low Berth x${lowBerthCount}`,
       tons: tons(lowBerthCount * LOW_BERTH.tons),
@@ -1034,6 +1084,8 @@ export function sheet(design: Design): Sheet {
   if (emergencyCount > 0) {
     const emergencyPower = emergencyCount * EMERGENCY_LOW_BERTH.power;
     lines.push({
+      key: "emergencyLowBerths",
+      ...(emergencyCount > 1 ? { count: emergencyCount } : {}),
       section: "Staterooms",
       label: `Emergency Low Berth x${emergencyCount}`,
       tons: tons(emergencyCount * EMERGENCY_LOW_BERTH.tons),
@@ -1046,7 +1098,7 @@ export function sheet(design: Design): Sheet {
   // Software. ShipSpec 4.7.4.
   let bandwidth = 0;
   let jumpControlBandwidth = 0;
-  for (const choice of design.software ?? []) {
+  for (const [at, choice] of (design.software ?? []).entries()) {
     const rule = softwareRule(choice.software, choice.level ?? 0);
     if (rule === undefined) {
       fail(`There is no ${choice.software} at level ${choice.level ?? 0}.`, "4.7.4");
@@ -1062,6 +1114,7 @@ export function sheet(design: Design): Sheet {
       bandwidth += rule.bandwidth;
     }
     lines.push({
+      key: `software:${at}`,
       section: "Software",
       label: rule.label,
       ...(rule.cost > 0 ? { cost: cr(rule.cost) } : {}),
@@ -1084,6 +1137,7 @@ export function sheet(design: Design): Sheet {
   const commonAreaTons = design.commonAreaTons ?? 0;
   if (commonAreaTons > 0) {
     lines.push({
+      key: "commonAreas",
       section: "Common Areas",
       label: "Common Areas",
       tons: tons(commonAreaTons),
@@ -1104,6 +1158,7 @@ export function sheet(design: Design): Sheet {
     const rule = PER_TON_SYSTEMS.cargoCrane;
     const craneTons = cargoCraneTons(usableTons - used);
     lines[craneLine] = {
+      key: craneKey,
       section: "Systems",
       label: rule.label,
       tons: tons(craneTons),
@@ -1119,7 +1174,7 @@ export function sheet(design: Design): Sheet {
   if (cargoTons < 0) {
     fail(`Components come to ${tonsUsed} tons in a hull of ${tons(usableTons)}.`, "6.1");
   }
-  lines.push({ section: "Cargo", label: "Cargo", tons: cargoTons });
+  lines.push({ key: "cargo", section: "Cargo", label: "Cargo", tons: cargoTons });
 
   // Step 13: finalise. ShipSpec 4.13.
   const totalCost = cr(lines.reduce((sum, line) => sum + (line.cost ?? 0), 0));
