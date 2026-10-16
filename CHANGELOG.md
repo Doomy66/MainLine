@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The help has a new section, The ships: every warship in the catalogue with its tonnage, price, tech
+  level, jump and armour, how it ranks against fleets and against worlds from fought-out trials, and a
+  note on its strengths and weaknesses.
 - A carrier's worth counts the fighters that come with it: the computer weighs carriers with their
   fighters when choosing what to build, as their price already includes them, and a carrier's sheet
   gives its strength both alone and with its fighters.

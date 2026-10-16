@@ -38,6 +38,10 @@
       code, kbd { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; font-size: 13px; }
       table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 14px; }
       th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      .rankings { font-size: 13px; }
+      .rankings th.num, .rankings td.num { text-align: right; white-space: nowrap; }
+      .rank-note { color: #cfd4dc; font-size: 12.5px; margin-top: 2px; }
+      .rank-sub { color: var(--muted); font-size: 11.5px; font-weight: normal; }
       th { color: var(--muted); font-weight: 500; }
       .steps { counter-reset: step; list-style: none; padding: 0; }
       .steps > li { counter-increment: step; position: relative; padding: 10px 14px 10px 52px; margin-bottom: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
@@ -65,6 +69,7 @@
         <a href="#rivals">The computer's Empires</a>
         <a href="#siege">Taking a world</a>
         <a href="#money">Money and shipyards</a>
+        <a href="#ships">The ships</a>
         <a href="#news">News</a>
         <a href="#winning">Winning</a>
         <a href="#tips">Tips</a>
@@ -470,6 +475,236 @@
           report to say so; how long it takes depends on the shipyard setting chosen at
           the start.
         </p>
+
+        <h2 id="ships">The ships</h2>
+        <p>
+          How the catalogue's warships do, fought out. <strong>Against fleets</strong>: every class fought every
+          other, in fleets of the same price and again in fleets of the same tonnage, 20 battles each way, to the
+          finish at a jump point; the figure is the share of those battles won. <strong>Against worlds</strong>:
+          for each of a dozen defended worlds, from tech level 7 to 15 and small to populous, the smallest fleet of
+          the class that silences the batteries and sinks the navy at least half the time; the figure is what that
+          fleet costs, on average across the worlds. Carriers fight with the fighters that come with them.
+        </p>
+        <p>
+          A capital ship takes any world on its own, so it ranks low against worlds only because one ship is a dear
+          way to take an ordinary world. Ships without a jump drive cannot reach a world or a fight by themselves:
+          they need a carrier's hangars or hired tenders. Civilian and support ships, the Pinnace among them, are
+          left out, as are any designs you import.
+        </p>
+        <table class="rankings">
+          <tr><th>Ship</th><th class="num">Tons</th><th class="num">MCr</th><th class="num">TL</th><th class="num">Jump</th><th class="num">Armour</th><th class="num">Against fleets</th><th class="num">Against worlds</th></tr>
+          <tr>
+            <td><strong>Dragon System Defence Boat</strong><div class="rank-note">No jump drive, so everything goes on armour 13, particle barbettes, a missile bay and point defence. The best defender for the money. Needs tenders or a carrier to go anywhere.</div></td>
+            <td class="num">400</td>
+            <td class="num">250</td>
+            <td class="num">13</td>
+            <td class="num">none</td>
+            <td class="num">13</td>
+            <td class="num">1st<div class="rank-sub">91% won</div></td>
+            <td class="num">4th<div class="rank-sub">MCr626</div></td>
+          </tr>
+          <tr>
+            <td><strong>Kia Heavy Fighter</strong><div class="rank-note">Armour 12, a fusion gun and missiles: hard to hurt and cheap enough to field in numbers. Needs a carrier or tenders.</div></td>
+            <td class="num">50</td>
+            <td class="num">32.6</td>
+            <td class="num">14</td>
+            <td class="num">none</td>
+            <td class="num">12</td>
+            <td class="num">2nd<div class="rank-sub">90% won</div></td>
+            <td class="num">2nd<div class="rank-sub">MCr483</div></td>
+          </tr>
+          <tr>
+            <td><strong>Maul-class Bombardment Ship</strong><div class="rank-note">Its two meson bays go straight through armour and do all its fighting against ships; its five orbital strike bays never hit a ship, but they wreck a world's batteries. One Maul took every world tried.</div></td>
+            <td class="num">2,000</td>
+            <td class="num">903</td>
+            <td class="num">13</td>
+            <td class="num">2</td>
+            <td class="num">13</td>
+            <td class="num">3rd<div class="rank-sub">80% won</div></td>
+            <td class="num">9th<div class="rank-sub">MCr903</div></td>
+          </tr>
+          <tr>
+            <td><strong>Snub 2</strong><div class="rank-note">The Snub rebuilt at TL12, with armour 8, military sensors and fire control. Twice the price, and worth it against fleets and worlds alike.</div></td>
+            <td class="num">20</td>
+            <td class="num">12.7</td>
+            <td class="num">12</td>
+            <td class="num">none</td>
+            <td class="num">8</td>
+            <td class="num">4th<div class="rank-sub">80% won</div></td>
+            <td class="num">3rd<div class="rank-sub">MCr504</div></td>
+          </tr>
+          <tr>
+            <td><strong>Gionetti Light Cruiser</strong><div class="rank-note">A meson spinal mount, missiles by the hundred, thrust 5 and jump-5, but no armour at all, so swarms wear it down. Dear.</div></td>
+            <td class="num">30,000</td>
+            <td class="num">15,184</td>
+            <td class="num">15</td>
+            <td class="num">5</td>
+            <td class="num">0</td>
+            <td class="num">5th<div class="rank-sub">79% won</div></td>
+            <td class="num">19th<div class="rank-sub">MCr15,184</div></td>
+          </tr>
+          <tr>
+            <td><strong>Azhanti High Lightning Frigate</strong> <span class="rank-sub">with 60 Rampart Light Fighters</span><div class="rank-note">A meson spinal mount, two dozen particle bays and 60 Ramparts. Jump-5 but only thrust 2. One takes any world, at a price.</div></td>
+            <td class="num">60,000</td>
+            <td class="num">24,532</td>
+            <td class="num">14</td>
+            <td class="num">5</td>
+            <td class="num">5</td>
+            <td class="num">6th<div class="rank-sub">74% won</div></td>
+            <td class="num">21st<div class="rank-sub">MCr24,532</div></td>
+          </tr>
+          <tr>
+            <td><strong>Snub</strong><div class="rank-note">The cheapest firepower in the catalogue: a missile rack for MCr6. Thin armour and civilian sensors; its booster gives thrust 6 for two hours a sortie. The best for the money, middling for its size.</div></td>
+            <td class="num">20</td>
+            <td class="num">6.0</td>
+            <td class="num">9</td>
+            <td class="num">none</td>
+            <td class="num">3</td>
+            <td class="num">7th<div class="rank-sub">74% won</div></td>
+            <td class="num">1st<div class="rank-sub">MCr355</div></td>
+          </tr>
+          <tr>
+            <td><strong>Arakoine Strike Cruiser</strong> <span class="rank-sub">with 100 Kia Heavy Fighters</span><div class="rank-note">A meson spinal mount, 40 missile bays and 100 Kias. Better armoured than the Azhanti, but only jump-3.</div></td>
+            <td class="num">50,000</td>
+            <td class="num">23,903</td>
+            <td class="num">15</td>
+            <td class="num">3</td>
+            <td class="num">6</td>
+            <td class="num">8th<div class="rank-sub">70% won</div></td>
+            <td class="num">20th<div class="rank-sub">MCr23,903</div></td>
+          </tr>
+          <tr>
+            <td><strong>Wasp Heavy Fighter</strong><div class="rank-note">Armour 12, a pulse laser and missiles. Dear for a fighter, so it does better matched by size than by price. The Tern's fighter.</div></td>
+            <td class="num">40</td>
+            <td class="num">39.0</td>
+            <td class="num">12</td>
+            <td class="num">none</td>
+            <td class="num">12</td>
+            <td class="num">9th<div class="rank-sub">62% won</div></td>
+            <td class="num">10th<div class="rank-sub">MCr908</div></td>
+          </tr>
+          <tr>
+            <td><strong>Broadsword Mercenary Cruiser</strong><div class="rank-note">Jump-3, a dozen beam lasers and a dozen missile racks. A steady all-rounder; the lasers do little to heavy armour.</div></td>
+            <td class="num">800</td>
+            <td class="num">326</td>
+            <td class="num">12</td>
+            <td class="num">3</td>
+            <td class="num">6</td>
+            <td class="num">10th<div class="rank-sub">52% won</div></td>
+            <td class="num">11th<div class="rank-sub">MCr909</div></td>
+          </tr>
+          <tr>
+            <td><strong>Flare Gunboat</strong><div class="rank-note">Plasma guns, pulse lasers and missiles on an armour 8 hull with thrust 6. Hits hard for its size, but only jump-1.</div></td>
+            <td class="num">300</td>
+            <td class="num">119</td>
+            <td class="num">12</td>
+            <td class="num">1</td>
+            <td class="num">8</td>
+            <td class="num">11th<div class="rank-sub">51% won</div></td>
+            <td class="num">6th<div class="rank-sub">MCr754</div></td>
+          </tr>
+          <tr>
+            <td><strong>Hyperion Escort Carrier</strong> <span class="rank-sub">with 10 Snubs</span><div class="rank-note">A cheap carrier with 10 Snubs and 18 missile racks: good value against worlds, weak in a long fight with warships. Thrust 1 and jump-1.</div></td>
+            <td class="num">1,000</td>
+            <td class="num">331</td>
+            <td class="num">9</td>
+            <td class="num">1</td>
+            <td class="num">4</td>
+            <td class="num">12th<div class="rank-sub">43% won</div></td>
+            <td class="num">5th<div class="rank-sub">MCr668</div></td>
+          </tr>
+          <tr>
+            <td><strong>Rampart Light Fighter</strong><div class="rank-note">A 10-ton TL15 fighter with one pulse laser. Next to useless for the money, dangerous in swarms matched by size; cannot crack the best-defended worlds.</div></td>
+            <td class="num">10</td>
+            <td class="num">12.7</td>
+            <td class="num">15</td>
+            <td class="num">none</td>
+            <td class="num">4</td>
+            <td class="num">13th<div class="rank-sub">40% won</div></td>
+            <td class="num">15th<div class="rank-sub">MCr1,971, 2 of 12 out of reach</div></td>
+          </tr>
+          <tr>
+            <td><strong>Gazelle Close Escort</strong><div class="rank-note">Jump-5 and thrust 5, with particle barbettes and good fire control and evasion. Fast and hard-hitting for its size, but lightly armoured and dear.</div></td>
+            <td class="num">400</td>
+            <td class="num">222</td>
+            <td class="num">14</td>
+            <td class="num">5</td>
+            <td class="num">5</td>
+            <td class="num">14th<div class="rank-sub">39% won</div></td>
+            <td class="num">8th<div class="rank-sub">MCr869</div></td>
+          </tr>
+          <tr>
+            <td><strong>Shibash Light Cruiser</strong><div class="rank-note">10,000 tons for under MCr2,700, with missile and particle bays and a great deal of hull. Good value; slow to kill, slow to kill with.</div></td>
+            <td class="num">10,000</td>
+            <td class="num">2,688</td>
+            <td class="num">11</td>
+            <td class="num">2</td>
+            <td class="num">8</td>
+            <td class="num">15th<div class="rank-sub">34% won</div></td>
+            <td class="num">16th<div class="rank-sub">MCr2,688</div></td>
+          </tr>
+          <tr>
+            <td><strong>Kinunir Battle Cruiser</strong><div class="rank-note">Jump-4 and well equipped, but mostly beam lasers, which heavy armour shrugs off. Dear for its punch.</div></td>
+            <td class="num">1,250</td>
+            <td class="num">686</td>
+            <td class="num">15</td>
+            <td class="num">4</td>
+            <td class="num">6</td>
+            <td class="num">16th<div class="rank-sub">29% won</div></td>
+            <td class="num">14th<div class="rank-sub">MCr1,555</div></td>
+          </tr>
+          <tr>
+            <td><strong>Musuna Frigate</strong><div class="rank-note">A cheap 2,000-ton frigate with a missile bay and plasma guns. Fair value against worlds; slow, and lightly armed for its size.</div></td>
+            <td class="num">2,000</td>
+            <td class="num">483</td>
+            <td class="num">11</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+            <td class="num">17th<div class="rank-sub">28% won</div></td>
+            <td class="num">7th<div class="rank-sub">MCr828</div></td>
+          </tr>
+          <tr>
+            <td><strong>Patrol Corvette</strong><div class="rank-note">The jump-3 workhorse, with pulse lasers and missile racks. Goes anywhere, takes weak worlds, loses to anything armoured.</div></td>
+            <td class="num">400</td>
+            <td class="num">178</td>
+            <td class="num">12</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+            <td class="num">18th<div class="rank-sub">28% won</div></td>
+            <td class="num">12th<div class="rank-sub">MCr958</div></td>
+          </tr>
+          <tr>
+            <td><strong>Destroyer Escort</strong><div class="rank-note">Jump-4 and thrust 6 with barbettes and plenty of sand, but armour 2: fragile for its price.</div></td>
+            <td class="num">1,000</td>
+            <td class="num">560</td>
+            <td class="num">15</td>
+            <td class="num">4</td>
+            <td class="num">2</td>
+            <td class="num">19th<div class="rank-sub">26% won</div></td>
+            <td class="num">13th<div class="rank-sub">MCr1,067</div></td>
+          </tr>
+          <tr>
+            <td><strong>Tern-class Fighter Carrier</strong> <span class="rank-sub">with 24 Wasp Heavy Fighters</span><div class="rank-note">Brings 24 Wasps, which do the fighting; the carrier itself has only pulse lasers and armour 4. A costly way to deliver fighters.</div></td>
+            <td class="num">5,000</td>
+            <td class="num">2,615</td>
+            <td class="num">12</td>
+            <td class="num">3</td>
+            <td class="num">4</td>
+            <td class="num">20th<div class="rank-sub">13% won</div></td>
+            <td class="num">17th<div class="rank-sub">MCr3,611</div></td>
+          </tr>
+          <tr>
+            <td><strong>Corsair</strong><div class="rank-note">A raider's hull with four beam lasers: enough to frighten traders, not to fight warships or take a defended world.</div></td>
+            <td class="num">400</td>
+            <td class="num">147</td>
+            <td class="num">12</td>
+            <td class="num">2</td>
+            <td class="num">4</td>
+            <td class="num">21st<div class="rank-sub">0% won</div></td>
+            <td class="num">18th<div class="rank-sub">MCr13,743, 5 of 12 out of reach</div></td>
+          </tr>
+        </table>
+        <p class="rank-sub">Out of 21 warships. Rankings change as designs are added or rules change; these are from the catalogue in this version.</p>
 
         <h2 id="news">News and the fog of war</h2>
         <p>
