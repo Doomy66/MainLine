@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Strength, the fighting value shown for ships and fleets and used by the computer to judge odds and
+  what to build, now counts armour properly: damage is reckoned against an armoured hull, armour makes a
+  hull tougher rather than adding a little to it, and orbital-strike and bombardment weapons, which
+  never hit a dodging ship, count for almost nothing. Fought out class against class, it now picks the
+  winner in 84% of pairings, against 78%. Fighter swarms and laser boats show much lower strength.
+- The computer's reckoning of a world's defences is refitted to match, from fights of fleets against
+  worlds: a planetary navy counts for far more than its boats alone, and its judgement is steadier at
+  high tech levels.
 - The Wasp heavy fighter is refitted: a dual cockpit seats a gunner, enhanced stealth makes it harder to find,
   and its cargo space carries more missiles. It costs more, and so does the Tern carrier with its 24 Wasps.
 - Small craft carry one weapon to a firmpoint, as High Guard says, and only one may be a turret. The Snub

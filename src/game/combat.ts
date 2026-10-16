@@ -25,7 +25,7 @@
  * damage lands.
  */
 
-import type { Attack, ShipClass } from "../catalogue/shipclass";
+import { strengthOf, type Attack, type ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
 import type { Rng } from "./rng";
 import { defenceArmour, defenceAttacks, defenceFireControl, defenceMax, ROUNDS_PER_DAY } from "./rules";
@@ -133,8 +133,7 @@ function classCombatant(c: ShipClass, damage: number, label: string): Combatant 
 
 /** Fighting value of a combatant as it stands, in the same measure as a class's strength. */
 function combatantStrength(c: Combatant): number {
-  const fire = c.attacks.reduce((t, a) => t + a.dice * 3.5 * a.multiple * a.count * a.perSalvo * (a.ion ? 0.5 : 1), 0.5);
-  return Math.sqrt((Math.max(0, c.hull) + c.armour * 10) * fire);
+  return strengthOf(c.hull, c.armour, c.attacks);
 }
 
 /** A ship as it goes into battle, damage and critical hits and all. */

@@ -12,10 +12,10 @@
  * would see, and gives orders a human could give.
  */
 
-import { damageAgainst, type ShipClass } from "../catalogue/shipclass";
+import { attackDamage, damageAgainst, STRENGTH_ARMOUR, type ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
 import { canRefuelAt, jumpMap, pathIn, routeTo } from "./nav";
-import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, income, repairRate, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, fixesCrits, income, repairRate, yardPrice } from "./rules";
 import { distanceBetween } from "../sector/hex";
 import { visibleSystems } from "./visibility";
 import type { Faction, Fleet, StandingOrders, Temper } from "./types";
@@ -160,14 +160,27 @@ export function aiStartingFleet(game: Game, faction: Faction): void {
 }
 
 /** Strength of a world's defences as they stand, in the same measure as a fleet's. */
+/**
+ * The weights that make a world's strength comparable with a fleet's, fitted
+ * to 2,279 fights of fleets against worlds: with them, a fleet whose strength
+ * matches a world's takes it about half the time, as before, and strength
+ * orders the fights by outcome better than the old reckoning did, most of all
+ * at high tech levels. A navy's boats count for far more than their own
+ * strength: they fight under the batteries' guns.
+ */
+const BATTERY_WEIGHT = 0.75;
+const NAVY_WEIGHT = 7.5;
+
 function defenceStrength(game: Game, at: string): number {
   const world = game.world(at);
   const ws = game.worldState(at);
   const navy = game.navyOf(at);
-  const boats = navy.cls === undefined ? 0 : navy.boats * navy.cls.strength;
+  const boats = navy.cls === undefined ? 0 : navy.boats * navy.cls.strength * NAVY_WEIGHT;
   if (ws.defence <= 0) return boats;
-  const fire = defenceAttacks(world).reduce((t, a) => t + a.dice * 3.5 * a.multiple * a.count, 0.5);
-  return Math.sqrt((ws.defence + defenceArmour(world) * 10) * fire) * (ws.defence / Math.max(1, defenceMax(world)) + 0.2) + boats;
+  // The batteries reckoned as a ship is: hull made tougher by armour, times
+  // their fire against an armoured hull.
+  const fire = Math.max(attackDamage(defenceAttacks(world), STRENGTH_ARMOUR), 0.5);
+  return BATTERY_WEIGHT * Math.sqrt(ws.defence * (1 + defenceArmour(world) / 3) * fire) + boats;
 }
 
 /** Enemy strength a faction believes is at a system: what it sees, or last saw. */

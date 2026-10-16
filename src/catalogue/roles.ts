@@ -46,7 +46,7 @@ const CIVILIAN: ReadonlySet<string> = new Set([
  */
 export function roleOf(cls: ShipClass): Role {
   if (CIVILIAN.has(cls.id)) return "civilian";
-  const fights = cls.design.military === true || (cls.armed && cls.strength >= cls.tons * 0.1);
+  const fights = cls.design.military === true || (cls.armed && cls.strength >= cls.tons * 0.05);
   if (!fights) return "civilian";
   if (cls.tons >= CAPITAL_TONS) return "capital";
   if (cls.jump === 0) return "defence";
