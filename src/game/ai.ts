@@ -13,6 +13,7 @@
  */
 
 import { attackDamage, damageAgainst, STRENGTH_ARMOUR, type ShipClass } from "../catalogue/shipclass";
+import type { Catalogue } from "../catalogue/catalogue";
 import type { Game } from "./game";
 import { canRefuelAt, jumpMap, pathIn, routeTo } from "./nav";
 import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, fixesCrits, income, repairRate, yardPrice } from "./rules";
@@ -112,15 +113,15 @@ function armourWeight(faction: Faction): number {
 }
 
 /** Fighting value per MCr, the measure a yard order is chosen by. */
-function valueFor(cls: ShipClass): number {
-  return cls.strength / Math.max(1, cls.cost);
+function valueFor(catalogue: Catalogue, cls: ShipClass): number {
+  return catalogue.strengthWithFighters(cls) / Math.max(1, cls.cost);
 }
 
 /**
  * Spend a budget on ships, best value first, with each repeat of a class
  * counting for a little less so a fleet is not one design fifty times over.
  */
-export function chooseShips(classes: readonly ShipClass[], budget: number, minJump: number, jitter: () => number): string[] {
+export function chooseShips(catalogue: Catalogue, classes: readonly ShipClass[], budget: number, minJump: number, jitter: () => number): string[] {
   const bought: string[] = [];
   const counts = new Map<string, number>();
   let left = budget;
@@ -128,7 +129,7 @@ export function chooseShips(classes: readonly ShipClass[], budget: number, minJu
     const options = classes.filter((c) => fighting(c) && c.cost <= left && c.jump >= minJump);
     if (options.length === 0) break;
     const scored = options
-      .map((c) => ({ c, score: valueFor(c) * Math.pow(0.8, counts.get(c.id) ?? 0) * (0.8 + 0.4 * jitter()) }))
+      .map((c) => ({ c, score: valueFor(catalogue, c) * Math.pow(0.8, counts.get(c.id) ?? 0) * (0.8 + 0.4 * jitter()) }))
       .sort((a, b) => b.score - a.score);
     const pick = scored[0]!.c;
     bought.push(pick.id);
@@ -142,9 +143,9 @@ export function chooseShips(classes: readonly ShipClass[], budget: number, minJu
 export function aiStartingFleet(game: Game, faction: Faction): void {
   const classes = game.catalogue.all();
   const budget = faction.credits * 0.95;
-  const guard = chooseShips(classes, budget * guardShare(faction.temper), 0, () => game.rng.next());
+  const guard = chooseShips(game.catalogue, classes, budget * guardShare(faction.temper), 0, () => game.rng.next());
   const guardCost = guard.reduce((s, id) => s + game.catalogue.get(id).cost, 0);
-  const strike = chooseShips(classes, budget - guardCost, STRIKE_JUMP, () => game.rng.next());
+  const strike = chooseShips(game.catalogue, classes, budget - guardCost, STRIKE_JUMP, () => game.rng.next());
   const spend = (ids: string[]) => {
     faction.credits -= ids.reduce((s, id) => s + game.catalogue.get(id).cost, 0);
     return ids.flatMap((id) => game.commission(id));
@@ -260,7 +261,7 @@ function build(game: Game, faction: Faction): void {
       const already = game.fleetsOf(faction.id).reduce((n, f) => n + f.ships.filter((sh) => sh.classId === cls.id).length, 0);
       // Slips are few, so a rich faction puts its money into bigger hulls
       // rather than a queue of cheap ones.
-      const score = (cls.strength / price) * Math.pow(price, wealth) * Math.pow(0.9, already) * suits(cls) * (0.9 + 0.2 * game.rng.next());
+      const score = (game.catalogue.strengthWithFighters(cls) / price) * Math.pow(price, wealth) * Math.pow(0.9, already) * suits(cls) * (0.9 + 0.2 * game.rng.next());
       if (best === null || score > best.score) best = { cls, at: w.at, score, price };
     }
   }
@@ -271,7 +272,7 @@ function build(game: Game, faction: Faction): void {
       if (busy.has(w.at)) continue;
       for (const cls of classes) {
         if (!fighting(cls) || cls.jump > 0 || cls.cost > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
-        const score = (cls.strength / cls.cost) * Math.pow(cls.cost, wealth) * suits(cls) * (0.9 + 0.2 * game.rng.next());
+        const score = (game.catalogue.strengthWithFighters(cls) / cls.cost) * Math.pow(cls.cost, wealth) * suits(cls) * (0.9 + 0.2 * game.rng.next());
         if (best === null || score > best.score) best = { cls, at: w.at, score, price: cls.cost };
       }
     }

@@ -416,7 +416,7 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
       "tr",
       { class: ctx.ships.has(s.id) ? "sel" : "" },
       h("td", {}, tick),
-      h("td", {}, h("span", { class: "goto", style: "cursor:pointer", onclick: () => showSheet(c) }, s.name), h("div", { class: "hint" }, c.name)),
+      h("td", {}, h("span", { class: "goto", style: "cursor:pointer", onclick: () => showSheet(c, game.catalogue) }, s.name), h("div", { class: "hint" }, c.name)),
       h("td", { style: "min-width:70px" }, `${game.hullLeft(s)}/${c.hull}`, meter(game.hullLeft(s) / c.hull)),
       h("td", { style: "min-width:60px" }, `${Math.round(s.fuel)}/${Math.round(c.fuelCapacity)}${s.unrefined ? "u" : ""}`, meter(c.fuelCapacity === 0 ? 0 : s.fuel / c.fuelCapacity, "fuel")),
       h("td", { class: "num" }, c.missiles + c.torpedoes > 0 ? `${s.missiles + s.torpedoes}/${c.missiles + c.torpedoes}` : "—"),
@@ -854,7 +854,7 @@ function classRows(
         h(
           "td",
           {},
-          h("span", { class: "goto", style: "cursor:pointer", onclick: () => showSheet(c) }, c.name),
+          h("span", { class: "goto", style: "cursor:pointer", onclick: () => showSheet(c, catalogue) }, c.name),
           carrierTag(c, catalogue),
           h("div", { class: "hint" }, weaponsSummary(c.attacks)),
           why === "" ? null : h("div", { class: "hint warn" }, why),
@@ -1254,7 +1254,7 @@ export function reportsPane(ctx: Ctx, goto: (at: string) => void): HTMLElement {
 
 /* A ship's design sheet --------------------------------------------------- */
 
-export function showSheet(cls: ShipClass): void {
+export function showSheet(cls: ShipClass, catalogue?: Catalogue): void {
   const s = cls.sheet;
   const close = () => box.remove();
   const box = h(
@@ -1279,7 +1279,14 @@ export function showSheet(cls: ShipClass): void {
         cls.hangars.length > 0 ? h("dd", {}, cls.hangars.map((hg) => `${hg.slots} × ${hg.label} (${hg.tons} t), which come with her`).join("; ")) : null,
         h("dt", {}, "Crew"), h("dd", {}, `${cls.crew}; cargo ${s.cargoTons} tons`),
         h("dt", {}, "Price"), h("dd", {}, `${mcr(cls.cost, 3)}; upkeep ${mcr(cls.upkeep, 3)} a week; built in ${cls.buildDays} days by the book`),
-        h("dt", {}, "Strength"), h("dd", {}, String(cls.strength)),
+        h("dt", {}, "Strength"),
+        h(
+          "dd",
+          {},
+          cls.hangars.length === 0 || catalogue === undefined
+            ? String(cls.strength)
+            : `${cls.strength}; ${Math.round(catalogue.strengthWithFighters(cls) * 10) / 10} with the fighters that come with it`,
+        ),
       ),
       h("h2", {}, "Design sheet, from the Ship Designer engine"),
       h(

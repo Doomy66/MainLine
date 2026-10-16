@@ -97,6 +97,15 @@ export class Catalogue {
     );
   }
 
+  /**
+   * A class's strength with the fighters that come with it: a carrier's
+   * price includes its fighters, so its worth has to as well. The same as
+   * its own strength for anything without hangars.
+   */
+  strengthWithFighters(cls: ShipClass): number {
+    return cls.hangars.reduce((s, h) => s + h.slots * (this.fighterFor(h)?.strength ?? 0), cls.strength);
+  }
+
   add(id: string, design: Design): ShipClass {
     const made = shipClass(id, design);
     this.classes.set(id, made);

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- A carrier's worth counts the fighters that come with it: the computer weighs carriers with their
+  fighters when choosing what to build, as their price already includes them, and a carrier's sheet
+  gives its strength both alone and with its fighters.
 - Strength, the fighting value shown for ships and fleets and used by the computer to judge odds and
   what to build, now counts armour properly: damage is reckoned against an armoured hull, armour makes a
   hull tougher rather than adding a little to it, and orbital-strike and bombardment weapons, which
