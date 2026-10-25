@@ -1105,8 +1105,9 @@ function answerButtons(ctx: Ctx, offer: Offer): HTMLElement {
   const what = offer.kind === "peace" ? "peace" : "an alliance";
   const answer = (yes: boolean) => (e: Event) => {
     e.stopPropagation();
-    answerOffer(game, offer, yes);
-    ctx.say(yes ? `You accept ${from.name}'s offer of ${what}.` : `You turn down ${from.name}'s offer of ${what}.`);
+    // An offer can come to nothing, if the Empire has found its allies elsewhere meanwhile.
+    const why = answerOffer(game, offer, yes);
+    ctx.say(why ?? (yes ? `You accept ${from.name}'s offer of ${what}.` : `You turn down ${from.name}'s offer of ${what}.`));
     ctx.refresh();
   };
   return h(
