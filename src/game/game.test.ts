@@ -9,7 +9,7 @@ import { planAi } from "./ai";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
 import { routeTo } from "./nav";
-import { atWar, declareWar, diplomacy, makeOffer, offersTo, PEACE_AT, relationOf, standing, WAR_AT } from "./relations";
+import { alliesOf, answerOffer, atWar, declareWar, diplomacy, makeOffer, offerBetween, offersTo, onCapture, PEACE_AT, relationOf, standing, WAR_AT } from "./relations";
 import { alerts } from "./attention";
 import { battleAt } from "./combat";
 import { visibleSystems } from "./visibility";
@@ -680,6 +680,116 @@ describe("war and peace", () => {
     expect(r.war).toBe(true);
   });
 
+  /** Every pair at a cool peace that drifts nowhere, so one change shows on its own. */
+  function calm(game: Game) {
+    for (const r of Object.values(game.state.relations!)) {
+      Object.assign(r, { war: false, allied: false, score: 0, base: 0, since: 0 });
+      delete r.clash;
+    }
+  }
+
+  /** Every Empire a player's, so none grows restless or makes offers of its own. */
+  function quiet(game: Game, ...except: Faction[]) {
+    for (const f of game.state.factions) if (!except.includes(f)) (f as { human: boolean }).human = true;
+  }
+
+  it("wearies a renewed war from its own first day, not from a clash in an earlier one", () => {
+    const game = newGame({}, 0, "PEACE");
+    calm(game);
+    quiet(game);
+    const [a, b] = game.state.factions as [Faction, Faction];
+    const r = relationOf(game, a.id, b.id)!;
+    Object.assign(r, { war: true, score: -20, base: -20, since: 133, clash: 50 });
+    game.state.day = 140;
+    diplomacy(game);
+    expect(r.score).toBe(-20);
+    game.state.day = 147;
+    diplomacy(game);
+    expect(r.score).toBe(-15);
+  });
+
+  it("makes only a leader's neighbours fear it, and leaves its wars free to end", () => {
+    const game = newGame({ victoryBy: "worlds" }, 0, "FEAR");
+    calm(game);
+    quiet(game);
+    const leader = game.state.factions[0]!;
+    const held = game.ownedWorlds(leader.id).map((w) => w.at);
+    const near = (f: Faction) => game.ownedWorlds(f.id).some((w) => held.some((at) => distanceBetween(w.at, at) <= 4));
+    const others = game.state.factions.slice(1);
+    const [fighting, neighbour] = others.filter(near) as [Faction, Faction];
+    const far = others.find((f) => !near(f))!;
+    // Nine tenths of the way to winning.
+    game.state.options.victoryShare = game.holding(leader.id).worlds / game.victoryTarget().worlds / 0.9;
+    Object.assign(relationOf(game, fighting.id, leader.id)!, { war: true, score: -50, base: -50, since: 0, clash: 7 });
+    game.state.day = 7;
+    diplomacy(game);
+    expect(relationOf(game, neighbour.id, leader.id)!.score).toBeCloseTo(-2.4);
+    expect(relationOf(game, far.id, leader.id)!.score).toBe(0);
+    expect(relationOf(game, fighting.id, leader.id)!.score).toBe(-50);
+  });
+
+  it("grows restless with a neighbour only with nothing it could take, and not with an ally or a new peace", () => {
+    const game = newGame({ victoryShare: 1 }, 0, "RESTLESS");
+    calm(game);
+    const f = game.state.factions[0]!;
+    quiet(game, f);
+    const own = game.ownedWorlds(f.id);
+    const reach = (at: string) => own.some((o) => distanceBetween(o.at, at) <= 4);
+    const g = game.state.factions.find((x) => x !== f && game.ownedWorlds(x.id).some((w) => reach(w.at)))!;
+    // Every peopled world within reach is its own or its neighbour's, but one independent.
+    const around = game.state.sector.worlds.filter((w) => w.uwp.population > 0 && reach(w.at) && game.worldState(w.at).owner !== f.id);
+    for (const w of around) game.worldState(w.at).owner = g.id;
+    const lone = game.worldState(around.find((w) => w.at !== g.capital)!.at);
+    lone.owner = null;
+    lone.navy = null;
+    game.state.fleets = [];
+    game.newFleet(f.id, f.capital, "main", [game.newShip("Patrol-Corvette")]);
+    const r = relationOf(game, f.id, g.id)!;
+    const week = (score: number) => {
+      Object.assign(r, { score, base: score });
+      game.state.day += 7;
+      diplomacy(game);
+      return r.score;
+    };
+    // An undefended world it could take keeps it busy.
+    lone.defence = 0;
+    expect(week(0)).toBe(0);
+    // One far beyond its navy does not.
+    lone.defence = 1e6;
+    expect(week(0)).toBeLessThan(0);
+    r.allied = true;
+    expect(week(50)).toBe(50);
+    r.allied = false;
+    r.since = game.state.day;
+    expect(week(0)).toBe(0);
+    r.since = game.state.day - 120;
+    expect(week(0)).toBeLessThan(0);
+  });
+
+  it("sours only the victim's friends nearby, and not those already at war with the aggressor", () => {
+    const game = newGame({}, 0, "CASCADE");
+    const near = (f: Faction, places: readonly string[]) => game.ownedWorlds(f.id).some((w) => places.some((at) => distanceBetween(w.at, at) <= 4));
+    const [aggressor, victim] = game.state.factions as [Faction, Faction];
+    const others = game.state.factions.slice(2);
+    // A world of the victim's with two other Empires near it and one far off.
+    const at = game.ownedWorlds(victim.id).find((w) => others.filter((f) => near(f, [w.at])).length >= 2 && others.some((f) => !near(f, [w.at])))!.at;
+    const [friend, fighting] = others.filter((f) => near(f, [at])) as [Faction, Faction];
+    const far = others.find((f) => !near(f, game.ownedWorlds(victim.id).map((w) => w.at)))!;
+    const setUp = () => {
+      calm(game);
+      for (const f of [friend, fighting, far]) relationOf(game, f.id, victim.id)!.score = 60;
+      relationOf(game, fighting.id, aggressor.id)!.war = true;
+    };
+    const against = (f: Faction) => relationOf(game, f.id, aggressor.id)!.score;
+    setUp();
+    relationOf(game, aggressor.id, victim.id)!.war = true;
+    onCapture(game, at, aggressor.id, victim.id);
+    expect([against(friend), against(fighting), against(far)]).toEqual([-10, 0, 0]);
+    setUp();
+    declareWar(game, aggressor.id, victim.id, "for the test");
+    expect([against(friend), against(fighting), against(far)]).toEqual([-10, 0, 0]);
+  });
+
   it("keeps everyone at war in a game saved before relations", () => {
     const game = newGame();
     delete game.state.relations;
@@ -798,6 +908,107 @@ describe("alliances and offers", () => {
     game.state.fleets = game.state.fleets.filter((f) => f !== friend);
     advanceDay(game);
     expect(game.worldState(world.at).siege?.by).toBe(c.id);
+  });
+
+  it("keeps a computer Empire to two allies, however many friends it has", () => {
+    const game = newGame({}, 0, "ALLY");
+    game.state.phase = "play";
+    for (const r of Object.values(game.state.relations!)) Object.assign(r, { war: false, allied: false, score: 90, base: 90, since: 0 });
+    game.state.day = 7;
+    diplomacy(game);
+    const offers = game.state.offers ?? [];
+    expect(offers.length).toBeGreaterThan(0);
+    for (const f of game.state.factions) expect(offers.filter((o) => o.from === f.id || o.to === f.id).length).toBeLessThanOrEqual(2);
+    game.state.day = 8;
+    diplomacy(game);
+    expect(game.state.factions.some((f) => alliesOf(game, f.id).length > 0)).toBe(true);
+    for (const f of game.state.factions) expect(alliesOf(game, f.id).length).toBeLessThanOrEqual(2);
+  });
+
+  it("withdraws an alliance a player accepts once the computer has all the allies it keeps", () => {
+    const game = newGame({}, 1, "ALLY");
+    const me = game.humans()[0]!;
+    const [other, x, y] = game.state.factions.filter((f) => !f.human) as [Faction, Faction, Faction];
+    Object.assign(relationOf(game, me.id, other.id)!, { war: false, allied: false, score: 60 });
+    expect(makeOffer(game, other.id, me.id, "alliance")).toBeNull();
+    for (const f of [x, y]) Object.assign(relationOf(game, other.id, f.id)!, { war: false, allied: true, score: 80 });
+    const why = answerOffer(game, offersTo(game, me.id)[0]!, true);
+    expect(why).toBe(`${other.name}'s offer of an alliance to ${me.name} no longer stands: ${other.name} has all the allies it wants.`);
+    expect(standing(game, me.id, other.id)).toBe("peace");
+    expect(game.state.log.some((e) => e.text === why)).toBe(true);
+  });
+
+  it("starts an alliance warm enough not to end the day it is made", () => {
+    const game = newGame({}, 1, "ALLY");
+    const me = game.humans()[0]!;
+    const other = game.state.factions.find((f) => !f.human)!;
+    const r = relationOf(game, me.id, other.id)!;
+    Object.assign(r, { war: false, allied: false, score: 60 });
+    makeOffer(game, other.id, me.id, "alliance");
+    // It has cooled while the player thought about it.
+    r.score = 5;
+    expect(answerOffer(game, offersTo(game, me.id)[0]!, true)).toBeNull();
+    diplomacy(game);
+    expect(standing(game, me.id, other.id)).toBe("alliance");
+    expect(r.score).toBe(30);
+  });
+
+  it("forgets offers from an Empire that has fallen", () => {
+    const game = newGame({}, 1, "OFFER");
+    const me = game.humans()[0]!;
+    const other = game.state.factions.find((f) => !f.human)!;
+    Object.assign(relationOf(game, me.id, other.id)!, { war: false, allied: false, score: 60 });
+    makeOffer(game, other.id, me.id, "alliance");
+    other.alive = false;
+    expect(offersTo(game, me.id)).toEqual([]);
+    expect(offerBetween(game, me.id, other.id)).toBeUndefined();
+    expect(alerts(game, me).some((a) => a.kind === "offer")).toBe(false);
+    diplomacy(game);
+    expect(game.state.offers).toEqual([]);
+  });
+
+  it("turns down a player's peace the stronger the computer is", () => {
+    const game = newGame({}, 1, "OFFER");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const other = game.state.factions.find((f) => !f.human)!;
+    for (const r of Object.values(game.state.relations!)) Object.assign(r, { war: false, allied: false, score: 0 });
+    const r = relationOf(game, me.id, other.id)!;
+    const ask = (mine: number, theirs: number) => {
+      game.state.fleets = [];
+      game.newFleet(me.id, me.capital, "main", Array.from({ length: mine }, () => game.newShip("Patrol-Corvette")));
+      game.newFleet(other.id, other.capital, "main", Array.from({ length: theirs }, () => game.newShip("Patrol-Corvette")));
+      // Enough to take peace from an enemy half as strong again, a little more.
+      Object.assign(r, { war: true, score: 25 - 20 * (1 - other.temper.aggression), clash: -100 });
+      makeOffer(game, me.id, other.id, "peace");
+      game.state.day++;
+      diplomacy(game);
+      return !r.war;
+    };
+    expect(ask(3, 5)).toBe(true);
+    expect(ask(1, 5)).toBe(false);
+  });
+
+  it("shows only an enemy's armed fleets at a player's worlds under news lag, however far the news comes", () => {
+    const game = newGame({ newsLag: 1 }, 1, "NEWS");
+    const me = game.humans()[0]!;
+    const [enemy, friend] = game.state.factions.filter((f) => !f.human) as [Faction, Faction];
+    for (const r of Object.values(game.state.relations!)) Object.assign(r, { war: false, allied: false });
+    relationOf(game, me.id, enemy.id)!.war = true;
+    relationOf(game, me.id, friend.id)!.allied = true;
+    // A world of ours three jumps out, whose news is three weeks old when it comes.
+    const there = game.state.sector.worlds.find((w) => distanceBetween(w.at, me.capital) === 3)!;
+    game.worldState(there.at).owner = me.id;
+    expect(game.lag(me.id, there.at)).toBe(21);
+    for (const owner of [enemy, friend]) {
+      const fleet = game.newFleet(owner.id, owner.capital, "main", [game.newShip("Broadsword-Mercenary-Cruiser")]);
+      me.news[fleet.id] = { fleetId: fleet.id, owner: owner.id, system: there.at, loc: "main", day: 0, since: 0, ships: 1, tons: 800, strength: 50 };
+    }
+    game.state.day = 25;
+    expect(alerts(game, me).filter((a) => a.kind === "enemy").map((a) => a.text)).toEqual([`${enemy.name} at ${there.name}: 1 ship`]);
+    game.state.day = 29;
+    expect(alerts(game, me).some((a) => a.kind === "enemy")).toBe(false);
   });
 
   it("makes turning on an ally a betrayal everyone notices", () => {

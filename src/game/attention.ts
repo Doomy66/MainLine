@@ -104,8 +104,15 @@ export function alerts(game: Game, me: Faction): Alert[] {
   const held = new Set(game.ownedWorlds(me.id).map((w) => w.at));
   const threat = new Map<string, { ships: number; who: Set<string> }>();
   if (lagged) {
+    // News of a far world is always some days old by the time it comes, so a
+    // sighting counts while it is no more than a week older than that.
     for (const s of Object.values(me.news)) {
-      if (s.left !== undefined || !held.has(s.system) || day - s.day > 7) continue;
+      if (s.left !== undefined || !held.has(s.system) || day - s.day > game.lag(me.id, s.system) + 7) continue;
+      // Only an enemy's, and only one that can fight. Whether a fleet carries
+      // guns was plain to whoever saw it.
+      if (!game.hostile(me.id, s.owner) || s.strength <= 0) continue;
+      const seen = game.state.fleets.find((f) => f.id === s.fleetId);
+      if (seen !== undefined && !game.fleetArmed(seen)) continue;
       const t = threat.get(s.system) ?? { ships: 0, who: new Set<string>() };
       t.ships += s.ships;
       t.who.add(game.faction(s.owner).name);
