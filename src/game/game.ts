@@ -13,6 +13,7 @@ import { routeTo } from "./nav";
 import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, people, slipsAt, TENDER_JUMP } from "./rules";
 import { forecast, shares, work, type Job } from "./yard";
 import { temperFromId } from "./temper";
+import { atWar } from "./relations";
 import type { Admiral, Build, Crits, Faction, Temper, Fleet, FleetReport, GameState, LogEntry, Loc, Order, Ship, StandingOrders, WorldState } from "./types";
 import { STANDING_PRESETS } from "./types";
 import { colourTerritories, shipName } from "./names";
@@ -175,9 +176,9 @@ export class Game {
     );
   }
 
-  /** Whether two factions are at war. Everyone is, with everyone. */
+  /** Whether two factions are at war. An independent world is at war with nobody, though it fights back. */
   hostile(a: string | null, b: string | null): boolean {
-    return a !== null && b !== null && a !== b;
+    return a !== null && b !== null && atWar(this, a, b);
   }
 
   /* Ships ----------------------------------------------------------------- */

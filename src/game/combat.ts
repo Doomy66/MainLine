@@ -178,10 +178,15 @@ export function besieging(fleet: Fleet): boolean {
   return fleet.order === null || fleet.order.kind === "move" || fleet.order.kind === "garrison";
 }
 
+/** Whether two factions are at war, so their ships and worlds fight. */
+type War = (a: string, b: string) => boolean;
+
 /** Whether party a opens fire on party b of its own accord. */
-function aggressor(a: Party, b: Party): boolean {
+function aggressor(a: Party, b: Party, war: War): boolean {
   if (a.side !== null && a.side === b.side) return false;
   if (a.side === null && b.side === null) return false;
+  // Empires at peace share an orbit without a shot fired.
+  if (a.side !== null && b.side !== null && !war(a.side, b.side)) return false;
   // A fleet goes by its standing orders: which fleets to engage, and whether to
   // attack the defences of a world it does not own, which is a siege.
   if (a.fleet !== undefined) {
@@ -199,14 +204,14 @@ function aggressor(a: Party, b: Party): boolean {
 }
 
 /** Everyone in a place who is fighting someone, and whom each is fighting. */
-function engagements(parties: Party[]): Map<Party, Party[]> {
+function engagements(parties: Party[], war: War): Map<Party, Party[]> {
   const out = new Map<Party, Party[]>();
   for (const a of parties) {
     if (!partyAlive(a)) continue;
     for (const b of parties) {
       if (a === b || !partyAlive(b)) continue;
       if (a.side === null && b.side === null) continue;
-      if (aggressor(a, b) || aggressor(b, a)) {
+      if (aggressor(a, b, war) || aggressor(b, a, war)) {
         const held = out.get(a) ?? [];
         held.push(b);
         out.set(a, held);
@@ -572,14 +577,15 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
     });
   }
   if (parties.length < 2) return null;
-  const opening = engagements(parties);
+  const war: War = (a, b) => game.hostile(a, b);
+  const opening = engagements(parties, war);
   if (opening.size === 0) return null;
 
   const involved = [...opening.keys()];
   const lines: string[] = [];
   const before = new Map(involved.map((p) => [p, p.combatants.filter(alive).length]));
   for (let round = 1; round <= ROUNDS_PER_DAY; round++) {
-    const engaged = engagements(parties);
+    const engaged = engagements(parties, war);
     if (engaged.size === 0) break;
     lines.push(`Round ${round}:`);
     // Breaking off.
@@ -592,7 +598,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       // cannot hurt you does not keep you under a world's guns.
       const fleeing = p.combatants.filter(alive).reduce((s, c) => s + combatantStrength(c), 0);
       const chasers = foes
-        .filter((f) => aggressor(f, p))
+        .filter((f) => aggressor(f, p, war))
         .map((f) => f.combatants.filter((c) => alive(c) && c.thrust > 0 && c.armour > 0 && c.attacks.length > 0))
         .filter((cs) => cs.length > 0 && cs.reduce((s, c) => s + combatantStrength(c), 0) >= fleeing * 0.25);
       const chase = chasers.length === 0 ? 0 : Math.max(...chasers.map((cs) => Math.max(...cs.map((c) => c.thrust))));
@@ -604,7 +610,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
         lines.push(`  ${p.label} tries to break off and cannot.`);
       }
     }
-    const firing = engagements(parties);
+    const firing = engagements(parties, war);
     for (const p of firing.keys()) {
       for (const c of p.combatants) {
         c.pdLeft = c.pointDefence > 0 ? rng.roll(c.pointDefence) : 0;

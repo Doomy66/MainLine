@@ -66,6 +66,7 @@
         <a href="#admirals">Admirals</a>
         <a href="#combat">Combat</a>
         <a href="#defences">Planetary defences</a>
+        <a href="#war">War and peace</a>
         <a href="#rivals">The computer's Empires</a>
         <a href="#siege">Taking a world</a>
         <a href="#money">Money and shipyards</a>
@@ -84,7 +85,7 @@
         <h1>How to play MainLine</h1>
         <p class="lede">
           You rule an Empire, a chain of worlds a jump-1 ship can cross, and every other Empire in the sector
-          is ruled by somebody else. Most of them are the computer. Build a fleet, take worlds and hold on
+          is ruled by somebody else. Most of them are the computer, and some of them start at war with you. Build a fleet, take worlds and hold on
           to your own. One turn is a day and a jump takes a week.
         </p>
 
@@ -164,8 +165,8 @@
           <tr><td>System</td><td>The world picked on the map: its profile, owner, worth, defences, and who is where in the system. At a yard you can build at, what is on each slip and when she is due, and what waits for one. Send your selected fleet to any place in the system from here.</td></tr>
           <tr><td>Fleets</td><td>Your fleets, their orders, standing orders and ships. The list gives each fleet one line, grouped into those that need orders (idle away from home, damaged, short of fuel, hangars not full), those busy (jumping, laying siege, repairing, or under an admiral) and those at rest at home; search it by fleet, place or ship class, and sort it by name, place or strength. Tick ships to split them off into a new fleet; merge fleets in the same place. <em>Add to defences</em> gives a fleet to a world you hold, for good.</td></tr>
           <tr><td>Shipyard</td><td>Lay down new ships at a yard you hold, or at an independent one. The catalogue is in four sections: warships; system defence, boats and fighters with no jump drive; capital ships of 5,000 tons and more, closed until you open it; and civilian and support ships (traders, liners, scouts), closed too. Import designs from the Ship Designer.</td></tr>
-          <tr><td>Empire</td><td>Treasury, income, upkeep, what it takes to win, standings, and your worlds.</td></tr>
-          <tr><td>Reports</td><td>Everything you have heard, newest first. Each report has an icon for its kind (battle, capture, arrival, sighting, new ship, money, loss) and every faction it names carries its emblem, a shape in its colour. Reports that do not concern your own fleets, worlds or treasury are dimmed. Battle reports open to show every round. At the top, <em>Needs attention</em> lists what wants you today: your worlds under siege, enemies at your worlds, battles that cost you ships, worlds lost, fleets waiting on orders, and class A yards of yours with nothing on any slip. Click a line to go there.</td></tr>
+          <tr><td>Empire</td><td>Treasury, income, upkeep, what it takes to win, standings, and your worlds. The standings say how each Empire stands with you, at war or at peace and how warmly, with a button to declare war on one at peace.</td></tr>
+          <tr><td>Reports</td><td>Everything you have heard, newest first. Each report has an icon for its kind (battle, capture, arrival, sighting, new ship, money, loss, war and peace) and every faction it names carries its emblem, a shape in its colour. Reports that do not concern your own fleets, worlds or treasury are dimmed. Battle reports open to show every round. At the top, <em>Needs attention</em> lists what wants you today: your worlds under siege, enemies at your worlds, battles that cost you ships, worlds lost, fleets waiting on orders, and class A yards of yours with nothing on any slip. Click a line to go there.</td></tr>
         </table>
         <p>
           <strong>Save</strong> writes the whole game to one <code>.game</code> file. The game also keeps
@@ -732,6 +733,42 @@
         <p>
           How fast news travels, and full fog, can both be changed at any time on the Empire tab, for every
           player at once. Turn full fog off and every order in the post arrives at once.
+        </p>
+
+        <h2 id="war">War and peace</h2>
+        <p>
+          Not every Empire is at war with every other. Each pair has a standing, from hostile to friendly, and is
+          either at war or at peace. Empires at peace share a system without a shot fired: their fleets and
+          worlds do not fight, neither can besiege the other's worlds, and either can buy fuel at the other's
+          ports. Independent worlds are anybody's to take.
+        </p>
+        <p>
+          <strong>Where it starts.</strong> With Empires from allegiances, two Empires of one polity start as
+          friends, a client state and its patron warmly, and different polities as rivals. Between Empires made
+          from Mains, and on top of the polities, neighbours are rivals for the worlds between them, two
+          governments alike get on and a democracy and a dictatorship do not, bold Empires are hard to like, and
+          chance adds a little. A game starts with a few wars, most often between neighbours, and an uneasy
+          peace everywhere else.
+        </p>
+        <table>
+          <tr><th>What happens</th><th>What it does to the standing</th></tr>
+          <tr><td>A world taken from an Empire</td><td>A heavy fall between the two, and a smaller one between the taker and the victim's friends</td></tr>
+          <tr><td>A battle, or a siege that silences a world</td><td>A fall between the two</td></tr>
+          <tr><td>An independent world taken on an Empire's border</td><td>A small fall: the border presses</td></tr>
+          <tr><td>A declaration of war</td><td>The victim's friends think the worse of whoever declared it</td></tr>
+          <tr><td>A common enemy</td><td>A slow rise between two Empires at peace</td></tr>
+          <tr><td>A war nobody is fighting</td><td>A steady rise, as both sides weary of it</td></tr>
+          <tr><td>One Empire close to winning</td><td>Every other Empire cools towards it, the more the closer it is</td></tr>
+          <tr><td>Nothing to take</td><td>A computer Empire with no independent or enemy world within four parsecs grows restless with the neighbours it is at peace with, the faster the bolder and hungrier it is</td></tr>
+          <tr><td>Each week</td><td>Every standing drifts a little back towards where it started</td></tr>
+        </table>
+        <p>
+          When a standing falls far enough the computer declares war, and says why in the news: over the fall of
+          a world, over a siege, over an Empire's growing power, or because it has no other worlds within its
+          reach. Even two Empires of one polity can come to that. When a war between two computer Empires has
+          cooled for two weeks and the standing has climbed back, they make peace. You can declare war on any
+          Empire you are at peace with from the Empire tab. A war with you ends only when you agree to it, and
+          offering peace is still to come. Games saved before this keep everyone at war with everyone.
         </p>
 
         <h2 id="rivals">The computer's Empires</h2>

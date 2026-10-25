@@ -30,7 +30,7 @@ import { chooseFile } from "../game/save";
 import { buyStarting, orderBuild, sellStarting } from "../game/turn";
 import { describeTemper, oddsWanted, withdrawAt } from "../game/temper";
 import { admiralText, alerts, fleetStatus, type Alert, type FleetState, type FleetStatus } from "../game/attention";
-import type { Admiral, Build, Engage, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
+import type { Admiral, Build, Engage, Faction, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
 import { LOC_NAMES, STANDING_PRESETS } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import {
@@ -48,6 +48,7 @@ import type { World } from "../sector/sec";
 import { h, mcr, meter, pct, tons } from "./dom";
 import { emblem, kindIcon, withEmblems } from "./emblems";
 import { planning, whereIs, type Ctx } from "./gameview";
+import { declareWar, describeScore, relationOf } from "../game/relations";
 
 const LOCS: Loc[] = ["main", "gg", "belt", "deep"];
 
@@ -1044,7 +1045,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
     h(
       "table",
       {},
-      h("tr", {}, h("th", {}, "Empire"), h("th", { class: "r" }, "Worlds"), h("th", { class: "r" }, "Population"), h("th", {})),
+      h("tr", {}, h("th", {}, "Empire"), h("th", { class: "r" }, "Worlds"), h("th", { class: "r" }, "Population"), h("th", {}, "With you"), h("th", {})),
       standings.slice(0, 40).map(({ f, worlds: n, people: p }) =>
         h(
           "tr",
@@ -1069,10 +1070,11 @@ export function empirePane(ctx: Ctx): HTMLElement {
           ),
           h("td", { class: "r num" }, n),
           h("td", { class: "r num", title: share(p, target.people) + " of the sector" }, describeHeadcount(p)),
+          standingWith(ctx, f),
           h("td", {}, h("button", { class: "small", onclick: () => ctx.selectSystem(f.capital, true) }, "Capital")),
         ),
       ),
-      h("tr", { class: "muted" }, h("td", {}, "Neutral (independent)"), h("td", { class: "r num" }, neutral.worlds), h("td", { class: "r num", title: share(neutral.people, target.people) + " of the sector" }, describeHeadcount(neutral.people)), h("td", {})),
+      h("tr", { class: "muted" }, h("td", {}, "Neutral (independent)"), h("td", { class: "r num" }, neutral.worlds), h("td", { class: "r num", title: share(neutral.people, target.people) + " of the sector" }, describeHeadcount(neutral.people)), h("td", {}), h("td", {})),
     ),
     h("h2", {}, `Your worlds (${worlds.length})`),
     h(
@@ -1092,6 +1094,39 @@ export function empirePane(ctx: Ctx): HTMLElement {
         );
       }),
     ),
+  );
+}
+
+/**
+ * How another Empire stands with you: at war, or at peace and how warmly, and
+ * a way to end the peace. Ending a war takes both sides, and is to come.
+ */
+function standingWith(ctx: Ctx, f: Faction): HTMLElement {
+  const { game, me } = ctx;
+  if (f.id === me.id) return h("td", { class: "muted" }, "—");
+  const r = relationOf(game, me.id, f.id);
+  if (r === undefined) return h("td", { class: "bad" }, "War");
+  const title = `Score ${Math.round(r.score)} of -100 to 100${r.cause !== undefined ? `; soured ${r.cause}` : ""}`;
+  if (r.war) return h("td", { class: "bad", title }, "War");
+  return h(
+    "td",
+    { title },
+    `Peace, ${describeScore(r.score)} `,
+    f.alive && game.state.phase === "play"
+      ? h(
+          "button",
+          {
+            class: "small",
+            onclick: () => {
+              if (!window.confirm(`Declare war on ${f.name}? Its friends will think the worse of you, and only both sides together can make peace again.`)) return;
+              declareWar(game, me.id, f.id, "by its own choice");
+              ctx.say(`You are at war with ${f.name}.`);
+              ctx.refresh();
+            },
+          },
+          "Declare war",
+        )
+      : null,
   );
 }
 

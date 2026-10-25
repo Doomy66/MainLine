@@ -21,6 +21,7 @@ import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
 import { round, ships } from "./game";
 import { canRefuelAt, shareFuel, spareFuel } from "./nav";
+import { diplomacy, onBattle, onCapture, onSiege } from "./relations";
 import {
   CAPTURED_DEFENCE,
   captureDays,
@@ -231,6 +232,7 @@ function capture(game: Game, at: string, by: string): void {
   const ws = game.worldState(at);
   const world = game.world(at);
   const prev = ws.owner;
+  onCapture(game, at, by, prev);
   ws.owner = by;
   ws.siege = null;
   ws.defence = Math.round(defenceMax(world) * CAPTURED_DEFENCE);
@@ -338,7 +340,7 @@ function sieges(game: Game): void {
     const max = defenceMax(world);
     const here = game.fleetsAt(world.at, "main");
     const besiegers = here.filter(
-      (f) => f.standing.besiege && besieging(f) && f.owner !== ws.owner && game.fleetArmed(f),
+      (f) => f.standing.besiege && besieging(f) && f.owner !== ws.owner && (ws.owner === null || game.hostile(f.owner, ws.owner)) && game.fleetArmed(f),
     );
     const defended = here.some((f) => f.owner === ws.owner && game.fleetArmed(f));
     if (besiegers.length === 0 || defended) {
@@ -364,6 +366,7 @@ function sieges(game: Game): void {
     if (ws.siege.days >= need) {
       capture(game, world.at, by);
     } else if (ws.siege.days === 1 || ws.siege.days === need - 1) {
+      if (ws.siege.days === 1) onSiege(game, world.at, by, ws.owner);
       const to = [by, ...(ws.owner === null ? [] : [ws.owner])];
       game.log({
         to,
@@ -751,6 +754,7 @@ export function advanceDay(game: Game): void {
     const report = battleAt(game, system, loc);
     if (report === null) continue;
     battled.add(place);
+    onBattle(game, report.factions, system);
     game.log({ to: report.factions, kind: "combat", text: report.headline, at: system, detail: report.lines, wake: true, firsthand: report.factions });
   }
   game.removeEmptyFleets();
@@ -776,6 +780,7 @@ export function advanceDay(game: Game): void {
   yards(game);
   if (isWeekEnd(day)) economy(game);
   intel(game, lost);
+  diplomacy(game);
   endings(game);
   for (const f of s.factions) f.ready = false;
 }

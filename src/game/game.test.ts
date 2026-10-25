@@ -9,11 +9,12 @@ import { planAi } from "./ai";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
 import { routeTo } from "./nav";
+import { atWar, declareWar, diplomacy, PEACE_AT, relationOf, WAR_AT } from "./relations";
 import { captureDays, defenceMax, jumpFuel } from "./rules";
 import { parseGame, serialise } from "./save";
 import { createGame, DEFAULT_OPTIONS, hasAllegiances } from "./setup";
 import { aiSetup, buyStarting, endTurn, orderBuild, runDays } from "./turn";
-import type { GameOptions } from "./types";
+import type { Faction, GameOptions } from "./types";
 import { STANDING_PRESETS } from "./types";
 
 const sector = parseSectorFile(readFileSync("sectors/Driftwater-Reach.sector", "utf8"));
@@ -370,6 +371,7 @@ describe("losing a capital", () => {
     game.worldState(capital).defence = 0;
     const fleet = game.newFleet(me.id, capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
     fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    declareWar(game, me.id, victim.id, "to test the fall of a capital");
     for (let i = 0; i < 20 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
     expect(game.worldState(capital).owner).toBe(me.id);
     expect(victim.capital).not.toBe(capital);
@@ -489,11 +491,97 @@ describe("Empires from allegiances", () => {
     expect(parseGame(serialise(game)).state.factions.map((f) => f.allegiance).sort()).toEqual(["CsIm", "ImDd", "ImDd", "ZhIN"]);
   });
 
+  it("starts Empires of one polity as friends, and other polities as rivals", () => {
+    const game = start("allegiance");
+    const id = (name: string) => game.state.factions.find((f) => f.name.startsWith(name))!.id;
+    const imperial = relationOf(game, id("Third Imperium (Regina)"), id("Third Imperium (Efate)"))!;
+    expect(imperial.war).toBe(false);
+    expect(imperial.score).toBeGreaterThanOrEqual(40);
+    const client = relationOf(game, id("Third Imperium (Regina)"), id("Cs0807"))!;
+    expect(client.score).toBeGreaterThan(relationOf(game, id("Third Imperium (Regina)"), id("Zhodani"))!.score);
+  });
+
   it("ignores allegiance when Empires come from Mains", () => {
     const game = start("mains");
     expect(game.state.factions.every((f) => f.allegiance === undefined)).toBe(true);
     // The non-aligned worlds are a Main like any other, and so an Empire.
     expect(game.state.factions).toHaveLength(5);
     expect(game.worldState("0301").owner).not.toBeNull();
+  });
+});
+
+describe("war and peace", () => {
+  /** Two computer Empires and a fleet of one in orbit of the other's world. */
+  function standoff() {
+    // The attacker is a player's, so the computer does not send its fleet elsewhere.
+    const game = newGame({}, 1, "PEACE");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const a = game.humans()[0];
+    const b = game.state.factions.find((f) => !f.human && game.ownedWorlds(f.id).some((w) => defenceMax(w) > 0));
+    const r = relationOf(game, a!.id, b!.id)!;
+    r.war = false;
+    r.score = 30;
+    const at = game.ownedWorlds(b!.id).find((w) => defenceMax(w) > 0)!;
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== at.at);
+    const fleet = game.newFleet(a!.id, at.at, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    return { game, a: a!, b: b!, r, at: at.at, fleet };
+  }
+
+  it("keeps Empires at peace from fighting or besieging each other", () => {
+    const { game, a, b, at, fleet } = standoff();
+    expect(game.hostile(a.id, b.id)).toBe(false);
+    const before = game.worldState(at).defence;
+    advanceDay(game);
+    expect(game.worldState(at).defence).toBe(before);
+    expect(game.worldState(at).siege).toBeNull();
+    expect(fleet.ships.every((sh) => sh.damage === 0)).toBe(true);
+    declareWar(game, a.id, b.id, "for the test");
+    expect(game.hostile(a.id, b.id)).toBe(true);
+    expect(game.state.log.some((e) => e.kind === "diplomacy" && e.text.includes(`${a.name} declares war on ${b.name}`))).toBe(true);
+    advanceDay(game);
+    expect(game.worldState(at).defence).toBeLessThan(before);
+  });
+
+  it("goes to war when relations sour, and back to peace when they mend", () => {
+    const game = newGame({}, 0, "PEACE");
+    const [a, b] = game.state.factions as [Faction, Faction];
+    const r = relationOf(game, a.id, b.id)!;
+    r.war = false;
+    r.score = WAR_AT - 1;
+    r.cause = "over the test";
+    r.causeBy = b.id;
+    diplomacy(game);
+    expect(r.war).toBe(true);
+    expect(game.state.log.some((e) => e.text === `${b.name} declares war on ${a.name}, over the test.`)).toBe(true);
+    // No peace while the fighting is fresh, then peace once it has cooled.
+    r.score = PEACE_AT + 1;
+    r.clash = game.state.day;
+    diplomacy(game);
+    expect(r.war).toBe(true);
+    game.state.day += 14;
+    diplomacy(game);
+    expect(r.war).toBe(false);
+  });
+
+  it("leaves only a player to make peace with a player", () => {
+    const game = newGame({}, 1, "PEACE");
+    const me = game.humans()[0]!;
+    const other = game.state.factions.find((f) => !f.human)!;
+    const r = relationOf(game, me.id, other.id)!;
+    r.war = true;
+    r.score = 90;
+    r.clash = -100;
+    diplomacy(game);
+    expect(r.war).toBe(true);
+  });
+
+  it("keeps everyone at war in a game saved before relations", () => {
+    const game = newGame();
+    delete game.state.relations;
+    const [a, b] = game.state.factions;
+    expect(atWar(game, a!.id, b!.id)).toBe(true);
+    expect(game.hostile(a!.id, null)).toBe(false);
   });
 });

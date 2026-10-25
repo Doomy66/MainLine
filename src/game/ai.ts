@@ -193,12 +193,12 @@ function knownThreat(game: Game, faction: Faction, at: string, sees: ReadonlySet
       .reduce((s, f) => s + game.fleetStrength(f), 0);
   }
   const seen = Object.values(faction.intel)
-    .filter((s) => s.system === at && s.left === undefined && game.state.day - s.day < 21)
+    .filter((s) => s.system === at && s.left === undefined && game.state.day - s.day < 21 && game.hostile(faction.id, s.owner))
     .reduce((t, s) => t + s.strength, 0);
   // Nobody leaves a world of theirs unwatched: expect something in orbit of an
   // enemy world, and a good deal more at an enemy capital.
   const owner = game.worldState(at).owner;
-  if (owner === null || owner === faction.id) return seen;
+  if (owner === null || !game.hostile(faction.id, owner)) return seen;
   const guess = (game.faction(owner).capital === at ? 1.5 : 0.3) * defenceStrength(game, at) + 50;
   return Math.max(seen, guess);
 }
@@ -359,7 +359,8 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
   if (mend(game, fleet)) return;
 
   // At a world it does not hold: take it, or give up if it cannot.
-  if (here.owner !== faction.id && (by.near === undefined || distanceBetween(by.near.at, fleet.system) <= by.near.parsecs)) {
+  const takeable = (owner: string | null) => owner === null || game.hostile(faction.id, owner);
+  if (takeable(here.owner) && (by.near === undefined || distanceBetween(by.near.at, fleet.system) <= by.near.parsecs)) {
     const against = defenceStrength(game, fleet.system) + knownThreat(game, faction, fleet.system, sees);
     if (mine >= against * nerve(by.temper)) {
       fleet.standing = ordersWith(by.temper, "Seek and destroy");
@@ -385,7 +386,7 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
     if (step.hops > MAX_HOPS) continue;
     if (by.near !== undefined && distanceBetween(by.near.at, at) > by.near.parsecs) continue;
     const ws = game.worldState(at);
-    if (ws.owner === faction.id) continue;
+    if (!takeable(ws.owner)) continue;
     const world = game.world(at);
     const need = defenceStrength(game, at) + knownThreat(game, faction, at, sees);
     looked++;
@@ -486,7 +487,7 @@ function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: 
     if (fleet.transit !== null || f === undefined || f.last !== today - 1 || f.last - f.since < 2) continue;
     if (f.at !== fleet.system || f.loc !== fleet.loc) continue;
     const owner = game.worldState(fleet.system).owner;
-    const sieging = fleet.loc === "main" && owner !== faction.id && fleet.standing.besiege && fleet.order === null;
+    const sieging = fleet.loc === "main" && (owner === null || game.hostile(faction.id, owner)) && fleet.standing.besiege && fleet.order === null;
     const guarding = owner === faction.id && fleet.order === null;
     if (guarding) continue;
     if (sieging) {

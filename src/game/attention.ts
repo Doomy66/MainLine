@@ -42,7 +42,7 @@ export function fleetStatus(game: Game, f: Fleet): FleetStatus {
     }
   }
   const ws = game.worldState(f.system);
-  if (ws.owner !== f.owner && f.loc === "main" && f.standing.besiege && game.fleetArmed(f)) {
+  if ((ws.owner === null || game.hostile(f.owner, ws.owner)) && f.loc === "main" && f.standing.besiege && game.fleetArmed(f)) {
     if (ws.siege?.by === f.owner) {
       const left = Math.max(0, captureDays(game.world(f.system)) - ws.siege.days);
       return { state: "busy", mark: "siege", text: `Siege of ${name}: submits in ${left} day${left === 1 ? "" : "s"}` };

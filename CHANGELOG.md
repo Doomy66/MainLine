@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- War and peace. Empires are no longer all at war with all: each pair has a standing and is at war or at
+  peace. Empires at peace do not fight or besiege each other and can buy fuel at each other's ports.
+  Empires of one polity start as friends, and Empires from Mains start mostly at peace, with a few wars
+  between rivals. Taking worlds, battles, sieges, borders, common enemies, a leader close to winning and
+  an Empire with nothing left to take move the standings, and the computer declares war and makes peace
+  as they do, saying why in the news. The Empire tab shows how each Empire stands with you and lets you
+  declare war. Older saves keep everyone at war.
 - A sector whose worlds belong to polities, such as an official one imported in PlanetHex, can start with
   them: under Empires from, choose Existing allegiances and each polity's worlds become Empires of its
   own, named for it, such as Darrian Confederation or Third Imperium (Regina). Non-aligned worlds start

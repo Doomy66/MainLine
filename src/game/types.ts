@@ -281,7 +281,7 @@ export interface WorldState {
   fought: number;
 }
 
-export type LogKind = "combat" | "capture" | "arrival" | "build" | "economy" | "info" | "lost" | "sighting";
+export type LogKind = "combat" | "capture" | "arrival" | "build" | "economy" | "info" | "lost" | "sighting" | "diplomacy";
 
 export interface LogEntry {
   /** The day the news reaches the faction, which is when it is shown. */
@@ -343,6 +343,23 @@ export interface GameOptions {
   fullFog: boolean;
 }
 
+/** How two Empires stand with each other. relations.ts says how it moves. */
+export interface Relation {
+  /** Where the pair started, and drifts back to. */
+  readonly base: number;
+  /** From -100, deadly enemies, to 100, firm friends. */
+  score: number;
+  war: boolean;
+  /** The day the war or the peace began. */
+  since: number;
+  /** Why it soured, last time it did, as the end of a sentence: "over the fall of Regina". */
+  cause?: string;
+  /** Whose grievance that was. */
+  causeBy?: string;
+  /** The last day they fought or took a world from each other. */
+  clash?: number;
+}
+
 export interface GameState {
   readonly version: 1;
   readonly name: string;
@@ -353,6 +370,11 @@ export interface GameState {
   factions: Faction[];
   worlds: Record<string, WorldState>;
   fleets: Fleet[];
+  /**
+   * Every pair of Empires, by their ids joined with a bar, lower first. Games
+   * from before relations have none, and everyone is at war with everyone.
+   */
+  relations?: Record<string, Relation>;
   designs: Record<string, Design>;
   rng: number;
   nextId: number;

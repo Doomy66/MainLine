@@ -63,6 +63,7 @@ const KIND_ICONS: Readonly<Record<LogKind, { paths: readonly string[]; colour: s
   info: { paths: ["M12 3a9 9 0 1 0 0.01 0z", "M12 11v6", "M12 7.5v0.5"], colour: "#8b93a1", label: "Report" },
   lost: { paths: ["M12 3a9 9 0 1 0 0.01 0z", "M6 6l12 12"], colour: "#ff5d73", label: "Loss" },
   sighting: { paths: ["M2 12c3 -5 6.5 -7 10 -7s7 2 10 7c-3 5 -6.5 7 -10 7s-7 -2 -10 -7z", "M12 9.5a2.5 2.5 0 1 0 0.01 0z"], colour: "#ffb347", label: "Sighting" },
+  diplomacy: { paths: ["M6 3h12v18l-6 -4l-6 4z", "M9 8h6", "M9 12h6"], colour: "#c792ea", label: "War and peace" },
 };
 
 export function kindIcon(kind: LogKind, size = 15): SVGSVGElement {
