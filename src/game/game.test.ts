@@ -1288,6 +1288,98 @@ describe("the computer's sieges and yards", () => {
     expect(orderBuild(game, a, "Patrol-Corvette", yard.at)).not.toBe("");
   });
 
+  it("sends a fleet only where it can fill its tanks, or jump on from to somewhere it can", () => {
+    const game = newGame({}, 0, "DRYTARGET");
+    game.state.phase = "play";
+    game.state.day = 10;
+    const ai = game.state.factions[0]!;
+    // The only world left to take has no fuel for anybody.
+    const port = (at: string, parsecs: number) => game.state.sector.worlds.find((w) => distanceBetween(w.at, at) === parsecs && "AB".includes(w.uwp.starport));
+    const dry = game.state.sector.worlds.find(
+      (w) => w.pbg.giants === 0 && w.uwp.hydrographics === 0 && !"ABCD".includes(w.uwp.starport) && w.uwp.population > 0 && port(w.at, 2) && port(w.at, 3),
+    )!;
+    for (const w of game.state.sector.worlds) game.worldState(w.at).owner = w.at === dry.at ? null : ai.id;
+    game.worldState(dry.at).defence = 0;
+    game.worldState(dry.at).navy = null;
+    game.state.fleets = [];
+    const from = (parsecs: number) => port(dry.at, parsecs)!;
+    // A corvette's tanks hold one jump of three parsecs: three out leaves it
+    // nothing to jump on with.
+    const far = from(3);
+    const corvette = game.newFleet(ai.id, far.at, "main", [game.newShip("Patrol-Corvette")], "Corvette");
+    // A cruiser's hold two parsecs there and one on.
+    const near = from(2);
+    const cruiser = game.newFleet(ai.id, near.at, "main", [game.newShip("Broadsword-Mercenary-Cruiser")], "Cruiser");
+    planAi(game, ai);
+    const goesThere = (f: typeof corvette) => f.order?.kind === "jump" && f.order.route.at(-1) === dry.at;
+    expect(goesThere(corvette)).toBe(false);
+    expect(goesThere(cruiser)).toBe(true);
+  });
+
+  it("keeps up a slow siege when it has no fuel to go anywhere else", () => {
+    const game = newGame({}, 0, "NOWAYHOME");
+    game.state.phase = "play";
+    game.state.day = 20;
+    const [ai, foe] = game.state.factions as [Faction, Faction];
+    relationOf(game, ai.id, foe.id)!.war = true;
+    // An enemy world with defences and no gas giant: no fuel there for an enemy.
+    const world = game.state.sector.worlds.find((w) => w.pbg.giants === 0 && defenceMax(w) > 0 && w.at !== ai.capital && w.at !== foe.capital)!;
+    game.worldState(world.at).owner = foe.id;
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== world.at);
+    const ws = game.worldState(world.at);
+    ws.navy = null;
+    // Five days have taken off a tenth: at that rate it has weeks to go.
+    ws.defence = Math.round(defenceMax(world) * 0.9);
+    const ship = game.newShip("Patrol-Corvette");
+    ship.fuel = 0;
+    const fleet = game.newFleet(ai.id, world.at, "main", [ship], "Strike");
+    fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    fleet.fighting = { at: world.at, loc: "main", since: 15, last: 19 };
+    planAi(game, ai);
+    expect(fleet.standing.besiege).toBe(true);
+  });
+
+  it("keeps the computer to one order at a time at another Empire's yard, and only when a slip is free", () => {
+    const { game, a, b } = yards("ONEATATIME");
+    a.credits = 50_000;
+    a.builds = [];
+    for (let i = 0; i < 6; i++) planAi(game, a);
+    const abroad = a.builds.filter((x) => game.worldState(x.at).owner === b.id);
+    expect(abroad.length).toBeGreaterThan(0);
+    expect(new Set(abroad.map((x) => x.at)).size).toBe(abroad.length);
+  });
+
+  it("has the computer build at its own yard though others' orders fill the slips", () => {
+    const { game, a, b } = yards("OWNYARD");
+    // The second Empire keeps one class A yard; the first takes the rest.
+    const mine = game.ownedWorlds(b.id).find((w) => w.uwp.starport === "A" && w.uwp.tl >= 12)!;
+    for (const w of game.ownedWorlds(b.id)) if (w.at !== mine.at) game.worldState(w.at).owner = a.id;
+    a.builds = [];
+    b.builds = [];
+    for (let i = 0; i < 3; i++) a.builds.push({ classId: "Patrol-Corvette", at: mine.at, name: `Order ${i}`, placed: 0, work: 60, worked: 0, done: 60 });
+    game.replanYard(mine.at);
+    b.credits = 5_000;
+    planAi(game, b);
+    expect(b.builds.map((x) => x.at)).toContain(mine.at);
+  });
+
+  it("keeps the computer from swelling its guard with carriers once it has its fill of small craft", () => {
+    const game = newGame({}, 0, "CARRIERS");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const ai = game.state.factions.find((f) => game.world(f.capital).uwp.starport === "A" && game.world(f.capital).uwp.tl >= 12)!;
+    game.state.fleets = game.state.fleets.filter((f) => f.owner !== ai.id);
+    // Two escort carriers' worth of Snubs in the guard's hangars, and a strike
+    // fleet big enough that the guard looks thin beside it.
+    game.newFleet(ai.id, ai.capital, "main", [...game.commission("Hyperion-Escort-Carrier"), ...game.commission("Hyperion-Escort-Carrier")], "Home Guard");
+    game.newFleet(ai.id, ai.capital, "gg", Array.from({ length: 12 }, () => game.newShip("Musuna-Frigate")), "Strike");
+    ai.credits = 600;
+    ai.builds = [];
+    for (let i = 0; i < 12; i++) planAi(game, ai);
+    expect(ai.builds.length).toBeGreaterThan(0);
+    expect(ai.builds.filter((b) => game.catalogue.get(b.classId).hangars.length > 0 && game.catalogue.get(b.classId).jump < 2)).toEqual([]);
+  });
+
   it("has the computer build at a friendly yard when its own cannot build a warship", () => {
     const { game, a, b } = yards("FRIENDAI");
     a.credits = 5_000;

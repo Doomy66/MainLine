@@ -3,9 +3,10 @@
  *
  * Each keeps a Home Guard at its capital and sends everything else out in
  * strike fleets. A strike fleet picks the most worthwhile world within four
- * jumps that it is strong enough to take, jumps there by way of wherever it can
- * refuel, and sits in orbit until the world submits. A beaten-up fleet goes
- * home to repair; one too weak for anything goes home and waits for more ships.
+ * jumps that it is strong enough to take and could fill its tanks at, or jump
+ * on from, jumps there by way of wherever it can refuel, and sits in orbit
+ * until the world submits. A beaten-up fleet goes home to repair; one too
+ * weak for anything goes home and waits for more ships.
  * Treasuries go on the best fighting value for money the yards can build.
  *
  * It plays by the same rules as a human: it sees only what a human in its place
@@ -16,7 +17,7 @@ import { attackDamage, damageAgainst, STRENGTH_ARMOUR, type ShipClass } from "..
 import type { Catalogue } from "../catalogue/catalogue";
 import type { Game } from "./game";
 import { canRefuelAt, jumpMap, pathIn, routeTo, spareFuel } from "./nav";
-import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, income, repairPort, repairRate, ROUNDS_PER_DAY, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, fuelSources, income, jumpFuel, repairPort, repairRate, ROUNDS_PER_DAY, slipsAt, yardPrice } from "./rules";
 import { relationOf } from "./relations";
 import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
@@ -335,6 +336,52 @@ function nearestRepairYard(game: Game, fleet: Fleet, broken: boolean): string[] 
   return best === null ? null : pathIn(map, fleet.system, best.at);
 }
 
+/**
+ * Whether a fleet could fill its tanks at a world as things stand or, for one
+ * it means to take, once the world is its own.
+ */
+function fuelThere(game: Game, fleet: Fleet, at: string, carried: ReadonlySet<string>, taking: boolean): boolean {
+  if (canRefuelAt(game, fleet, at, carried)) return true;
+  if (!taking) return false;
+  const world = game.world(at);
+  return fleet.ships.every((s) => carried.has(s.id) || fuelSources(world, game.cls(s), false).length > 0);
+}
+
+/**
+ * The way to send a fleet to a world without leaving it there with empty
+ * tanks. Where it can fill up on arrival, the whole route. Where it cannot, it
+ * must arrive with fuel for a jump on to somewhere it can: so it goes as far
+ * as the last stop before, where it can fill up, and, once there, fills up
+ * before the last jump if the tanks would not hold enough. Null where its tanks
+ * could never hold enough, or there is nowhere to jump on to.
+ */
+function safeWay(
+  game: Game,
+  fleet: Fleet,
+  map: ReadonlyMap<string, { hops: number; prev: string }>,
+  at: string,
+  taking: boolean,
+): { route: string[] } | "refuel" | null {
+  const route = pathIn(map, fleet.system, at);
+  if (route === null) return null;
+  const carried = game.carriedShips(fleet);
+  if (fuelThere(game, fleet, at, carried, taking)) return { route };
+  let out = Infinity;
+  for (const n of game.neighbours(at, game.fleetJump(fleet, carried))) {
+    const d = distanceBetween(at, n);
+    if (d >= out) break;
+    if (canRefuelAt(game, fleet, n, carried)) out = d;
+  }
+  if (out === Infinity) return null;
+  const leg = distanceBetween(route.length > 1 ? route[route.length - 2]! : fleet.system, at);
+  const ships = fleet.ships.filter((s) => !carried.has(s.id));
+  const need = (s: Fleet["ships"][number]) => jumpFuel(game.cls(s).tons, leg) + jumpFuel(game.cls(s).tons, out) - 1e-9;
+  if (ships.some((s) => game.cls(s).fuelCapacity < need(s))) return null;
+  if (route.length > 1) return { route: route.slice(0, -1) };
+  if (ships.every((s) => s.fuel >= need(s))) return { route };
+  return canRefuelAt(game, fleet, fleet.system, carried) ? "refuel" : null;
+}
+
 /** Small craft: a Snub, a fighter, a pinnace. */
 const SMALL_CRAFT_TONS = 100;
 /**
@@ -356,7 +403,19 @@ function build(game: Game, faction: Faction): void {
     .sort(nearest)
     .slice(0, 2);
   // A yard with a long queue is somewhere else's job.
-  const busyYard = (w: World) => game.scheduleAt(w.at, 1).start > game.state.day + 14;
+  const today = game.state.day;
+  const busyYard = (w: World) => {
+    const start = game.scheduleAt(w.at, 1).start;
+    const owner = game.worldState(w.at).owner;
+    // Another Empire's yard takes one order at a time from it, and only with a
+    // slip free: the slips go first come first served, and an outsider's queue
+    // would keep the owner off its own.
+    if (owner !== null && owner !== faction.id) return start > today || faction.builds.some((b) => b.at === w.at);
+    if (start <= today + 14) return false;
+    // Its own yard, booked up by others' orders, is still the best it has
+    // while its own do not fill the slips.
+    return owner !== faction.id || faction.builds.filter((b) => b.at === w.at).length >= slipsAt(w);
+  };
   // Where none of those can build a warship that can go anywhere, or all that
   // can are busy, the nearest of an ally's or a friendly Empire's, at the
   // same markup: a rich Empire with only low-tech ports is not left with
@@ -392,15 +451,21 @@ function build(game: Game, faction: Faction): void {
   const busy = new Set(yards.filter(busyYard).map((w) => w.at));
   const counts = new Map<string, number>();
   let small = 0;
+  let carried = 0;
   for (const f of game.fleetsOf(faction.id)) {
     const aboard = game.hangared(f);
     for (const sh of f.ships) {
       counts.set(sh.classId, (counts.get(sh.classId) ?? 0) + 1);
-      if (game.cls(sh).tons < SMALL_CRAFT_TONS && !aboard.has(sh.id)) small++;
+      if (game.cls(sh).tons < SMALL_CRAFT_TONS && aboard.has(sh.id)) carried++;
+      else if (game.cls(sh).tons < SMALL_CRAFT_TONS) small++;
     }
   }
-  // Enough small craft, and the money waits for something bigger.
-  const tooSmall = (cls: ShipClass) => cls.tons < SMALL_CRAFT_TONS && small >= SMALL_CRAFT_MOST;
+  // Enough small craft, and the money waits for something bigger. A carrier
+  // that cannot go anywhere is only a way round that for a guard, so it is
+  // held to the same count, its hangars' craft and all.
+  const tooSmall = (cls: ShipClass) =>
+    (cls.tons < SMALL_CRAFT_TONS && small >= SMALL_CRAFT_MOST) ||
+    (cls.hangars.length > 0 && cls.jump < STRIKE_JUMP && small + carried >= SMALL_CRAFT_MOST);
   for (const w of yards) {
     if (busy.has(w.at)) continue;
     for (const cls of classes) {
@@ -430,7 +495,6 @@ function build(game: Game, faction: Faction): void {
   if (best === null) return;
   faction.credits -= best.price;
   const work = buildDaysFor(best.cls, game.state.options.buildSpeed);
-  const today = game.state.day;
   faction.builds.push({ classId: best.cls.id, at: best.at, name: shipName(game.rng, game.shipNamesInUse()), placed: today, work, worked: 0, done: today + work });
   game.replanYard(best.at);
 }
@@ -542,7 +606,7 @@ function strike(
   // Somewhere worth taking.
   const map = jumpMap(game, fleet);
   const margin = oddsWanted(by.temper);
-  let best: { at: string; score: number; need: number } | null = null;
+  const candidates: { at: string; score: number; need: number }[] = [];
   let looked = 0;
   let foeInReach: string | null = null;
   for (const [at, step] of map) {
@@ -560,21 +624,29 @@ function strike(
     value *= prize(by.temper, ws.owner !== null);
     if (ws.owner !== null && game.faction(ws.owner).capital === at) value *= 1.5;
     const score = value / Math.pow(step.hops + 1, 1.3);
-    if (best === null || score > best.score) best = { at, score, need };
+    candidates.push({ at, score, need });
   }
-  if (best !== null) {
-    const route = pathIn(map, fleet.system, best.at);
-    if (route !== null) {
-      fleet.standing = travelling(by.temper);
-      fleet.order = { kind: "jump", route };
-      const world = game.world(best.at);
-      const owner = game.worldState(best.at).owner;
-      const r = best.need <= 0 ? Infinity : mine / best.need;
-      const held = owner === null ? "an independent world" : game.faction(owner).capital === best.at ? `${game.faction(owner).name}'s capital` : `a ${game.faction(owner).name} world`;
-      const looks = r >= 3 ? "lightly held" : r >= 1.6 ? "within our strength" : "a hard fight, but worth it";
-      because(fleet, `heads for ${world.name}, because it looks a good target: ${held}, worth MCr${income(world).toFixed(1)} a week, and ${looks}.`);
+  // The best that the fleet can go to and not be left there with empty tanks.
+  // A world it could fill up at once it holds counts: it goes only where it
+  // expects to win, and if peace comes first the port sells it fuel anyway.
+  candidates.sort((a, b) => b.score - a.score);
+  for (const best of candidates) {
+    const way = safeWay(game, fleet, map, best.at, true);
+    if (way === null) continue;
+    if (way === "refuel") {
+      fleet.order = { kind: "refuel" };
+      because(fleet, `takes on fuel at ${game.world(fleet.system).name} before going for ${game.world(best.at).name}, because there is none to be had there.`);
       return;
     }
+    fleet.standing = travelling(by.temper);
+    fleet.order = { kind: "jump", route: way.route };
+    const world = game.world(best.at);
+    const owner = game.worldState(best.at).owner;
+    const r = best.need <= 0 ? Infinity : mine / best.need;
+    const held = owner === null ? "an independent world" : game.faction(owner).capital === best.at ? `${game.faction(owner).name}'s capital` : `a ${game.faction(owner).name} world`;
+    const looks = r >= 3 ? "lightly held" : r >= 1.6 ? "within our strength" : "a hard fight, but worth it";
+    because(fleet, `heads for ${world.name}, because it looks a good target: ${held}, worth MCr${income(world).toFixed(1)} a week, and ${looks}.`);
+    return;
   }
 
   // Nothing it can take: home, to wait for more. Against an Empire it chose
@@ -646,10 +718,15 @@ function respond(game: Game, faction: Faction, sees: ReadonlySet<string>): Set<s
         busy.add(f.id);
         break;
       }
-      const route = pathIn(mapOf(f), f.system, t.at);
-      if (route !== null && route.length <= 2) {
+      const way = safeWay(game, f, mapOf(f), t.at, false);
+      if (way === "refuel") {
+        f.order = { kind: "refuel" };
+        busy.add(f.id);
+        break;
+      }
+      if (way !== null && way.route.length <= 2) {
         f.standing = ordersFor(faction, "Patrol");
-        f.order = { kind: "jump", route };
+        f.order = { kind: "jump", route: way.route };
         busy.add(f.id);
         break;
       }
@@ -690,6 +767,9 @@ function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: 
         because(fleet, `gives up the siege of ${game.world(fleet.system).name} and heads home, because its defences are holding out.`);
         continue;
       }
+      // With no way home, a siege however slow is better than sitting idle
+      // in orbit with the guns quiet.
+      if (daysToSilence(game, fleet, fleet.system) < Infinity) continue;
     }
     fleet.standing = orders("Avoid battle");
     // Fuel first, where it is quiet, then on its way.
@@ -740,10 +820,15 @@ function defend(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
       because(fleet, `takes on fuel at ${game.world(fleet.system).name} before going to ${game.world(t.at).name}'s aid, because the tanks are low.`);
       return;
     }
-    const route = routeTo(game, fleet, t.at);
-    if (route === null || route.length > 3) continue;
+    const way = safeWay(game, fleet, jumpMap(game, fleet, undefined, 3), t.at, false);
+    if (way === null) continue;
+    if (way === "refuel") {
+      fleet.order = { kind: "refuel" };
+      because(fleet, `takes on fuel at ${game.world(fleet.system).name} before going to ${game.world(t.at).name}'s aid, because there is none to be had there.`);
+      return;
+    }
     fleet.standing = ordersWith(by.temper, "Patrol");
-    fleet.order = { kind: "jump", route };
+    fleet.order = { kind: "jump", route: way.route };
     because(fleet, `goes to ${game.world(t.at).name}'s aid, because an enemy was sighted there${plight(t.at)} and ${odds(mine, t.threat)}.`);
     return;
   }
