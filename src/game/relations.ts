@@ -279,6 +279,21 @@ function weekly(game: Game): void {
   const relations = game.state.relations!;
   const living = alive(game);
   const ids = new Set(living.map((f) => f.id));
+  // Who is at war with whom, gathered once: asking pair by pair for a common
+  // enemy took seconds a week with a hundred Empires. Nothing below makes or
+  // ends a war, so it holds for the whole of the week's changes.
+  const enemies = new Map(living.map((f) => [f.id, new Set<string>()]));
+  for (const [key, r] of Object.entries(relations)) {
+    if (!r.war) continue;
+    const [a, b] = key.split("|") as [string, string];
+    enemies.get(a)?.add(b);
+    enemies.get(b)?.add(a);
+  }
+  const commonEnemy = (a: string, b: string) => {
+    const [few, many] = [enemies.get(a)!, enemies.get(b)!].sort((x, y) => x.size - y.size) as [Set<string>, Set<string>];
+    for (const c of few) if (many.has(c)) return true;
+    return false;
+  };
   for (const [key, r] of Object.entries(relations)) {
     const [a, b] = key.split("|") as [string, string];
     if (!ids.has(a) || !ids.has(b)) continue;
@@ -288,7 +303,7 @@ function weekly(game: Game): void {
     // its own first day.
     if (r.war && game.state.day - Math.max(r.clash ?? r.since, r.since) >= COOLING) r.score = clamp(r.score + WEARINESS);
     // A common enemy brings two Empires at peace closer.
-    if (!r.war && living.some((c) => c.id !== a && c.id !== b && atWar(game, a, c.id) && atWar(game, b, c.id))) r.score = clamp(r.score + 3);
+    if (!r.war && commonEnemy(a, b)) r.score = clamp(r.score + 3);
   }
 
   // One Empire close to winning makes its neighbours uneasy. Those already at
@@ -308,9 +323,10 @@ function weekly(game: Game): void {
   // A computer Empire with nothing to take grows restless with its neighbours,
   // though not with its allies, nor with one it made peace with lately. One
   // with no navy has nothing to be restless with.
+  const owned = new Map(living.map((f) => [f.id, game.ownedWorlds(f.id)]));
   for (const f of living) {
     if (f.human) continue;
-    const own = game.ownedWorlds(f.id);
+    const own = owned.get(f.id)!;
     const strength = strengthOf(game, f.id);
     if (own.length === 0 || strength <= 0 || somethingToTake(game, f, own, strength)) continue;
     const restless = 3 * (0.5 + f.temper.aggression + f.temper.expansion);
@@ -320,7 +336,7 @@ function weekly(game: Game): void {
       if (r !== undefined && r.since > 0 && game.state.day - r.since < RESTLESS_AFTER) continue;
       // Only a neighbour with a world near enough and weak enough to take: a
       // small Empire does not pick a quarrel with one it could never hurt.
-      const prey = game.ownedWorlds(g.id).some((w) => defenceStrength(game, w.at) < strength && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
+      const prey = owned.get(g.id)!.some((w) => defenceStrength(game, w.at) < strength && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
       if (prey) shift(game, f.id, g.id, -restless, { text: "with no other worlds within its reach", who: f.id });
     }
   }
@@ -636,8 +652,17 @@ function proposals(game: Game): void {
   const living = alive(game);
   // Alliances an offer still waiting would make count against the limit too,
   // or an Empire offered one to every friend in the same week.
-  const committed = (id: string) =>
-    alliesOf(game, id).length + standingOffers(game).filter((o) => o.kind === "alliance" && (o.from === id || o.to === id)).length;
+  // Counted once and kept up as offers go out: counting afresh for every pair
+  // took over a second a week with a hundred Empires.
+  const counts = new Map<string, number>();
+  const committed = (id: string) => {
+    let n = counts.get(id);
+    if (n === undefined) {
+      n = alliesOf(game, id).length + standingOffers(game).filter((o) => o.kind === "alliance" && (o.from === id || o.to === id)).length;
+      counts.set(id, n);
+    }
+    return n;
+  };
   const room = (g: Faction) => g.human || committed(g.id) < MOST_ALLIES;
   for (const f of living) {
     if (f.human) continue;
@@ -646,7 +671,11 @@ function proposals(game: Game): void {
       const r = relationOf(game, f.id, g.id);
       if (r === undefined || day - (r.offered ?? -Infinity) < OFFER_EVERY || offerBetween(game, f.id, g.id) !== undefined) continue;
       if (r.war && g.human && willing(game, f, g.id, "peace")) makeOffer(game, f.id, g.id, "peace");
-      else if (!r.war && r.allied !== true && r.score >= ALLY_AT && room(f) && room(g) && willing(game, f, g.id, "alliance")) makeOffer(game, f.id, g.id, "alliance");
+      else if (!r.war && r.allied !== true && r.score >= ALLY_AT && room(f) && room(g) && willing(game, f, g.id, "alliance")) {
+        makeOffer(game, f.id, g.id, "alliance");
+        counts.set(f.id, committed(f.id) + 1);
+        counts.set(g.id, committed(g.id) + 1);
+      }
     }
   }
 }
