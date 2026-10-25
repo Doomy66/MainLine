@@ -123,7 +123,7 @@ ships.
 - class C builds small craft.
 
 None builds above its world's tech level. Independent class A yards build for
-anybody, at a markup.
+anybody, at a markup, and so do the yards of Empires at peace with you.
 
 **News can travel by ship.** News arrives instantly unless you choose
 otherwise. Set it to travel by express boat, courier or trader and a report

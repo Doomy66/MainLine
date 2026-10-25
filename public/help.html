@@ -164,7 +164,7 @@
           <tr><th>Tab</th><th>What it is for</th></tr>
           <tr><td>System</td><td>The world picked on the map: its profile, owner, worth, defences, and who is where in the system. At a yard you can build at, what is on each slip and when she is due, and what waits for one. Send your selected fleet to any place in the system from here.</td></tr>
           <tr><td>Fleets</td><td>Your fleets, their orders, standing orders and ships. The list gives each fleet one line, grouped into those that need orders (idle away from home, damaged, short of fuel, hangars not full), those busy (jumping, laying siege, repairing, or under an admiral) and those at rest at home; search it by fleet, place or ship class, and sort it by name, place or strength. Tick ships to split them off into a new fleet; merge fleets in the same place. <em>Add to defences</em> gives a fleet to a world you hold, for good.</td></tr>
-          <tr><td>Shipyard</td><td>Lay down new ships at a yard you hold, or at an independent one. The catalogue is in four sections: warships; system defence, boats and fighters with no jump drive; capital ships of 5,000 tons and more, closed until you open it; and civilian and support ships (traders, liners, scouts), closed too. Import designs from the Ship Designer.</td></tr>
+          <tr><td>Shipyard</td><td>Lay down new ships at a yard you hold, or at an independent one or one of an Empire at peace with you, at a fifth more. The catalogue is in four sections: warships; system defence, boats and fighters with no jump drive; capital ships of 5,000 tons and more, closed until you open it; and civilian and support ships (traders, liners, scouts), closed too. Import designs from the Ship Designer.</td></tr>
           <tr><td>Empire</td><td>Treasury, income, upkeep, what it takes to win, standings, and your worlds. The standings say how each Empire stands with you, at war, at peace and how warmly, or allied, with buttons to declare war, offer peace, propose an alliance or leave one, and whom each computer Empire is allied with and at war with.</td></tr>
           <tr><td>Reports</td><td>Everything you have heard, newest first. Each report has an icon for its kind (battle, capture, arrival, sighting, new ship, money, loss, war and peace) and every faction it names carries its emblem, a shape in its colour. Reports that do not concern your own fleets, worlds or treasury are dimmed. Battle reports open to show every round. At the top, <em>Needs attention</em> lists what wants you today: offers of peace or alliance to accept or decline, your worlds under siege, enemies at your worlds, battles that cost you ships, worlds lost, fleets waiting on orders, and class A yards of yours with nothing on any slip. Click a line to go there.</td></tr>
         </table>
@@ -351,7 +351,8 @@
         <h2 id="defences">Planetary defences</h2>
         <p>
           In orbit of its main world, every world with people on it and a tech level of 7 or better fights back.
-          It has two kinds of defence, and to take the world you must beat both.
+          It has two kinds of defence, and to take the world you must beat both. A naval base has defences to
+          silence even on a world nobody lives on, or below tech level 7, though there they have no guns.
         </p>
         <h3>Ground batteries</h3>
         <p>
@@ -456,7 +457,10 @@
           A yard can only have so many ships on the slips at once: three at a class A starport, two at class B
           and one at class C. Order more and they wait their turn, each starting when a slip comes free; the
           Shipyard tab shows how busy a yard is and when each ship will start and finish. An independent yard's
-          slips are shared by everybody who builds there.
+          slips are shared by everybody who builds there. So are the slips of a yard held by an Empire at peace
+          or allied with you, which builds for you at a fifth over the price, as an independent yard does. A ship
+          is delivered wherever she was built unless the yard's owner is at war with you by the day she is done,
+          when it keeps her.
         </p>
         <p>
           A ship's time on the slips starts from the book's day for every MCr1 it costs, scaled by the
@@ -814,8 +818,13 @@
         </table>
         <p>
           Its admirals do not fight to no end. A fleet that has fought in one place for three days without
-          settling it keeps out of battle until it is on its way again, and a siege that has not silenced a
-          world's defences in five days is given up. Any fleet stopping to refuel, yours included, takes on fuel
+          settling it keeps out of battle until it is on its way again, and a siege that will not silence a
+          world's defences within a week at the rate it is going is given up; that world is left alone for four
+          weeks. It does not send fleets against worlds their guns could not silence in a month. It takes worse
+          odds against an Empire it declared war on itself, so a war it starts is a war it fights. It keeps no
+          more than twenty small craft outside hangars, saving its money for warships, and builds at the yards
+          of Empires at peace with it when its own yards and the independent ones near it cannot build a warship
+          or are all busy. Any fleet stopping to refuel, yours included, takes on fuel
           where no enemy is waiting if it can. The computer builds warships only, never armed traders or
           mining ships.
         </p>

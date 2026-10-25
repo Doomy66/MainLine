@@ -221,9 +221,6 @@ function through(dice: number, armour: number): number {
 function daysToSilence(game: Game, fleet: Fleet, at: string): number {
   const ws = game.worldState(at);
   if (ws.defence <= 0) return 0;
-  // The defences of a world nobody lives on never come out to fight, so they
-  // are never silenced: a naval base on an empty rock cannot be taken by siege.
-  if (game.world(at).uwp.population === 0) return Infinity;
   const armour = defenceArmour(game.world(at));
   let perRound = 0;
   for (const s of fleet.ships) {

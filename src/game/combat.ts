@@ -608,7 +608,9 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
   const navy = ws.navy ?? null;
   const navyClass = navy !== null && game.catalogue.has(navy.classId) ? game.catalogue.get(navy.classId) : undefined;
   const boats = navyClass === undefined ? [] : navy!.boats;
-  if (loc === "main" && (ws.defence > 0 || boats.length > 0) && world.uwp.population > 0) {
+  // A naval base on a world nobody lives on fights too: otherwise its
+  // defences were never silenced and the world could never be taken.
+  if (loc === "main" && (ws.defence > 0 || boats.length > 0)) {
     const attacks = defenceAttacks(world);
     const defences: Combatant = {
       label: `${world.name} defences`,

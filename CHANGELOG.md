@@ -14,6 +14,16 @@
   a war with it going. Restlessness counts only worlds the Empire could beat, never turns on allies and
   waits four months after a peace. A capture or a declaration sours only the victim's friends nearby, and
   not those already at war. A computer Empire far stronger than you is much harder to talk into peace.
+- The yards of Empires at peace or allied with you build for you at a fifth over the price, as an
+  independent yard does; a ship there is lost only if that Empire is at war with you when she is done.
+- A naval base on a world nobody lives on, or below tech level 7, can now be besieged and taken: its
+  defences used to sit out every battle, so the world held out for ever.
+- The computer gives up a siege that will not silence the defences within a week at the rate it is
+  going, and leaves that world alone for four weeks; it no longer sends fleets against worlds their guns
+  cannot hurt. It fights the wars it declares, taking worse odds against an Empire it chose to attack.
+  It keeps at most twenty small craft outside hangars and saves for warships, and builds at the yards of
+  Empires at peace with it when its own cannot build a warship. In test games it takes more worlds and
+  sits on less unspent money.
 - A fallen capital's government moves to a world that is not under siege, at the heart of the Empire.
 - An Empire with no worlds and no ship that can jump is finished, and a game with no Empire left ends
   with no winner.
