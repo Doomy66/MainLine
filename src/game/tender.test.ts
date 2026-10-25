@@ -4,7 +4,7 @@ import { bundledDesigns } from "../catalogue/catalogue";
 import { parseSectorFile } from "../sector/sectorfile";
 import { distanceBetween } from "../sector/hex";
 import { advanceDay } from "./day";
-import { routeTo } from "./nav";
+import { jumpMap, routeTo } from "./nav";
 import { tenderCost, TENDER_JUMP } from "./rules";
 import { createGame, DEFAULT_OPTIONS } from "./setup";
 
@@ -92,5 +92,20 @@ describe("jump tenders", () => {
     fleet.ships.push(game.newShip("Rampart-Light-Fighter"));
     expect(game.fleetJump(fleet)).toBe(0);
     expect(game.carriedTons(fleet)).toBe(10);
+  });
+
+  it("are counted the same fleet-wide as ship by ship, and a short search finds what a long one does", () => {
+    const { game, me } = setup();
+    const ships = [...game.commission("Hyperion-Escort-Carrier"), game.newShip("Rampart-Light-Fighter")];
+    const fleet = game.newFleet(me.id, me.capital, "main", ships);
+    for (const f of [fleet, { ...fleet, tender: true }]) {
+      const held = game.carriedShips(f);
+      for (const s of f.ships) expect(held.has(s.id)).toBe(game.carried(f, s));
+    }
+    const ship = game.newFleet(me.id, me.capital, "main", [game.newShip("Patrol-Corvette")]);
+    const full = jumpMap(game, ship);
+    const short = jumpMap(game, ship, undefined, 2);
+    expect([...full].some(([, s]) => s.hops > 2)).toBe(true);
+    expect([...short]).toEqual([...full].filter(([, s]) => s.hops <= 2));
   });
 });

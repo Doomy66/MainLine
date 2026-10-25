@@ -451,6 +451,18 @@ function respond(game: Game, faction: Faction, sees: ReadonlySet<string>): Set<s
     .map((w) => ({ at: w.at, threat: knownThreat(game, faction, w.at, sees), value: income(w) }))
     .filter((t) => t.threat > 0)
     .sort((a, b) => b.value - a.value);
+  // Each fleet's reach, found once and asked of every threatened world. Only a
+  // world two jumps off is worth answering, so the search goes no further.
+  // Nothing done here changes where a fleet that is not yet busy can reach.
+  const maps = new Map<string, ReturnType<typeof jumpMap>>();
+  const mapOf = (f: Fleet) => {
+    let map = maps.get(f.id);
+    if (map === undefined) {
+      map = jumpMap(game, f, undefined, 2);
+      maps.set(f.id, map);
+    }
+    return map;
+  };
   for (const t of threatened) {
     const candidates = game
       .fleetsOf(faction.id)
@@ -462,7 +474,7 @@ function respond(game: Game, faction: Faction, sees: ReadonlySet<string>): Set<s
         busy.add(f.id);
         break;
       }
-      const route = routeTo(game, f, t.at);
+      const route = pathIn(mapOf(f), f.system, t.at);
       if (route !== null && route.length <= 2) {
         f.standing = ordersFor(faction, "Patrol");
         f.order = { kind: "jump", route };

@@ -248,6 +248,17 @@ export class Game {
     return this.tendered(fleet) || this.hangared(fleet).has(ship.id);
   }
 
+  /**
+   * Every ship a fleet carries through jump, as carried() would say of each.
+   * Asking carried() ship by ship fills the hangars again for every ship, which
+   * a carrier fleet of a hundred fighters cannot afford; anything that goes
+   * through the whole fleet asks this once instead.
+   */
+  carriedShips(fleet: Fleet): Set<string> {
+    if (!this.tendered(fleet)) return this.hangared(fleet);
+    return new Set(fleet.ships.filter((s) => this.cls(s).jump === 0).map((s) => s.id));
+  }
+
   /** Tons the tenders would carry: ships without jump drives that no hangar holds. */
   carriedTons(fleet: Fleet): number {
     const held = this.hangared(fleet);
@@ -266,9 +277,9 @@ export class Game {
   }
 
   /** And jumps as far as its shortest-legged ship. */
-  fleetJump(fleet: Fleet): number {
+  fleetJump(fleet: Fleet, carried: ReadonlySet<string> = this.carriedShips(fleet)): number {
     if (fleet.ships.length === 0) return 0;
-    return fleet.ships.reduce((low, s) => Math.min(low, this.carried(fleet, s) ? TENDER_JUMP : this.shipJump(s)), Infinity);
+    return fleet.ships.reduce((low, s) => Math.min(low, carried.has(s.id) ? TENDER_JUMP : this.shipJump(s)), Infinity);
   }
 
   fleetTons(fleet: Fleet): number {
@@ -299,10 +310,10 @@ export class Game {
   }
 
   /** How many parsecs the fleet could jump now on the fuel it carries. */
-  fleetRange(fleet: Fleet): number {
-    let range = this.fleetJump(fleet);
+  fleetRange(fleet: Fleet, carried: ReadonlySet<string> = this.carriedShips(fleet)): number {
+    let range = this.fleetJump(fleet, carried);
     for (const s of fleet.ships) {
-      if (this.carried(fleet, s)) continue;
+      if (carried.has(s.id)) continue;
       const c = this.cls(s);
       range = Math.min(range, Math.floor((s.fuel + 1e-9) / jumpFuel(c.tons, 1)));
     }
@@ -316,7 +327,8 @@ export class Game {
     if (!this.worlds.has(to)) return { ok: false, reason: "not a system in play" };
     const parsecs = distanceBetween(fleet.system, to);
     if (parsecs === 0) return { ok: false, reason: "already there" };
-    const drive = this.fleetJump(fleet);
+    const carried = this.carriedShips(fleet);
+    const drive = this.fleetJump(fleet, carried);
     if (drive === 0) {
       const lame = fleet.ships.find((s) => this.shipJump(s) === 0)!;
       return {
@@ -326,7 +338,7 @@ export class Game {
     }
     if (parsecs > drive) return { ok: false, reason: `${parsecs} parsecs; the fleet jumps ${drive}` };
     for (const s of fleet.ships) {
-      if (this.carried(fleet, s)) continue;
+      if (carried.has(s.id)) continue;
       const need = jumpFuel(this.cls(s).tons, parsecs);
       if (s.fuel + 1e-9 < need) {
         return { ok: false, reason: `${s.name} has ${round(s.fuel)} of the ${round(need)} tons of fuel it needs` };

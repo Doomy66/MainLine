@@ -14,20 +14,25 @@ export function inRange(game: Game, fleet: Fleet): string[] {
   return [...game.neighbours(fleet.system, range)];
 }
 
-/** Whether every ship in a fleet could fill its tanks at a system. */
-export function canRefuelAt(game: Game, fleet: Fleet, at: string): boolean {
+/**
+ * Whether every ship in a fleet could fill its tanks at a system. A caller
+ * asking about many systems passes the fleet's carried ships, worked out once.
+ */
+export function canRefuelAt(game: Game, fleet: Fleet, at: string, carried: ReadonlySet<string> = game.carriedShips(fleet)): boolean {
   const world = game.world(at);
   const hostile = game.hostile(fleet.owner, game.worldState(at).owner);
-  return fleet.ships.every((s) => game.carried(fleet, s) || fuelSources(world, game.cls(s), hostile).length > 0);
+  return fleet.ships.every((s) => carried.has(s.id) || fuelSources(world, game.cls(s), hostile).length > 0);
 }
 
 /**
  * The fuel a ship keeps for itself when a fleet shares fuel: enough for a jump
  * of the fleet's planned length, or of its own drive's reach.
  */
-export function fuelKept(game: Game, fleet: Fleet, ship: Fleet["ships"][number], parsecs?: number): number {
+export function fuelKept(game: Game, ship: Fleet["ships"][number], parsecs?: number): number {
   const c = game.cls(ship);
-  if (game.carried(fleet, ship) || c.jump === 0) return 0;
+  // A ship without a drive keeps none, carried or not. Only such a ship is
+  // ever carried, so there is no need to fill the hangars to ask.
+  if (c.jump === 0) return 0;
   return Math.min(c.fuelCapacity, jumpFuel(c.tons, parsecs ?? c.jump));
 }
 
@@ -36,7 +41,7 @@ export function spareFuel(game: Game, fleet: Fleet, parsecs?: number): { spare: 
   let spare = 0;
   let short = 0;
   for (const s of fleet.ships) {
-    const keep = fuelKept(game, fleet, s, parsecs);
+    const keep = fuelKept(game, s, parsecs);
     if (s.fuel > keep) spare += s.fuel - keep;
     else short += keep - s.fuel;
   }
@@ -48,7 +53,7 @@ export function spareFuel(game: Game, fleet: Fleet, parsecs?: number): { spare: 
  * of it for a jump, within one fleet. Returns the tons passed.
  */
 export function shareFuel(game: Game, fleet: Fleet, parsecs?: number): number {
-  const keep = (s: Fleet["ships"][number]) => fuelKept(game, fleet, s, parsecs);
+  const keep = (s: Fleet["ships"][number]) => fuelKept(game, s, parsecs);
   const donors = fleet.ships.filter((s) => s.fuel > keep(s) + 0.01).sort((a, b) => b.fuel - keep(b) - (a.fuel - keep(a)));
   let moved = 0;
   for (const r of fleet.ships.filter((s) => s.fuel < keep(s) - 0.01)) {
@@ -67,9 +72,9 @@ export function shareFuel(game: Game, fleet: Fleet, parsecs?: number): number {
 }
 
 /** Whether every ship's tanks hold enough for a jump of this many parsecs when full. */
-function tanksBigEnough(game: Game, fleet: Fleet, parsecs: number): boolean {
+function tanksBigEnough(game: Game, fleet: Fleet, parsecs: number, carried: ReadonlySet<string>): boolean {
   return fleet.ships.every((s) => {
-    if (game.carried(fleet, s)) return true;
+    if (carried.has(s.id)) return true;
     const c = game.cls(s);
     return c.fuelCapacity + 1e-9 >= jumpFuel(c.tons, parsecs);
   });
@@ -81,24 +86,31 @@ function tanksBigEnough(game: Game, fleet: Fleet, parsecs: number): boolean {
  * it has, or on a full load where it can refuel before it goes; after that it
  * fills up at every stop. A system it cannot refuel at can be the end of a
  * route but not a stop on one.
+ *
+ * A caller that only wants routes of a few jumps says how many, and the search
+ * stops there. It goes out a jump at a time, so what it finds within that many
+ * is just what the whole search would have found.
  */
-export function jumpMap(game: Game, fleet: Fleet, avoid: ReadonlySet<string> = new Set()): Map<string, { hops: number; prev: string }> {
+export function jumpMap(game: Game, fleet: Fleet, avoid: ReadonlySet<string> = new Set(), maxHops = Infinity): Map<string, { hops: number; prev: string }> {
   const out = new Map<string, { hops: number; prev: string }>();
   if (fleet.transit !== null) return out;
-  const drive = game.fleetJump(fleet);
+  // Which ships ride in hangars or with tenders does not change during the
+  // search, and working it out is the dear part of asking about a system.
+  const carried = game.carriedShips(fleet);
+  const drive = game.fleetJump(fleet, carried);
   if (drive === 0) return out;
   let reach = drive;
-  while (reach > 0 && !tanksBigEnough(game, fleet, reach)) reach--;
+  while (reach > 0 && !tanksBigEnough(game, fleet, reach, carried)) reach--;
   if (reach === 0) return out;
-  const startFuelled = canRefuelAt(game, fleet, fleet.system);
-  const firstReach = Math.max(game.fleetRange(fleet), startFuelled ? reach : 0);
+  const startFuelled = canRefuelAt(game, fleet, fleet.system, carried);
+  const firstReach = Math.max(game.fleetRange(fleet, carried), startFuelled ? reach : 0);
   if (firstReach === 0) return out;
 
   const refuels = new Map<string, boolean>();
   const canStop = (at: string) => {
     let held = refuels.get(at);
     if (held === undefined) {
-      held = !avoid.has(at) && canRefuelAt(game, fleet, at);
+      held = !avoid.has(at) && canRefuelAt(game, fleet, at, carried);
       refuels.set(at, held);
     }
     return held;
@@ -106,7 +118,7 @@ export function jumpMap(game: Game, fleet: Fleet, avoid: ReadonlySet<string> = n
   const seen = new Set([fleet.system]);
   let frontier = [fleet.system];
   let hops = 0;
-  while (frontier.length > 0) {
+  while (frontier.length > 0 && hops < maxHops) {
     hops++;
     const next: string[] = [];
     for (const here of frontier) {
@@ -115,7 +127,8 @@ export function jumpMap(game: Game, fleet: Fleet, avoid: ReadonlySet<string> = n
         if (seen.has(at)) continue;
         seen.add(at);
         out.set(at, { hops, prev: here });
-        if (canStop(at)) next.push(at);
+        // After the last jump allowed there is no going on, so no need to ask.
+        if (hops < maxHops && canStop(at)) next.push(at);
       }
     }
     frontier = next;
