@@ -6,7 +6,7 @@
 
 import type { Game } from "./game";
 import { captureDays } from "./rules";
-import { offersTo } from "./relations";
+import { offersTo, relationOf } from "./relations";
 import type { Faction, Fleet, Offer } from "./types";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
@@ -95,7 +95,7 @@ export function alerts(game: Game, me: Faction): Alert[] {
   // Worlds of ours under siege.
   for (const w of game.ownedWorlds(me.id)) {
     const s = game.worldState(w.at).siege;
-    if (s === null || s.by === me.id) continue;
+    if (s === null || s.by === me.id || !game.hostile(me.id, s.by)) continue;
     const left = Math.max(0, captureDays(w) - s.days);
     out.push({ kind: "siege", at: w.at, text: `${w.name} is under siege by ${game.faction(s.by).name}: it submits in ${left} day${left === 1 ? "" : "s"}` });
   }
@@ -111,6 +111,8 @@ export function alerts(game: Game, me: Faction): Alert[] {
       // Only an enemy's, and only one that can fight. Whether a fleet carries
       // guns was plain to whoever saw it.
       if (!game.hostile(me.id, s.owner) || s.strength <= 0) continue;
+      // A fleet seen while we were still at peace was no threat then.
+      if (s.day < (relationOf(game, me.id, s.owner)?.since ?? -Infinity)) continue;
       const seen = game.state.fleets.find((f) => f.id === s.fleetId);
       if (seen !== undefined && !game.fleetArmed(seen)) continue;
       const t = threat.get(s.system) ?? { ships: 0, who: new Set<string>() };

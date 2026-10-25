@@ -318,8 +318,10 @@ function weekly(game: Game): void {
       if (g.id === f.id || atWar(game, f.id, g.id) || allied(game, f.id, g.id)) continue;
       const r = relationOf(game, f.id, g.id);
       if (r !== undefined && r.since > 0 && game.state.day - r.since < RESTLESS_AFTER) continue;
-      const near = game.ownedWorlds(g.id).some((w) => own.some((o) => distanceBetween(o.at, w.at) <= REACH));
-      if (near) shift(game, f.id, g.id, -restless, { text: "with no other worlds within its reach", who: f.id });
+      // Only a neighbour with a world near enough and weak enough to take: a
+      // small Empire does not pick a quarrel with one it could never hurt.
+      const prey = game.ownedWorlds(g.id).some((w) => defenceStrength(game, w.at) < strength && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
+      if (prey) shift(game, f.id, g.id, -restless, { text: "with no other worlds within its reach", who: f.id });
     }
   }
 }
@@ -390,6 +392,10 @@ export function makePeace(game: Game, a: string, b: string): void {
   r.score = Math.max(r.score, PEACE_AT);
   delete r.cause;
   delete r.causeBy;
+  // Their sieges of each other's worlds end with the war, not a day later.
+  for (const ws of Object.values(game.state.worlds)) {
+    if (ws.siege !== null && ((ws.siege.by === a && ws.owner === b) || (ws.siege.by === b && ws.owner === a))) ws.siege = null;
+  }
   announce(game, [a, b], `${game.faction(a).name} and ${game.faction(b).name} make peace.`);
 }
 
@@ -556,6 +562,14 @@ function answerOffers(game: Game): void {
   for (const offer of [...(game.state.offers ?? [])]) {
     const to = game.faction(offer.to);
     if (to.human) {
+      // An offer of alliance from an Empire that has found its allies
+      // elsewhere is withdrawn, rather than left waiting to be accepted.
+      if (offer.kind === "alliance" && fullOfAllies(game, offer.from)) {
+        game.state.offers = (game.state.offers ?? []).filter((o) => o !== offer);
+        const text = `${game.faction(offer.from).name}'s offer of an alliance to ${to.name} no longer stands: it has all the allies it wants.`;
+        game.log({ to: [offer.from, offer.to], kind: "diplomacy", text, wake: true, firsthand: [offer.from, offer.to], about: [offer.from, offer.to] });
+        continue;
+      }
       if (day - offer.day >= OFFER_LASTS) {
         game.state.offers = (game.state.offers ?? []).filter((o) => o !== offer);
         game.log({ to: [offer.from, offer.to], kind: "diplomacy", text: `${game.faction(offer.from).name}'s offer to ${to.name} lapses unanswered.` });

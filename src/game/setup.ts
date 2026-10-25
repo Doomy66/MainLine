@@ -116,7 +116,10 @@ export function empireName(start: Start, sector: SectorData, all: readonly Start
   const base = polityFamily(sector.polities, code);
   if (base === "") return null;
   const sharing = all.filter((m) => m.allegiance !== undefined && !m.allegiance.startsWith("Cs") && polityFamily(sector.polities, m.allegiance) === base);
-  return sharing.length > 1 ? `${base} (${start.name})` : base;
+  if (sharing.length <= 1) return base;
+  // Two capitals can share a name in a big sector; the hex tells them apart.
+  const twin = sharing.some((m) => m !== start && m.name === start.name);
+  return `${base} (${twin ? `${start.name} ${start.capital}` : start.name})`;
 }
 
 /** MCr a week a Main's worlds pay together. */

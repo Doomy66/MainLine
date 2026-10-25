@@ -24,6 +24,11 @@
   It keeps at most twenty small craft outside hangars and saves for warships, and builds at the yards of
   Empires at peace with it when its own cannot build a warship. In test games it takes more worlds and
   sits on less unspent money.
+- A restless Empire picks a quarrel only with a neighbour that has a world near enough and weak enough
+  for it to take, not with one far stronger. A peace ends the two Empires' sieges of each other at once.
+  An offer of alliance from an Empire that has found its allies elsewhere is withdrawn rather than left
+  waiting. With slow news, a fleet seen before a war began no longer counts as an enemy at your world.
+  Two Empires named after capitals of the same name are told apart by hex.
 - A fallen capital's government moves to a world that is not under siege, at the heart of the Empire.
 - An Empire that loses its last world is finished. Its ships go over to whoever holds the system they
   are in or jumping to, or join an independent world's defences, and its orders at the yards lapse. A
