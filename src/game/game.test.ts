@@ -397,6 +397,106 @@ describe("losing a capital", () => {
       expect(due).toBe(victim.disorderUntil! + 6);
     }
   });
+
+  it("does not move the government to a world with enemy warships in the system", () => {
+    const game = newGame({}, 1, "FALL");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const victim = [...game.state.factions].filter((f) => !f.human).sort((a, b) => game.ownedWorlds(b.id).length - game.ownedWorlds(a.id).length)[0]!;
+    (victim as { human: boolean }).human = true; // kept still for the test
+    const capital = victim.capital;
+    // Every great world of the victim's but one has our warships waiting off it.
+    const others = game.ownedWorlds(victim.id).filter((w) => w.at !== capital);
+    const most = Math.max(...others.map((w) => w.uwp.population));
+    const great = others.filter((w) => w.uwp.population >= most - 2).sort((a, b) => b.uwp.population - a.uwp.population);
+    const spared = great[great.length - 1]!;
+    const watched = great.filter((w) => w !== spared);
+    expect(watched.length).toBeGreaterThan(0);
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== capital && !watched.some((w) => w.at === f.system));
+    for (const w of watched) {
+      const f = game.newFleet(me.id, w.at, "deep", [game.newShip("Patrol-Corvette")], `Watching ${w.name}`);
+      f.standing = { ...f.standing, intercept: false, besiege: false };
+    }
+    game.worldState(capital).defence = 0;
+    const fleet = game.newFleet(me.id, capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    declareWar(game, me.id, victim.id, "to test the fall of a capital");
+    for (let i = 0; i < 20 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
+    expect(game.worldState(capital).owner).toBe(me.id);
+    expect(watched.map((w) => w.at)).not.toContain(victim.capital);
+    expect(game.fleetsAt(victim.capital).some((f) => f.owner === me.id)).toBe(false);
+  });
+});
+
+describe("the end of an Empire", () => {
+  /** A faction stripped of its worlds, its fleets and its slips. */
+  function strip(game: Game, f: Faction): void {
+    for (const w of game.ownedWorlds(f.id)) game.worldState(w.at).owner = null;
+    game.state.fleets = game.state.fleets.filter((x) => x.owner !== f.id);
+    f.builds = [];
+  }
+
+  it("comes when it has no world left and nothing that can jump to take one", () => {
+    const game = newGame({}, 1, "ZOMBIE");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const [boats, jumper] = game.state.factions.filter((f) => !f.human);
+    for (const f of [boats!, jumper!]) {
+      (f as { human: boolean }).human = true; // kept still for the test
+      strip(game, f);
+    }
+    const at = game.state.sector.worlds.find((w) => game.worldState(w.at).owner === null && game.fleetsAt(w.at).length === 0)!.at;
+    game.newFleet(boats!.id, at, "deep", [game.newShip("Dragon-System-Defence-Boat"), game.newShip("Dragon-System-Defence-Boat")]);
+    game.newFleet(jumper!.id, at, "gg", [game.newShip("Patrol-Corvette")]);
+    advanceDay(game);
+    expect(boats!.alive).toBe(false);
+    expect(game.fleetsOf(boats!.id)).toEqual([]);
+    expect(game.state.log.some((e) => e.text.startsWith(`${boats!.name} is no more`) && e.text.includes("last 2 ships"))).toBe(true);
+    // A ship with a jump drive can still go and take a world back.
+    expect(jumper!.alive).toBe(true);
+  });
+
+  it("with no Empire left at all, ends the game with nobody the winner", () => {
+    const game = newGame({}, 0, "NOBODY");
+    game.state.phase = "play";
+    game.state.day = 1;
+    for (const f of game.state.factions) {
+      // Kept still for the test: the computer would buy ships at an independent yard.
+      (f as { human: boolean }).human = true;
+      strip(game, f);
+    }
+    advanceDay(game);
+    expect(game.state.factions.every((f) => !f.alive)).toBe(true);
+    expect(game.state.phase).toBe("over");
+    expect(game.state.winner).toBeNull();
+    expect(game.state.log.some((e) => e.text.startsWith("No Empire is left standing"))).toBe(true);
+  });
+});
+
+describe("battle reports", () => {
+  it("tell a big battle's heaviest fire in full and add up the rest", () => {
+    const game = newGame({}, 0, "BIG");
+    game.state.phase = "play";
+    const [a, b] = game.state.factions;
+    declareWar(game, a!.id, b!.id, "to test a big battle");
+    const at = game.state.sector.worlds.find((w) => game.worldState(w.at).owner === null && game.fleetsAt(w.at).length === 0)!.at;
+    const one = game.newFleet(a!.id, at, "deep", Array.from({ length: 30 }, () => game.newShip("Patrol-Corvette")));
+    const other = game.newFleet(b!.id, at, "deep", Array.from({ length: 30 }, () => game.newShip("Gazelle-Close-Escort")));
+    for (const f of [one, other]) f.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    const report = battleAt(game, at, "deep")!;
+    const rounds = report.lines.join("\n").split(/^Round \d+:$/m).slice(1);
+    expect(rounds.length).toBeGreaterThan(0);
+    for (const r of rounds) {
+      const lines = r.split("\n");
+      expect(lines.filter((l) => l.includes(" → ")).length).toBeLessThanOrEqual(8);
+      expect(lines.filter((l) => / takes \d+ damage\.$/.test(l)).length).toBeLessThanOrEqual(8);
+    }
+    expect(report.lines).toContain("    The rest of the fire, side by side:");
+    expect(report.lines.length).toBeLessThan(150);
+    // The summary at the top still counts every ship in and lost.
+    expect(report.lines[0]).toMatch(/: 30 in, \d+ lost/);
+  });
 });
 
 describe("news", () => {

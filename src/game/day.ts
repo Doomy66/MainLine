@@ -271,15 +271,13 @@ function announceOwner(game: Game, at: string, owner: string | null): void {
 }
 
 /**
- * A capital falls. Government moves to the next world, the faction is thrown
+ * A capital falls. Government moves to another world, the faction is thrown
  * into disorder for some weeks, and worlds that were held by the old capital's
  * authority and not much else take their chance to go their own way.
  */
 function fallOfCapital(game: Game, factionId: string, lostAt: string): void {
   const loser = game.faction(factionId);
-  const next = game
-    .ownedWorlds(factionId)
-    .sort((a, b) => b.uwp.population - a.uwp.population || b.uwp.tl - a.uwp.tl)[0];
+  const next = newCapital(game, factionId);
   if (next === undefined) return;
   loser.capital = next.at;
   loser.disorderUntil = game.state.day + DISORDER_DAYS;
@@ -321,6 +319,29 @@ function fallOfCapital(game: Game, factionId: string, lostAt: string): void {
       firsthand: [factionId],
     });
   }
+}
+
+/**
+ * Where a government goes when its capital falls. Not to a world under siege
+ * or with enemy warships in the system, which may fall in its turn the same
+ * day, unless there is nowhere else. Of the great worlds left, those with at
+ * least a hundredth of the people of the largest, it goes to the one fewest
+ * worlds would break away from: the heart of what is left, not its edge.
+ */
+function newCapital(game: Game, factionId: string): World | undefined {
+  const owned = game.ownedWorlds(factionId);
+  const threatened = (w: World) =>
+    game.worldState(w.at).siege !== null || game.fleetsAt(w.at).some((f) => game.hostile(f.owner, factionId) && game.fleetArmed(f));
+  const safe = owned.filter((w) => !threatened(w));
+  const pool = safe.length > 0 ? safe : owned;
+  if (pool.length === 0) return undefined;
+  const most = Math.max(...pool.map((w) => w.uwp.population));
+  const losses = (from: World) =>
+    owned.reduce((n, w) => n + (w.at === from.at ? 0 : breakawayChance(w, distanceBetween(w.at, from.at))), 0);
+  return pool
+    .filter((w) => w.uwp.population >= most - 2)
+    .map((w) => ({ w, losses: losses(w) }))
+    .sort((a, b) => a.losses - b.losses || b.w.uwp.population - a.w.uwp.population || b.w.uwp.tl - a.w.uwp.tl)[0]!.w;
 }
 
 /** A planetary navy left in peace mends its boats, and replaces one lost a week. */
@@ -607,20 +628,41 @@ function endings(game: Game): void {
     if (f.peak === undefined || worlds > f.peak.worlds) f.peak = { worlds, day: s.day };
   }
   for (const f of s.factions) {
-    if (!f.alive) continue;
-    const worlds = game.ownedWorlds(f.id).length;
-    const ships = game.fleetsOf(f.id).reduce((n, fl) => n + fl.ships.length, 0);
-    if (worlds === 0 && ships === 0 && f.builds.length === 0) {
+    if (!f.alive || f.builds.length > 0 || game.ownedWorlds(f.id).length > 0) continue;
+    const fleets = game.fleetsOf(f.id);
+    const left = fleets.reduce((n, fl) => n + fl.ships.length, 0);
+    if (left === 0) {
       f.alive = false;
       game.log({
         to: s.factions.map((x) => x.id),
         kind: "lost",
         text: `${f.name} is no more: no worlds, no ships.`,
       });
+      continue;
     }
+    // Boats with no jump drive and no world to serve can never take one back,
+    // unless they are already holding one under siege, so the Empire is done.
+    const canJump = fleets.some((fl) => fl.ships.some((sh) => game.cls(sh).jump > 0));
+    const besieging = Object.values(s.worlds).some((ws) => ws.siege?.by === f.id);
+    if (canJump || besieging) continue;
+    s.fleets = s.fleets.filter((fl) => fl.owner !== f.id);
+    f.alive = false;
+    game.log({
+      to: s.factions.map((x) => x.id),
+      kind: "lost",
+      text: `${f.name} is no more: with no world left and no ship that can jump, ${
+        left === 1 ? "the crew of its last ship gives up the fight and goes its own way" : `the crews of its last ${left} ships give up the fight and go their own way`
+      }.`,
+    });
   }
   const target = game.victoryTarget();
   const alive = s.factions.filter((f) => f.alive);
+  if (alive.length === 0) {
+    // Everybody gone at once, or nobody to begin with: there is no one left to win.
+    s.phase = "over";
+    game.log({ to: s.factions.map((x) => x.id), kind: "info", text: "No Empire is left standing. The game is over and nobody has won it.", wake: true, firsthand: s.factions.map((x) => x.id) });
+    return;
+  }
   for (const f of alive) {
     const held = game.holding(f.id);
     const enough = target.by === "population" ? held.people >= target.need : held.worlds >= target.need;

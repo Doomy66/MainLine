@@ -384,37 +384,106 @@ function fire(
 }
 
 /**
+ * How many lines of each part of a round a report keeps: fire, damage, and
+ * critical hits and losses. A battle between big fleets otherwise writes
+ * hundreds of lines a round, which nobody reads and every save carries.
+ */
+const REPORT_FIRE_LINES = 8;
+const REPORT_DAMAGE_LINES = 8;
+const REPORT_AFTERMATH_LINES = 12;
+
+/**
+ * The most telling of some lines, in their own order: those that weigh most,
+ * the earlier on a tie.
+ */
+function keepMost<T>(items: readonly T[], max: number, weight: (t: T) => number): { kept: T[]; rest: T[] } {
+  if (items.length <= max) return { kept: [...items], rest: [] };
+  const chosen = new Set(
+    items
+      .map((t, i) => ({ i, w: weight(t) }))
+      .sort((a, b) => b.w - a.w || a.i - b.i)
+      .slice(0, max)
+      .map((x) => x.i),
+  );
+  return { kept: items.filter((_, i) => chosen.has(i)), rest: items.filter((_, i) => !chosen.has(i)) };
+}
+
+/**
  * The round's fire, one line for each weapon of each ship at each target: how
  * many fired, what they needed, how many hit and for how much. Enough to see
- * who did what to whom, without a line for every laser.
+ * who did what to whom, without a line for every laser. In a big battle only
+ * the heaviest fire is told line by line, and the rest is added up by side.
  */
-function describeShots(shots: readonly Shot[], lines: string[]): void {
+function describeShots(shots: readonly Shot[], lines: string[], sideOf: ReadonlyMap<Combatant, string>): void {
   const groups = new Map<string, Shot[]>();
   for (const s of shots) {
     const key = `${s.from.label}|${s.attack.label}|${s.target.label}`;
     groups.set(key, [...(groups.get(key) ?? []), s]);
   }
-  for (const group of groups.values()) {
+  const told = [...groups.values()].map((group) => {
     const first = group[0]!;
     const a = first.attack;
     const rolled = group.filter((s) => s.effect !== null);
     const hitting = rolled.filter((s) => s.effect! >= 0);
     const need = 8 - first.dm.total;
     const dms = first.dm.parts.length === 0 ? "no DMs" : first.dm.parts.join(", ");
+    const fired = a.ordnance !== undefined ? group.reduce((n, s) => n + s.launched, 0) : group.length;
     const what =
       a.ordnance !== undefined
-        ? `${group.reduce((n, s) => n + s.launched, 0)} ${a.ordnance === "missile" ? "missile" : "torpedo"}${group.reduce((n, s) => n + s.launched, 0) === 1 ? "" : "s"} from ${group.length} ${a.label}`
+        ? `${fired} ${a.ordnance === "missile" ? "missile" : "torpedo"}${fired === 1 ? "" : "s"} from ${group.length} ${a.label}`
         : `${group.length} × ${a.label}`;
     const stopped = group.reduce((n, s) => n + s.stopped, 0);
     const damage = hitting.map((s) => s.amount);
     const armourNote = first.armour > 0 ? `, armour ${first.armour}` : a.meson ? ", armour ignored" : "";
     const mult = a.multiple > 1 ? `, ×${a.multiple}` : "";
-    lines.push(
+    const line =
       `    ${first.from.label} → ${first.target.label}: ${what}, needing ${need}+ (${dms}${armourNote}${mult}).` +
-        `${stopped > 0 ? ` ${stopped} shot down.` : ""}` +
-        ` ${hitting.length} of ${rolled.length} hit${hitting.length > 0 ? `, for ${damage.join(", ")}` : ""}.`,
-    );
+      `${stopped > 0 ? ` ${stopped} shot down.` : ""}` +
+      ` ${hitting.length} of ${rolled.length} hit${hitting.length > 0 ? `, for ${damage.join(", ")}` : ""}.`;
+    return { line, side: sideOf.get(first.from) ?? first.from.label, fired, hits: hitting.length, damage: damage.reduce((t, d) => t + d, 0) };
+  });
+  const { kept, rest } = keepMost(told, REPORT_FIRE_LINES, (t) => t.damage);
+  for (const t of kept) lines.push(t.line);
+  if (rest.length === 0) return;
+  lines.push("    The rest of the fire, side by side:");
+  const bySide = new Map<string, { fired: number; hits: number; damage: number }>();
+  for (const t of rest) {
+    const sum = bySide.get(t.side) ?? { fired: 0, hits: 0, damage: 0 };
+    bySide.set(t.side, { fired: sum.fired + t.fired, hits: sum.hits + t.hits, damage: sum.damage + t.damage });
   }
+  for (const [side, sum] of bySide) {
+    lines.push(`      ${side}: ${sum.fired} shot${sum.fired === 1 ? "" : "s"}, ${sum.hits > 0 ? `${sum.hits} hit, for ${sum.damage} in all` : "none hit"}.`);
+  }
+}
+
+/** The round's damage, ship by ship, the worst of it in full. */
+function describeDamage(dealt: ReadonlyMap<Combatant, number>, lines: string[]): void {
+  const { kept, rest } = keepMost([...dealt], REPORT_DAMAGE_LINES, ([, amount]) => amount);
+  for (const [c, amount] of kept) lines.push(`  ${c.label} takes ${amount} damage.`);
+  if (rest.length > 0) {
+    const total = rest.reduce((t, [, amount]) => t + amount, 0);
+    lines.push(rest.length === 1 ? `  And one more takes ${total} damage.` : `  And ${rest.length} more take ${total} damage between them.`);
+  }
+}
+
+/**
+ * The round's critical hits and losses. A world's defences falling silent is
+ * always told; past that, losses come before critical hits.
+ */
+function describeAftermath(after: readonly string[], lines: string[]): void {
+  const lost = (l: string) => l.endsWith(" is destroyed.");
+  const { kept, rest } = keepMost(after, REPORT_AFTERMATH_LINES, (l) => (l.endsWith(" are silenced.") ? 2 : lost(l) ? 1 : 0));
+  lines.push(...kept);
+  const crits = rest.filter((l) => !lost(l)).length;
+  const sunk = rest.length - crits;
+  const parts = [crits > 0 ? `${crits} more critical hit${crits === 1 ? "" : "s"}` : "", sunk > 0 ? `${sunk} more ship${sunk === 1 ? "" : "s"} destroyed` : ""].filter((p) => p !== "");
+  if (parts.length > 0) lines.push(`  And ${parts.join(" and ")}.`);
+}
+
+/** The ships a side lost, by name, up to a score of them. */
+function namesOf(lost: readonly string[]): string {
+  const max = 20;
+  return lost.length <= max ? lost.join(", ") : `${lost.slice(0, max).join(", ")} and ${lost.length - max} more`;
 }
 
 /** Critical hits, High Guard's location table cut to what the game tracks. */
@@ -501,7 +570,8 @@ function land(rng: Rng, hits: Hit[], lines: string[]): void {
       const count = Math.min(MAX_CRITS_PER_HIT, crossed + (effect >= DAMAGE_CRIT_EFFECT ? 1 : 0));
       for (let i = 0; i < count && c.hull > 0; i++) critical(rng, c, lines);
     }
-    if (c.hull <= 0) lines.push(c.ship === undefined ? `  ${c.label} are silenced.` : `  ${c.label} is destroyed.`);
+    // Batteries fall silent; a navy boat, though nobody's ship, is destroyed like one.
+    if (c.hull <= 0) lines.push(c.tons === DEFENCE_TONS ? `  ${c.label} are silenced.` : `  ${c.label} is destroyed.`);
   }
 }
 
@@ -591,6 +661,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
 
   const involved = [...opening.keys()];
   const lines: string[] = [];
+  const sideOf = new Map(involved.flatMap((p) => p.combatants.map((c) => [c, p.label] as const)));
   const before = new Map(involved.map((p) => [p, p.combatants.filter(alive).length]));
   for (let round = 1; round <= ROUNDS_PER_DAY; round++) {
     const engaged = engagements(parties, war);
@@ -637,12 +708,14 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
         }
       }
     }
-    describeShots(shots, lines);
+    describeShots(shots, lines, sideOf);
     const dealt = new Map<Combatant, number>();
     for (const h of hits) dealt.set(h.target, (dealt.get(h.target) ?? 0) + h.amount);
-    for (const [c, amount] of dealt) lines.push(`  ${c.label} takes ${amount} damage.`);
+    describeDamage(dealt, lines);
     if (hits.length === 0) lines.push("  No hits.");
-    land(rng, hits, lines);
+    const after: string[] = [];
+    land(rng, hits, after);
+    describeAftermath(after, lines);
   }
 
   // What each computer Empire learns of its enemies' armour: a rough average of
@@ -679,7 +752,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       fleet.ships = fleet.ships.filter((s) => s.damage < game.cls(s).hull);
       const left = fleet.ships.length;
       summary.push(
-        `${p.label}: ${before.get(p)} in, ${lost.length} lost${lost.length > 0 ? ` (${lost.join(", ")})` : ""}${
+        `${p.label}: ${before.get(p)} in, ${lost.length} lost${lost.length > 0 ? ` (${namesOf(lost)})` : ""}${
           p.escaped && left > 0 ? ", broke off" : ""
         }.`,
       );
