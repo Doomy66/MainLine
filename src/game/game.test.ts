@@ -15,7 +15,8 @@ import { battleAt } from "./combat";
 import { visibleSystems } from "./visibility";
 import { captureDays, defenceMax, jumpFuel } from "./rules";
 import { parseGame, serialise } from "./save";
-import { createGame, DEFAULT_OPTIONS, hasAllegiances } from "./setup";
+import { BIGGEST_START, createGame, DEFAULT_OPTIONS, factionMains, hasAllegiances, victoryLine, worldsInArea } from "./setup";
+import { mainsIn } from "../sector/mains";
 import { aiSetup, buyStarting, endTurn, orderBuild, runDays } from "./turn";
 import type { Faction, GameOptions } from "./types";
 import { STANDING_PRESETS } from "./types";
@@ -604,12 +605,130 @@ describe("Empires from allegiances", () => {
     expect(client.score).toBeGreaterThan(relationOf(game, id("Third Imperium (Regina)"), id("Zhodani"))!.score);
   });
 
+  /** Two Mains of four worlds each, five parsecs apart, under the codes given. */
+  const pair = (codeA: string, codeB: string, polities: { code: string; name: string; short: string }[]) => {
+    const lines = ["Hex\tName\tUWP\tBases\tRemarks\tZone\tPBG\tAllegiance\tStars"];
+    for (let r = 1; r <= 4; r++) lines.push(line(`010${r}`, `West${r}`, "B555666-9", codeA));
+    for (let r = 1; r <= 4; r++) lines.push(line(`060${r}`, `East${r}`, "B555666-9", codeB));
+    const sector = { ...parseSec(lines.join("\n"), "Pair"), polities };
+    const game = createGame({ name: "p", sector, area: ["A"], players: [], options: { ...DEFAULT_OPTIONS, empiresFrom: "allegiance" }, designs, seed: "KIN" });
+    const [a, b] = game.state.factions as [Faction, Faction];
+    return { game, score: relationOf(game, a.id, b.id)!.base };
+  };
+
+  it("finds polities kin by their names, not by codes that look alike", () => {
+    // The Thoengling Empire and the Thirz Empire are strangers, for all their
+    // codes start alike; with no names to go by, the codes are all there is.
+    const named = pair("VThE", "VTzE", [
+      { code: "VThE", name: "Thoengling Empire", short: "Thoengling" },
+      { code: "VTzE", name: "Thirz Empire", short: "Thirz" },
+    ]);
+    const unnamed = pair("VThE", "VTzE", []);
+    const unrelated = pair("VThE", "ZhCo", []);
+    expect(unnamed.score - unrelated.score).toBe(70);
+    // Two Domains of the Imperium are one family by name.
+    const imperial = pair("ImDd", "ImDc", [
+      { code: "ImDd", name: "Third Imperium, Domain of Deneb", short: "Imperium" },
+      { code: "ImDc", name: "Third Imperium, Domain of Sylea", short: "Imperium" },
+    ]);
+    expect(imperial.score - named.score).toBe(70);
+  });
+
+  it("treats two client states under one code as sharing a patron, not as one polity", () => {
+    const polities = [
+      { code: "CsIm", name: "Client state, Third Imperium", short: "NA" },
+      { code: "CsZh", name: "Client state, Zhodani Consulate", short: "NA" },
+    ];
+    const clients = pair("CsIm", "CsIm", polities);
+    const strangers = pair("CsIm", "CsZh", polities);
+    expect(clients.score - strangers.score).toBe(40);
+    // Each is a state of its own, named as any Main is.
+    expect(new Set(clients.game.state.factions.map((f) => f.name)).size).toBe(2);
+  });
+
+  it("names Empires of one polity apart even when their codes differ", () => {
+    const { game } = pair("AsT0", "AsT1", [
+      { code: "AsT0", name: "Aslan Hierate, Tlaukhu control, Yerlyaruiwo (1)", short: "Aslan" },
+      { code: "AsT1", name: "Aslan Hierate, Tlaukhu control, Khaukheairl (2)", short: "Aslan" },
+    ]);
+    expect(game.state.factions.map((f) => f.name).sort()).toEqual(["Aslan Hierate (East1)", "Aslan Hierate (West1)"]);
+  });
+
+  it("refuses to start a game of fewer than two Empires", () => {
+    const one = () => createGame({ name: "a", sector: charted, area: ["A"], players: [], options: { ...DEFAULT_OPTIONS, empiresFrom: "allegiance", factionMinWorlds: 6 }, designs, seed: "ONE" });
+    expect(one).toThrow(/only one Empire/);
+    const none = () => createGame({ name: "a", sector: charted, area: ["P"], players: [], options: { ...DEFAULT_OPTIONS }, designs, seed: "NONE" });
+    expect(none).toThrow(/no Empires/);
+  });
+
   it("ignores allegiance when Empires come from Mains", () => {
     const game = start("mains");
     expect(game.state.factions.every((f) => f.allegiance === undefined)).toBe(true);
     // The non-aligned worlds are a Main like any other, and so an Empire.
     expect(game.state.factions).toHaveLength(5);
     expect(game.worldState("0301").owner).not.toBeNull();
+  });
+});
+
+describe("Mains too big to be one Empire", () => {
+  const generated = (seed: string, density: string) =>
+    parseSectorFile(JSON.stringify({ level: "sector", version: 1, name: seed, seed, date: "001-1105", density, shifts: { population: 0, tech: 0 }, subsectors: [] }));
+  const whole = "ABCDEFGHIJKLMNOP".split("");
+
+  it("leaves the bundled sectors' Mains whole when they are played whole", () => {
+    for (const stem of ["Driftwater-Reach", "Spandrel-Verge"]) {
+      const s = parseSectorFile(readFileSync(`sectors/${stem}.sector`, "utf8"));
+      for (const victoryBy of ["population", "worlds"] as const) {
+        expect(factionMains(s, whole, { ...DEFAULT_OPTIONS, victoryBy })).toEqual(mainsIn(s.worlds).filter((m) => m.hexes.length >= DEFAULT_OPTIONS.factionMinWorlds));
+      }
+    }
+  });
+
+  it("splits them so that nobody starts at the victory line", () => {
+    for (const [seed, density, area] of [
+      ["DELTA", "dense", whole],
+      ["CHARLIE", "standard", whole],
+      ["HOTEL", "standard", "ABEF".split("")],
+    ] as const) {
+      const s = generated(seed, density);
+      for (const victoryBy of ["population", "worlds"] as const) {
+        const options = { ...DEFAULT_OPTIONS, victoryBy };
+        const inArea = worldsInArea(s, area);
+        const { worth, need } = victoryLine(inArea, options);
+        const of = (hexes: readonly string[]) => hexes.reduce((t, at) => t + worth(inArea.find((w) => w.at === at)!), 0);
+        // Whole, some Main would have won on the first day.
+        const before = Math.max(...mainsIn(inArea).map((m) => of(m.hexes)));
+        if (victoryBy === "population") expect(before).toBeGreaterThanOrEqual(need);
+        const starts = factionMains(s, area, options);
+        expect(starts.some((m) => m.splitFrom !== undefined)).toBe(true);
+        for (const m of starts) expect(of(m.hexes)).toBeLessThan(need);
+        if (area === whole) for (const m of starts) expect(of(m.hexes)).toBeLessThanOrEqual(need * BIGGEST_START);
+      }
+    }
+  });
+
+  it("starts the pieces of one Main as friends, and says where they came from", () => {
+    const s = generated("DELTA", "dense");
+    const game = createGame({ name: "d", sector: s, area: whole, players: [], options: { ...DEFAULT_OPTIONS }, designs, seed: "SPLIT" });
+    const target = game.victoryTarget();
+    for (const f of game.state.factions) expect(game.holding(f.id).people).toBeLessThan(target.need);
+    const kin: number[] = [];
+    const others: number[] = [];
+    const fs = game.state.factions;
+    for (let i = 0; i < fs.length; i++) {
+      for (let j = i + 1; j < fs.length; j++) {
+        const r = relationOf(game, fs[i]!.id, fs[j]!.id)!;
+        if (fs[i]!.splitFrom !== undefined && fs[i]!.splitFrom === fs[j]!.splitFrom) {
+          expect(r.war).toBe(false);
+          kin.push(r.base);
+        } else others.push(r.base);
+      }
+    }
+    const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    expect(kin.length).toBeGreaterThan(0);
+    expect(mean(kin)).toBeGreaterThan(mean(others) + 40);
+    // The Main a piece came from survives a save.
+    expect(parseGame(serialise(game)).state.factions.map((f) => f.splitFrom)).toEqual(fs.map((f) => f.splitFrom));
   });
 });
 

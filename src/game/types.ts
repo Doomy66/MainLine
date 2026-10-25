@@ -220,6 +220,8 @@ export interface Faction {
   readonly main: string;
   /** The polity it began as part of, by its Allegiance code, where it began from one. */
   readonly allegiance?: string;
+  /** The capital hex of the Main it was cut from, where that Main was too big to be one Empire. */
+  readonly splitFrom?: string;
   capital: string;
   /** MCr. */
   credits: number;

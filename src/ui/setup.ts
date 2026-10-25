@@ -69,25 +69,56 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
   }
 
   /**
-   * A warning when an Empire starts close to winning: with allegiances, a
+   * A warning when an Empire starts close to winning. With allegiances, a
    * polity that holds most of the area in play can start at the victory line.
+   * Taken from Mains, a Main that big is split, so it is only where one or two
+   * worlds hold most of the people that anybody starts close, or where one
+   * world alone, left independent, would win the game for whoever takes it.
    */
   function earlyLead(): string | null {
     const peopled = worldsInArea(sector(), [...area]).filter((w) => w.uwp.population > 0);
-    const byPeople = options.victoryBy === "population";
-    const measure = (ats: readonly string[]) => {
-      const held = new Set(ats);
-      return peopled.filter((w) => held.has(w.at)).reduce((t, w) => t + (byPeople ? people(w) : 1), 0);
+    const shareOf = (byPeople: boolean) => {
+      const count = (ats: readonly string[]) => {
+        const held = new Set(ats);
+        return peopled.filter((w) => held.has(w.at)).reduce((t, w) => t + (byPeople ? people(w) : 1), 0);
+      };
+      const total = count(peopled.map((w) => w.at));
+      return (ats: readonly string[]) => (total === 0 ? 0 : count(ats) / total);
     };
-    const total = measure(peopled.map((w) => w.at));
-    if (total === 0) return null;
-    const lead = mains.map((m) => ({ m, share: measure(m.hexes) / total })).sort((a, b) => b.share - a.share)[0];
-    if (lead === undefined || lead.share < options.victoryShare * 0.8) return null;
+    const byPeople = options.victoryBy === "population";
+    const share = shareOf(byPeople);
+    const close = options.victoryShare * 0.8;
+    const lead = mains.map((m) => ({ m, share: share(m.hexes) })).sort((a, b) => b.share - a.share)[0];
+    const giant = peopled.map((w) => ({ w, share: share([w.at]) })).sort((a, b) => b.share - a.share)[0];
     const what = byPeople ? "people" : "peopled worlds";
-    const name = empireName(lead.m, sector(), mains) ?? lead.m.name;
-    return lead.share >= options.victoryShare
-      ? `${name} starts with ${Math.round(lead.share * 100)}% of the ${what} in play, enough to win at once. Play fewer subsectors, raise the victory share, or take Empires from Mains.`
-      : `${name} starts with ${Math.round(lead.share * 100)}% of the ${what} in play, close to the ${Math.round(options.victoryShare * 100)}% that wins.`;
+    const pct = (x: number) => `${Math.round(x * 100)}%`;
+
+    // What would help: more of the sector, Mains, which are split where too
+    // big, or counting worlds, where a crowded world counts for one.
+    const cures: string[] = [];
+    if (area.size < SUBSECTOR_LETTERS.length) cures.push("play more subsectors");
+    if (options.empiresFrom === "allegiance") cures.push("take Empires from Mains");
+    if (byPeople) {
+      const byWorlds = shareOf(false);
+      const ats = lead !== undefined && lead.share >= close ? lead.m.hexes : giant !== undefined ? [giant.w.at] : [];
+      if (byWorlds(ats) < close) cures.push("win by worlds instead");
+    }
+    const advice =
+      cures.length === 0
+        ? ""
+        : ` ${cures.length === 1 ? cures[0]! : `${cures.slice(0, -1).join(", ")} or ${cures[cures.length - 1]!}`}.`.replace(/^ ./, (c) => c.toUpperCase());
+
+    if (lead !== undefined && lead.share >= close) {
+      const name = empireName(lead.m, sector(), mains) ?? lead.m.name;
+      return lead.share >= options.victoryShare
+        ? `${name} starts with ${pct(lead.share)} of the ${what} in play, enough to win at once.${advice}`
+        : `${name} starts with ${pct(lead.share)} of the ${what} in play, close to the ${pct(options.victoryShare)} that wins.${advice}`;
+    }
+    if (giant !== undefined && giant.share >= close) {
+      const takes = giant.share >= options.victoryShare ? "wins" : "all but wins";
+      return `${giant.w.name} alone holds ${pct(giant.share)} of the ${what} in play, so whoever takes it ${takes}.${advice}`;
+    }
+    return null;
   }
 
   function recompute(): void {
@@ -247,7 +278,13 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             render();
           },
         },
-        h("td", {}, h("span", { class: "chip", style: `background:${colours.get(m.capital)}` }), empireName(m, sector(), mains) ?? m.name),
+        h(
+          "td",
+          {},
+          h("span", { class: "chip", style: `background:${colours.get(m.capital)}` }),
+          empireName(m, sector(), mains) ?? m.name,
+          m.splitFrom === undefined ? null : h("div", { class: "hint" }, `Part of the ${worlds.get(m.splitFrom)!.name} Main`),
+        ),
         h("td", { class: "r num" }, m.hexes.length),
         h("td", { class: "num" }, capital.uwpText),
         h("td", { class: "r num" }, topTl),
@@ -375,10 +412,17 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
         { class: "hint" },
         options.empiresFrom === "allegiance"
           ? "Each polity's worlds become Empires of its own, one for each part of it a ship can cross. Non-aligned worlds and polities too small to be an Empire are independent, there to be taken. "
-          : "Smaller chains and lone worlds are independent, there to be taken. ",
+          : "A Main too big for a fair start is split into several Empires, which start as friends. Smaller chains and lone worlds are independent, there to be taken. ",
         "The computer plays every Empire no player takes. Click an Empire, here or on the map, to give it to the highlighted player.",
       ),
       headStart === null ? null : h("p", { class: "error" }, headStart),
+      factionsCount >= 2
+        ? null
+        : h(
+            "p",
+            { class: "error" },
+            `${factionsCount === 0 ? "There are no Empires" : "There is only one Empire"} in the area in play, and a game needs at least two. Play more subsectors or lower the smallest Empire.`,
+          ),
       h(
         "div",
         { class: "mains" },
@@ -424,8 +468,9 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           {
             onchange: (e: Event) => {
               options.victoryBy = (e.target as HTMLSelectElement).value as "population" | "worlds";
-              const label = document.getElementById("victory-share");
-              if (label !== null) label.textContent = victoryLabel();
+              // How big a Main may be before it is split goes by how victory is counted.
+              recompute();
+              render();
             },
           },
           h("option", { value: "population", selected: options.victoryBy === "population" }, "Population: rule a share of the sector's people"),
@@ -442,6 +487,10 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             options.victoryShare = Number((e.target as HTMLInputElement).value) / 100;
             const label = document.getElementById("victory-share");
             if (label !== null) label.textContent = victoryLabel();
+          },
+          onchange: () => {
+            recompute();
+            render();
           },
         }),
         h("label", {}, "Starting treasury"),
@@ -523,15 +572,22 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             class: "primary",
             disabled: !canStart,
             onclick: () => {
-              const game = createGame({
-                name,
-                sector: sector(),
-                area: [...area].sort(),
-                players: players.map((p) => ({ name: p.name.trim(), capital: p.capital })),
-                options,
-                designs: bundledDesigns(),
-                seed: `${name}|${Date.now()}`,
-              });
+              let game: Game;
+              try {
+                game = createGame({
+                  name,
+                  sector: sector(),
+                  area: [...area].sort(),
+                  players: players.map((p) => ({ name: p.name.trim(), capital: p.capital })),
+                  options,
+                  designs: bundledDesigns(),
+                  seed: `${name}|${Date.now()}`,
+                });
+              } catch (error) {
+                message = error instanceof Error ? error.message : String(error);
+                render();
+                return;
+              }
               aiSetup(game);
               onStart(game);
             },

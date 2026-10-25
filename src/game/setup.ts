@@ -5,8 +5,8 @@
 
 import type { Design } from "../shipdesign/engine/design";
 import { subsectorOf } from "../sector/hex";
-import { mainsIn, type Main } from "../sector/mains";
-import { claimedBy, polityMains } from "../sector/polities";
+import { capitalFirst, mainsIn, splitMain, type Main } from "../sector/mains";
+import { claimedBy, polityFamily, polityMains } from "../sector/polities";
 import type { SectorData, World } from "../sector/sec";
 import { Game } from "./game";
 import { colourTerritories, factionColour, polityName } from "./names";
@@ -14,7 +14,7 @@ import { distanceBetween } from "../sector/hex";
 import { Rng, seedOf } from "./rng";
 import { temperFromId } from "./temper";
 import { startingRelations } from "./relations";
-import { defenceMax, income } from "./rules";
+import { defenceMax, income, people } from "./rules";
 import type { Faction, GameOptions, GameState, Personality } from "./types";
 
 export const DEFAULT_OPTIONS: GameOptions = {
@@ -35,18 +35,66 @@ export function worldsInArea(sector: SectorData, area: readonly string[]): World
   return sector.worlds.filter((w) => letters.has(subsectorOf(w.hex)));
 }
 
-/** Where an Empire starts: a Main, and the polity it belongs to when Empires come from allegiances. */
-export type Start = Main & { readonly allegiance?: string };
+/**
+ * Where an Empire starts: a Main, the polity it belongs to when Empires come
+ * from allegiances, and the capital hex of the Main it was cut from when its
+ * own Main was too big to be one Empire.
+ */
+export type Start = Main & { readonly allegiance?: string; readonly splitFrom?: string };
 
-/** The Mains that become factions, longest first. */
+/**
+ * The most an Empire made from Mains starts with, as a share of what winning
+ * takes. A bigger Main is split. At this the biggest Empire must take nearly
+ * twice as much again as it starts with to win, and the bundled sectors,
+ * whose biggest Main starts with a third of what winning takes, keep their
+ * Mains whole when played whole. A generated sector of standard density,
+ * played whole, starts with about nineteen Empires rather than fourteen, and
+ * one of dense density about twelve rather than two.
+ */
+export const BIGGEST_START = 0.35;
+
+/**
+ * What a world counts for towards victory, and how much winning takes, among
+ * some worlds: as Game.holding and Game.victoryTarget count them.
+ */
+export function victoryLine(worlds: readonly World[], options: Pick<GameOptions, "victoryShare" | "victoryBy">): { worth: (w: World) => number; need: number } {
+  const byPeople = options.victoryBy === "population";
+  const worth = (w: World) => (w.uwp.population === 0 ? 0 : byPeople ? people(w) : 1);
+  const total = worlds.reduce((t, w) => t + worth(w), 0);
+  return { worth, need: byPeople ? total * options.victoryShare : Math.ceil(total * options.victoryShare) };
+}
+
+/**
+ * The Mains that become factions, longest first. Taken from Mains, one too
+ * big to be a fair start is split into pieces, each an Empire of its own.
+ */
 export function factionMains(
   sector: SectorData,
   area: readonly string[],
-  options: Pick<GameOptions, "factionMinWorlds" | "empiresFrom">,
+  options: Pick<GameOptions, "factionMinWorlds" | "empiresFrom" | "victoryShare" | "victoryBy">,
 ): Start[] {
   const inArea = worldsInArea(sector, area);
   if (options.empiresFrom === "allegiance") return polityMains(inArea, options.factionMinWorlds);
-  return mainsIn(inArea).filter((m) => m.hexes.length >= options.factionMinWorlds);
+  const mains = mainsIn(inArea).filter((m) => m.hexes.length >= options.factionMinWorlds);
+  const { worth, need } = victoryLine(inArea, options);
+  const byHex = new Map(inArea.map((w) => [w.at, w]));
+  // A world that alone holds what winning takes, as one can in a small area
+  // played by population, belongs to nobody at the start, or whoever had it
+  // would win on the first day. So it counts for nothing in splitting its Main.
+  const giants = new Set(need > 0 ? inArea.filter((w) => worth(w) >= need).map((w) => w.at) : []);
+  const held = (w: World) => (giants.has(w.at) ? 0 : worth(w));
+  const split = mains.map((m) => splitMain(m, byHex, held, need * BIGGEST_START, need, options.factionMinWorlds));
+  if (giants.size === 0 && split.every((pieces) => pieces === null)) return mains;
+  return mains
+    .flatMap((m, i): Start[] => split[i] ?? [m])
+    .flatMap((m): Start[] => {
+      if (!m.hexes.some((at) => giants.has(at))) return [m];
+      const hexes = m.hexes.filter((at) => !giants.has(at));
+      if (hexes.length < Math.min(options.factionMinWorlds, m.hexes.length)) return [];
+      const capital = hexes.map((at) => byHex.get(at)!).sort(capitalFirst)[0]!;
+      return [{ ...m, name: capital.name, hexes, capital: capital.at }];
+    })
+    .sort((a, b) => b.hexes.length - a.hexes.length || a.name.localeCompare(b.name));
 }
 
 /** Whether any world in the sector belongs to somebody, so Empires can come from allegiances. */
@@ -58,15 +106,17 @@ export function hasAllegiances(sector: SectorData): boolean {
  * An Empire's name from the polity it belongs to: "Third Imperium", or
  * "Third Imperium (Regina)" where the polity is several Empires. Null where
  * the polity has no name to give, or is a client state, whose Mains are each
- * a small state of their own and are named as any Main is.
+ * a small state of their own and are named as any Main is. Polities are
+ * counted by name, not code, because the Aslan clans each have a code of
+ * their own and are all the Aslan Hierate.
  */
 export function empireName(start: Start, sector: SectorData, all: readonly Start[]): string | null {
   const code = start.allegiance;
   if (code === undefined || code.startsWith("Cs")) return null;
-  const polity = sector.polities?.find((p) => p.code === code);
-  const base = polity?.name.split(",")[0]!.trim() ?? "";
+  const base = polityFamily(sector.polities, code);
   if (base === "") return null;
-  return all.filter((m) => m.allegiance === code).length > 1 ? `${base} (${start.name})` : base;
+  const sharing = all.filter((m) => m.allegiance !== undefined && !m.allegiance.startsWith("Cs") && polityFamily(sector.polities, m.allegiance) === base);
+  return sharing.length > 1 ? `${base} (${start.name})` : base;
 }
 
 /** MCr a week a Main's worlds pay together. */
@@ -107,6 +157,15 @@ export function createGame(spec: NewGame): Game {
   const inArea = worldsInArea(spec.sector, spec.area);
   const byHex = new Map(inArea.map((w) => [w.at, w]));
   const mains = factionMains(spec.sector, spec.area, spec.options);
+  // A game is Empires against one another. The setup screen will not start
+  // one with fewer, and nothing else should either.
+  if (mains.length < 2) {
+    throw new Error(
+      mains.length === 0
+        ? "There are no Empires in the area in play, and a game needs at least two. Play more subsectors or lower the smallest Empire."
+        : "There is only one Empire in the area in play, and a game needs at least two. Play more subsectors or lower the smallest Empire.",
+    );
+  }
   const humans = new Map(spec.players.map((p, i) => [p.capital, { ...p, index: i }]));
   const colours = colourTerritories(
     mains.map((m) => ({ key: m.capital, hexes: m.hexes, human: humans.get(m.capital)?.index })),
@@ -127,6 +186,7 @@ export function createGame(spec: NewGame): Game {
       playerName: human?.name ?? "",
       main: main.name,
       ...(main.allegiance === undefined ? {} : { allegiance: main.allegiance }),
+      ...(main.splitFrom === undefined ? {} : { splitFrom: main.splitFrom }),
       capital: main.capital,
       credits: startingCredits(main, byHex, spec.options),
       alive: true,
@@ -145,7 +205,12 @@ export function createGame(spec: NewGame): Game {
   });
   // Each Empire's character, varied from its personality by the game's seed.
   for (const f of factions) f.temper = temperFromId(f.personality, `${spec.seed}|${f.id}`);
-  const relations = startingRelations(factions, { name: spec.sector.name, worlds: inArea }, owner, spec.seed);
+  const relations = startingRelations(
+    factions,
+    { name: spec.sector.name, worlds: inArea, ...(spec.sector.polities === undefined ? {} : { polities: spec.sector.polities }) },
+    owner,
+    spec.seed,
+  );
   // Humans give orders in the order they were listed.
   const humanOrder = new Map(spec.players.map((p, i) => [p.capital, i]));
   factions.sort((a, b) => {

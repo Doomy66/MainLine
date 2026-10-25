@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { distanceBetween, hexDistance, parseHex, subsectorOf } from "./hex";
-import { mainsIn } from "./mains";
+import { mainsIn, splitMain, type Main } from "./mains";
 import { createHash } from "node:crypto";
 import { parseSec } from "./sec";
 import { parseSectorFile } from "./sectorfile";
@@ -110,5 +110,64 @@ describe("a PlanetHex sector file", () => {
       const top = Math.max(...m.hexes.map((at) => byHex.get(at)!.uwp.population));
       expect(byHex.get(m.capital)!.uwp.population).toBe(top);
     }
+  });
+});
+
+describe("splitting a Main", () => {
+  // A straight run of twelve worlds down one column, its two busiest worlds
+  // near either end, and a short run of six apart from it.
+  const row = (at: string, name: string, uwp: string) => `${at}\t${name}\t${uwp}\t\t\t\t703\tNaHu\tG2 V`;
+  const rows = ["Hex\tName\tUWP\tBases\tRemarks\tZone\tPBG\tAllegiance\tStars"];
+  for (let r = 1; r <= 12; r++) {
+    const at = `01${String(r).padStart(2, "0")}`;
+    rows.push(row(at, `Long${r}`, r === 2 ? "A788899-C" : r === 11 ? "A777777-B" : "C555555-8"));
+  }
+  for (let r = 1; r <= 6; r++) rows.push(row(`050${r}`, `Short${r}`, "C555555-8"));
+  const strip = parseSec(rows.join("\n"), "Strip");
+  const worlds = new Map(strip.worlds.map((w) => [w.at, w]));
+  const long = mainsIn(strip.worlds).find((m) => m.hexes.length === 12)!;
+  const short = mainsIn(strip.worlds).find((m) => m.hexes.length === 6)!;
+  const one = () => 1;
+  const connected = (m: Main) => {
+    const seen = new Set([m.hexes[0]!]);
+    const walk = [m.hexes[0]!];
+    while (walk.length > 0) {
+      const here = walk.pop()!;
+      for (const at of m.hexes) {
+        if (seen.has(at) || distanceBetween(here, at) !== 1) continue;
+        seen.add(at);
+        walk.push(at);
+      }
+    }
+    return seen.size === m.hexes.length;
+  };
+
+  it("leaves a Main small enough alone", () => {
+    expect(splitMain(long, worlds, one, 12, 20, 4)).toBeNull();
+  });
+
+  it("cuts a long one into runs a jump-1 ship can cross, around its busiest worlds", () => {
+    const pieces = splitMain(long, worlds, one, 5, 10, 4)!;
+    expect(pieces.length).toBeGreaterThanOrEqual(3);
+    expect(pieces.flatMap((p) => p.hexes).sort()).toEqual([...long.hexes].sort());
+    for (const p of pieces) {
+      expect(p.hexes.length).toBeLessThanOrEqual(5);
+      expect(p.hexes.length).toBeGreaterThanOrEqual(4);
+      expect(connected(p)).toBe(true);
+      expect(p.splitFrom).toBe(long.capital);
+      expect(p.name).toBe(worlds.get(p.capital)!.name);
+    }
+    expect(pieces.map((p) => p.capital)).toEqual(expect.arrayContaining(["0102", "0111"]));
+    // The same every time.
+    expect(splitMain(long, worlds, one, 5, 10, 4)).toEqual(pieces);
+  });
+
+  it("goes below the smallest Empire only to keep a Main under the victory line", () => {
+    // Six worlds, and five win: cut into halves of three.
+    const halves = splitMain(short, worlds, one, 2, 5, 4)!;
+    expect(halves.map((p) => p.hexes.length)).toEqual([3, 3]);
+    expect(halves.every(connected)).toBe(true);
+    // Short of the line, a Main that cannot be cut into Empires stays whole.
+    expect(splitMain(short, worlds, one, 2, 7, 4)).toBeNull();
   });
 });

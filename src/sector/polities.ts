@@ -17,7 +17,7 @@
 
 import { hexDistance } from "./hex";
 import { capitalFirst, mainsIn, type Main } from "./mains";
-import type { World } from "./sec";
+import type { Polity, World } from "./sec";
 
 /** A Main that belongs to a polity. */
 export interface PolityMain extends Main {
@@ -29,6 +29,25 @@ export function claimedBy(world: World): string | null {
   const code = (world.allegiance ?? "").trim();
   if (code === "" || code === "--" || code.startsWith("Na")) return null;
   return code;
+}
+
+/**
+ * A polity's name without the part of it a world is in: "Third Imperium" for
+ * "Third Imperium, Domain of Deneb". Empty where the sector does not name it.
+ */
+export function polityFamily(polities: readonly Polity[] | undefined, code: string): string {
+  const polity = polities?.find((p) => p.code === code);
+  return polity?.name.split(",")[0]!.trim() ?? "";
+}
+
+/**
+ * The polity a client state belongs to, by name: "Third Imperium" for
+ * "Client state, Third Imperium". Empty where the sector does not say.
+ */
+export function clientOf(polities: readonly Polity[] | undefined, code: string): string {
+  const polity = polities?.find((p) => p.code === code);
+  const comma = polity?.name.indexOf(",") ?? -1;
+  return comma < 0 ? "" : polity!.name.slice(comma + 1).trim();
 }
 
 /** How far off a Main of its own polity a world can lie and still be part of it. */

@@ -22,7 +22,8 @@
 
 import { attackDamage, STRENGTH_ARMOUR } from "../catalogue/shipclass";
 import { distanceBetween } from "../sector/hex";
-import type { SectorData, World } from "../sector/sec";
+import { clientOf, polityFamily } from "../sector/polities";
+import type { Polity, SectorData, World } from "../sector/sec";
 import type { Game } from "./game";
 import { defenceArmour, defenceAttacks, isWeekEnd } from "./rules";
 import { Rng, seedOf } from "./rng";
@@ -89,23 +90,42 @@ function rule(world: World | undefined): "many" | "few" | "one" | "other" {
   return "other";
 }
 
-/** How two polities stand by their Allegiance codes alone. */
-function kinship(a: string | undefined, b: string | undefined): number {
-  if (a === undefined || b === undefined) return 0;
-  if (a === b) return 70;
-  const family = (code: string) => (code.startsWith("Cs") ? null : code.slice(0, 2));
-  const patron = (code: string) => (code.startsWith("Cs") ? code.slice(2, 4) : null);
-  if (family(a) !== null && family(a) === family(b)) return 50;
-  if (patron(a) !== null && patron(a) === family(b)) return 40;
-  if (patron(b) !== null && patron(b) === family(a)) return 40;
-  if (patron(a) !== null && patron(a) === patron(b)) return 20;
+/** Two pieces of one Main that was too big to be one Empire. */
+function splitKin(a: Faction, b: Faction): boolean {
+  return a.splitFrom !== undefined && a.splitFrom === b.splitFrom;
+}
+
+/**
+ * How two Empires stand by where they came from. Two pieces of one Main start
+ * as Empires of one polity do. Otherwise it goes by polity: by the polities'
+ * names where the sector gives them, so that the Thoengling Empire and the
+ * Thirz Empire, VThE and VTzE, are strangers for all their codes look alike,
+ * and by the codes where it does not. A client state is not a polity: each of
+ * its Mains is a small state of its own, so two of them share a patron and no
+ * more, even under one code.
+ */
+function kinship(a: Faction, b: Faction, polities: readonly Polity[] | undefined): number {
+  if (splitKin(a, b)) return 70;
+  const x = a.allegiance;
+  const y = b.allegiance;
+  if (x === undefined || y === undefined) return 0;
+  const client = (code: string) => code.startsWith("Cs");
+  if (x === y && !client(x)) return 70;
+  const byName = [x, y].every((code) => (client(code) ? clientOf(polities, code) : polityFamily(polities, code)) !== "");
+  const family = (code: string) => (client(code) ? null : byName ? polityFamily(polities, code) : code.slice(0, 2));
+  const patron = (code: string) => (!client(code) ? null : byName ? clientOf(polities, code) : code.slice(2, 4));
+  if (family(x) !== null && family(x) === family(y)) return 50;
+  if (patron(x) !== null && patron(x) === family(y)) return 40;
+  if (patron(y) !== null && patron(y) === family(x)) return 40;
+  if (patron(x) !== null && patron(x) === patron(y)) return 20;
   return -20;
 }
 
 /**
  * Where every pair starts. Empires of one polity, or a client state and its
- * patron, start as friends and other polities as rivals. On top of that, and
- * all there is between Empires made from Mains: neighbours are rivals for the
+ * patron, start as friends and other polities as rivals, and so do the pieces
+ * of a Main too big to be one Empire. On top of that, and all there is
+ * between other Empires made from Mains: neighbours are rivals for the
  * worlds between them, two governments alike get on and a democracy and a
  * dictatorship do not, bold Empires are hard to like, and the seed adds a
  * little of its own so that no two games start the same.
@@ -128,14 +148,15 @@ export function startingRelations(
     for (let j = i + 1; j < factions.length; j++) {
       const a = factions[i]!;
       const b = factions[j]!;
-      let score = byAllegiance ? kinship(a.allegiance, b.allegiance) : 0;
+      const kin = byAllegiance || splitKin(a, b);
+      let score = kin ? kinship(a, b, sector.polities) : 0;
       if (neighbours(a.id, b.id)) score -= 15;
       const ra = rule(byHex.get(a.capital));
       const rb = rule(byHex.get(b.capital));
       if (ra === rb && ra !== "other") score += 10;
       else if ((ra === "many" && rb === "one") || (ra === "one" && rb === "many")) score -= 15;
       score -= 20 * ((a.temper.aggression + b.temper.aggression) / 2);
-      score += (rng.next() * 2 - 1) * (byAllegiance ? 10 : 25);
+      score += (rng.next() * 2 - 1) * (kin ? 10 : 25);
       score = Math.round(clamp(score));
       const war = score <= WAR_AT;
       out[relationKey(a.id, b.id)] = { base: score, score, war, since: 0, ...(war ? { cause: "over old grievances" } : {}) };
