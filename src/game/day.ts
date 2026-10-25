@@ -500,11 +500,27 @@ function sightingOf(game: Game, fleet: Fleet, before: Sighting | undefined): Sig
   };
 }
 
+/** How many days after it was sent a capital keeps news of a fleet before forgetting it. */
+const NEWS_KEPT = 60;
+
 /** Send a sighting home: at once where the capital can see it, by courier otherwise. */
 function sendHome(game: Game, faction: Faction, sighting: Sighting): void {
   const lag = game.lag(faction.id, sighting.system);
-  if (lag === 0) faction.news[sighting.fleetId] = sighting;
-  else faction.inbox.push({ arrives: game.state.day + lag, kind: "sighting", sighting });
+  if (lag === 0) {
+    faction.news[sighting.fleetId] = sighting;
+    return;
+  }
+  // Only players read the news: the computer's Empires go by what they see. Post
+  // for them alone was most of a big game's save, so, as with the log, it is not
+  // sent, except in a game with no players at all.
+  if (!faction.human && game.humans().length > 0) return;
+  // News that would be forgotten the day it came is not worth the courier.
+  if (lag > NEWS_KEPT) return;
+  // Older news of this fleet that would come no sooner than this would be
+  // passed over when it came, so it is taken out of the post now.
+  const arrives = game.state.day + lag;
+  faction.inbox = faction.inbox.filter((d) => d.kind !== "sighting" || d.sighting.fleetId !== sighting.fleetId || d.arrives < arrives);
+  faction.inbox.push({ arrives, kind: "sighting", sighting });
 }
 
 /** What every faction sees, what it remembers of what it saw, and what it hears. */
@@ -583,7 +599,7 @@ function intel(game: Game, lost: ReadonlyMap<string, { owner: string; system: st
       }
     }
     for (const [id, s] of Object.entries(faction.news)) {
-      if (day - (s.left ?? s.day) > 60) delete faction.news[id];
+      if (day - (s.left ?? s.day) > NEWS_KEPT) delete faction.news[id];
     }
 
     // Under full fog, a player's own fleets report home by courier.

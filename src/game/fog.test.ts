@@ -126,3 +126,47 @@ describe("news of your own fleets", () => {
     expect(game.logFor(me.id).some((e) => e.kind === "combat" && e.at === at)).toBe(true);
   });
 });
+
+describe("news of other fleets in the post", () => {
+  it("is not sent where it would be forgotten on arrival, and news that overtakes older news replaces it", () => {
+    const { game, me } = oneHuman({ newsLag: 1 });
+    const enemy = game.state.factions.find((f) => !f.human)!;
+    // Kept out of the computer's hands, so its fleets stay where the test puts them.
+    (enemy as { human: boolean }).human = true;
+    const world = (pred: (d: number) => boolean) => game.state.sector.worlds.find((w) => pred(distanceBetween(me.capital, w.at)))!.at;
+    const beyond = world((d) => d >= 9);
+    const far = world((d) => d === 5);
+    const near = world((d) => d === 1);
+    expect(game.lag(me.id, beyond)).toBeGreaterThan(60);
+    const scout = (fleetOwner: string, at: string) => {
+      const f = game.newFleet(fleetOwner, at, "deep", [game.newShip("Scout-Courier")]);
+      f.standing = { ...STANDING_PRESETS["Avoid battle"]! };
+      return f;
+    };
+    for (const at of [beyond, far, near]) scout(me.id, at);
+    const lost = scout(enemy.id, beyond);
+    const moving = scout(enemy.id, far);
+    const posted = (id: string) => me.inbox.filter((d) => d.kind === "sighting" && d.sighting.fleetId === id);
+
+    advanceDay(game);
+    expect(me.intel[lost.id]).toBeDefined();
+    expect(posted(lost.id)).toHaveLength(0);
+    expect(posted(moving.id).map((d) => d.arrives)).toEqual([game.state.day + 35]);
+
+    // It comes nearer the capital, so news of it there gets home first.
+    moving.system = near;
+    advanceDay(game);
+    expect(posted(moving.id).map((d) => d.arrives)).toEqual([game.state.day + 7]);
+  });
+
+  it("is not sent to the computer's Empires, which go by what they see", () => {
+    const { game, me } = oneHuman({ newsLag: 1 });
+    const computer = game.state.factions.find((f) => !f.human && game.ownedWorlds(f.id).some((w) => game.lag(f.id, w.at) > 0))!;
+    const at = game.ownedWorlds(computer.id).find((w) => game.lag(computer.id, w.at) > 0)!.at;
+    const visitor = game.newFleet(me.id, at, "deep", [game.newShip("Scout-Courier")]);
+    visitor.standing = { ...STANDING_PRESETS["Avoid battle"]! };
+    advanceDay(game);
+    expect(computer.intel[visitor.id]).toBeDefined();
+    expect(computer.inbox.filter((d) => d.kind === "sighting")).toHaveLength(0);
+  });
+});
