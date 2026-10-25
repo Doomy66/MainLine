@@ -24,6 +24,9 @@
   It keeps at most twenty small craft outside hangars and saves for warships, and builds at the yards of
   Empires at peace with it when its own cannot build a warship. In test games it takes more worlds and
   sits on less unspent money.
+- The computer no longer strands fleets with empty tanks: it sends them only where they can refuel or
+  jump on to fuel. It places one order at a time at another Empire's yard, so it no longer crowds a yard's
+  owner out, and its guards no longer grow swarms of carriers.
 - An Empire on its way to winning grows hungry for its weaker neighbours' worlds and goes to war for
   them, two wars of its own choosing at a time, the more readily the nearer it is to victory and the
   bolder it is.
