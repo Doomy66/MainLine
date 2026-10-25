@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+- No more winning on the first day with Empires from Mains: a Main worth more than about a third of what
+  winning takes is split into several Empires, each ruled from one of its biggest worlds, which start as
+  friends but can fall out. The new game screen shows which Main each came from. A world with enough
+  people to win on its own starts independent. With Empires from allegiances, the early-lead warning now
+  suggests only what would help.
+- Diplomacy fixes from long test runs. A computer Empire really keeps no more than two allies: an offer
+  accepted after it has found two no longer stands. A new alliance starts warm enough to last the day.
+  Offers from a fallen Empire vanish. A renewed war wearies from its own start. Fear of a leader starts at
+  three quarters of the way to victory, is half as strong, touches only its neighbours and no longer keeps
+  a war with it going. Restlessness counts only worlds the Empire could beat, never turns on allies and
+  waits four months after a peace. A capture or a declaration sours only the victim's friends nearby, and
+  not those already at war. A computer Empire far stronger than you is much harder to talk into peace.
+- A fallen capital's government moves to a world that is not under siege, at the heart of the Empire.
+- An Empire with no worlds and no ship that can jump is finished, and a game with no Empire left ends
+  with no winner.
+- Battle reports of big battles list the heaviest fire, damage and criticals of each round and sum up the
+  rest, so long games save far smaller.
+- Days with big carrier fleets take a fraction of a second rather than several.
+- With slow news, Needs attention no longer warns of allies' or neutral fleets, and still warns of
+  enemies seen far away.
+- Official sectors: Vargr polities whose codes look alike no longer start as kin, separate client
+  states of one patron no longer start as one polity, and polities with several codes, such as the Aslan,
+  get distinct Empire names.
 - Alliances and diplomacy. Empires can be allies: they see what each other sees, their fleets in the same
   place fight on the same side, an ally's fleet in orbit stops a siege, and each can repair at the other's
   ports. From the Empire tab you can offer peace, propose an alliance and leave one, as well as declare

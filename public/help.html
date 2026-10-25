@@ -343,7 +343,9 @@
         <p class="muted">
           Every battle report on the Reports tab opens to show each round: for every weapon of every ship at
           every target, how many fired, what they needed to hit and why, how many missiles were shot down, how
-          many hit and for how much, and every critical. If a battle went strangely, the answer is in there.
+          many hit and for how much, and every critical. If a battle went strangely, the answer is in there. In a
+          big battle a round lists only the heaviest fire, the worst damage and the worst criticals, and sums up
+          the rest side by side.
         </p>
 
         <h2 id="defences">Planetary defences</h2>
@@ -427,7 +429,9 @@
         </p>
         <h3>Losing your capital</h3>
         <p>
-          Lose your capital and you rule from your next biggest world, but the government falls with it. For 28
+          Lose your capital and the government moves to one of your bigger worlds: one not under siege and with no
+          enemy fleet in its system if there is one, and of those the one at the heart of your Empire, where
+          fewest worlds would break away. The government falls all the same. For 28
           days the faction is in disorder: it collects only a quarter of its income and nothing on its slips moves.
           Worse, each of its other worlds may take the chance to break away and declare itself independent. The
           chance is one in ten, three in a hundred more for every parsec from the new capital, and one in ten more
@@ -751,7 +755,8 @@
         </p>
         <p>
           <strong>Where it starts.</strong> With Empires from allegiances, two Empires of one polity start as
-          friends, a client state and its patron warmly, and different polities as rivals. Between Empires made
+          friends, a client state and its patron warmly, and different polities as rivals. Empires split from
+          one Main too big for a fair start begin as friends in the same way. Between Empires made
           from Mains, and on top of the polities, neighbours are rivals for the worlds between them, two
           governments alike get on and a democracy and a dictatorship do not, bold Empires are hard to like, and
           chance adds a little. A game starts with a few wars, most often between neighbours, and an uneasy
@@ -759,15 +764,15 @@
         </p>
         <table>
           <tr><th>What happens</th><th>What it does to the standing</th></tr>
-          <tr><td>A world taken from an Empire</td><td>A heavy fall between the two, and a smaller one between the taker and the victim's friends</td></tr>
+          <tr><td>A world taken from an Empire</td><td>A heavy fall between the two, and a smaller one between the taker and the victim's friends within four parsecs that are not already at war with it</td></tr>
           <tr><td>A battle, or a siege that silences a world</td><td>A fall between the two</td></tr>
           <tr><td>An independent world taken on an Empire's border</td><td>A small fall: the border presses</td></tr>
-          <tr><td>A declaration of war</td><td>The victim's friends think the worse of whoever declared it, and turning on an ally costs twice as much with them and a little with everyone</td></tr>
+          <tr><td>A declaration of war</td><td>The victim's friends near it think the worse of whoever declared it, unless already at war with it themselves; turning on an ally costs twice as much with all its friends and a little with everyone</td></tr>
           <tr><td>Leaving an alliance, or turning down an offer</td><td>A fall between the two</td></tr>
           <tr><td>A common enemy</td><td>A slow rise between two Empires at peace</td></tr>
           <tr><td>A war nobody is fighting</td><td>A steady rise, as both sides weary of it</td></tr>
-          <tr><td>One Empire close to winning</td><td>Every other Empire cools towards it, the more the closer it is</td></tr>
-          <tr><td>Nothing to take</td><td>A computer Empire with no independent or enemy world within four parsecs grows restless with the neighbours it is at peace with, the faster the bolder and hungrier it is</td></tr>
+          <tr><td>One Empire close to winning</td><td>Once it is three quarters of the way to victory, Empires with a world within four parsecs of its own cool towards it, the more the closer it is, up to four a week. Its enemies already at war with it do not, so those wars can still end</td></tr>
+          <tr><td>Nothing to take</td><td>A computer Empire with a fleet, and no independent or enemy world within four parsecs that its whole navy could beat, grows restless with the neighbours it is at peace with, the faster the bolder and hungrier it is. Never with an ally, and not for four months after making peace with that neighbour</td></tr>
           <tr><td>Each week</td><td>Every standing drifts a little back towards where it started</td></tr>
         </table>
         <p>
@@ -775,18 +780,21 @@
           a world, over a siege, over an Empire's growing power, or because it has no other worlds within its
           reach. Even two Empires of one polity can come to that. When a war between two computer Empires has
           cooled for two weeks and the standing has climbed back, they make peace. Two computer Empires that are
-          firm friends, all the more with a common enemy, become allies; an alliance whose standing cools falls
-          back to peace. A computer Empire keeps no more than two allies, and none will ally with an Empire close
-          to winning.
+          firm friends, all the more with a common enemy, become allies, and a new alliance starts at least
+          warmly; an alliance whose standing cools falls back to peace. A computer Empire keeps no more than two
+          allies, and none will ally with an Empire close to winning. If it has found its two by the time an
+          offer of alliance is accepted, the offer no longer stands.
         </p>
         <p>
           <strong>Your diplomacy</strong> is on the Empire tab, beside each Empire's standing with you. At peace
           you can declare war or propose an alliance; at war you can offer peace; allied, you can leave the
           alliance and stay at peace. A computer Empire answers the next day. Peace comes easier from one that is
-          less bold, losing the war or fighting others too, and harder while the fighting is fresh. An alliance
+          less bold, losing the war or fighting others too, and harder while the fighting is fresh, and much
+          harder from one far stronger than you. An alliance
           wants a warm standing and comes easier against a common enemy. The computer makes you offers too, of
           peace when it would take it and of alliance when it would have one. They wait under
-          <em>Needs attention</em> with Accept and Decline, and lapse after two weeks unanswered. A war with you
+          <em>Needs attention</em> with Accept and Decline, and lapse after two weeks unanswered, or at once if the
+          Empire that made one falls. A war with you
           ends only when you agree to it. Under each computer Empire the standings say whom it is allied with and
           at war with. Games saved before relations keep everyone at war with everyone.
         </p>
@@ -824,7 +832,8 @@
           standing. The share is of the sector's people unless the game was set up to count worlds instead, when
           every peopled world counts the same, from a billion souls to a mining camp. A world's people are its
           population digit's power of ten times the population multiplier from the sector's PBG. An Empire with
-          no worlds and no ships is out. The Empire tab shows your people and worlds and what winning takes,
+          no worlds and no ships is out, and so is one with no worlds and no ship that can jump: its last crews
+          give up the fight. If no Empire is left standing, nobody wins. The Empire tab shows your people and worlds and what winning takes,
           the standings by both, and the independent worlds still to be had. Games saved before victory by
           population count worlds; the Empire tab can switch the rule at any time, for every player.
           When someone wins, the game shows who, the final standings against the winning line, and your
@@ -849,8 +858,11 @@
           <strong>Sectors.</strong> Make one in <a href="https://doomy66.github.io/PlanetHex/" target="_blank" rel="noopener">PlanetHex</a>.
           Save it, and in Mainline's new game screen press <em>Load a PlanetHex .sector…</em> and pick the
           <code>.sector</code> file. Mainline rolls the same worlds from it that PlanetHex does. Sparse or Rift
-          density makes the best game. At Standard density the worlds join up so well that one Empire can cover
-          half the sector. Hover over a subsector's letter under <em>Area in play</em> to see its name.
+          density makes the best game. At Standard density the worlds join up so well that one Main can cover
+          much of the sector. So a Main worth more than about a third of what winning takes is split into several
+          Empires, each ruled from one of its biggest worlds far from the others and each still a run a jump-1
+          ship can cross. They start as friends, but can fall out. The new game screen shows each under the Main
+          it came from. A single world with enough people to win on its own starts independent. Hover over a subsector's letter under <em>Area in play</em> to see its name.
         </p>
         <p>
           <strong>Official sectors.</strong> To play the Spinward Marches or any other published sector, import it
@@ -867,7 +879,9 @@
           of their own and get names of their own. Non-aligned worlds, and groups smaller than the smallest Empire,
           start independent. <em>Mains, ignoring allegiance</em> starts the sector as if nobody held anything.
           Only the subsectors in play count, for the Empires and for victory, so a big polity can start close to
-          winning when you play only its part of the sector. The new game screen warns you when an Empire does.
+          winning when you play only its part of the sector. The new game screen warns you when an Empire does,
+          and says what would help: more subsectors, Empires from Mains, or victory by worlds. Mains are split
+          when too big, but polities are not.
         </p>
         <p>
           <strong>Ships.</strong> Design one in the
@@ -880,7 +894,7 @@
 
         <h2 id="terms">Terms</h2>
         <table>
-          <tr><td>Empire</td><td>A faction, starting on a group of worlds each one parsec from another, so a jump-1 ship can cross it. Every such group of four or more worlds is an Empire. With Empires from allegiances, each polity's worlds are grouped the same way.</td></tr>
+          <tr><td>Empire</td><td>A faction, starting on a group of worlds each one parsec from another, so a jump-1 ship can cross it. Every such group of four or more worlds is an Empire, and one too big for a fair start is split into several. With Empires from allegiances, each polity's worlds are grouped the same way.</td></tr>
           <tr><td>Parsec</td><td>One hex on the map.</td></tr>
           <tr><td>Jump-<em>n</em>, J<em>n</em></td><td>How many parsecs a ship can jump at once.</td></tr>
           <tr><td>Thrust, M<em>n</em></td><td>How hard a ship can manoeuvre: it dodges, chases and escapes with it.</td></tr>

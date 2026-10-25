@@ -40,7 +40,9 @@ of writing, this is 100% Claude generated to my exacting requirements.
 
 **Setting up.** Pick a sector and the subsectors in play. Every chain of at
 least four worlds becomes an Empire; smaller chains and lone worlds are
-independent and there to be taken. A sector whose worlds belong to polities, as
+independent and there to be taken. A chain worth more than about a third of
+what winning takes is split into several Empires that start as friends, so
+nobody wins on the first day. A sector whose worlds belong to polities, as
 an official one's do, can instead start with them: each polity's worlds are
 grouped into Empires of its own, and non-aligned worlds start independent.
 Empires start at war or at peace with one another, and war, peace and alliances
@@ -104,7 +106,8 @@ with orders to besiege, and the world submits in a few days. That is two days
 plus one for every two population digits. Defences rebuild once nobody is
 shooting at them.
 
-**Losing a capital** moves the government to your next biggest world and
+**Losing a capital** moves the government to a big world at the heart of
+your Empire, away from any siege, and
 throws the faction into disorder for four weeks: a quarter of the income, idle
 yards, and worlds far from the new capital, or with little law, breaking away.
 
