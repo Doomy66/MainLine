@@ -49,6 +49,12 @@ const FEAR_FROM = 0.75;
 const FEAR = 4;
 /** Days after a peace before an Empire with nothing to take grows restless with the same neighbour. */
 const RESTLESS_AFTER = 120;
+/** Share of the way to victory from which a computer Empire grows ambitious. */
+const AMBITION_FROM = 0.25;
+/** How fast ambition sours it on a weaker neighbour a week, at victory's door, for a steady Empire. */
+const AMBITION = 10;
+/** Wars of its own choosing an ambitious Empire will have at once. */
+const AMBITIOUS_WARS = 2;
 
 export function relationKey(a: string, b: string): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
@@ -338,6 +344,30 @@ function weekly(game: Game): void {
       // small Empire does not pick a quarrel with one it could never hurt.
       const prey = owned.get(g.id)!.some((w) => defenceStrength(game, w.at) < strength && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
       if (prey) shift(game, f.id, g.id, -restless, { text: "with no other worlds within its reach", who: f.id });
+    }
+  }
+
+  // An Empire on its way to winning wants more, and looks hungrily at its
+  // weaker neighbours, the more the nearer it is to victory and the bolder it
+  // is. Without this the strong sat content at peace and no game was won. Two
+  // wars of its own choosing at a time, not counting one with nothing left in
+  // reach to take, or a leader sat on a beaten remnant for years.
+  for (const f of living) {
+    if (f.human) continue;
+    const share = nearVictory(game, f.id);
+    if (share <= AMBITION_FROM) continue;
+    const own = owned.get(f.id)!;
+    const strength = strengthOf(game, f.id);
+    if (own.length === 0 || strength <= 0) continue;
+    const takeable = (g: Faction) => owned.get(g.id)!.some((w) => defenceStrength(game, w.at) < strength && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
+    const chosen = living.filter((g) => g.id !== f.id && atWar(game, f.id, g.id) && relationOf(game, f.id, g.id)?.declaredBy === f.id && takeable(g));
+    if (chosen.length >= AMBITIOUS_WARS) continue;
+    const hunger = (AMBITION * (Math.min(1, share) - AMBITION_FROM)) / (1 - AMBITION_FROM) * (0.5 + f.temper.aggression);
+    for (const g of living) {
+      if (g.id === f.id || atWar(game, f.id, g.id) || allied(game, f.id, g.id) || strengthOf(game, g.id) >= strength) continue;
+      const r = relationOf(game, f.id, g.id);
+      if (r !== undefined && r.since > 0 && game.state.day - r.since < RESTLESS_AFTER) continue;
+      if (takeable(g)) shift(game, f.id, g.id, -hunger, { text: "hungry for more worlds", who: f.id });
     }
   }
 }

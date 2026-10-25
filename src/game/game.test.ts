@@ -906,6 +906,43 @@ describe("war and peace", () => {
     expect(week(0)).toBeLessThan(0);
   });
 
+  it("makes an Empire near victory hungry for a weaker neighbour's worlds, two wars of its choosing at a time", () => {
+    const game = newGame({ victoryBy: "worlds" }, 0, "AMBITION");
+    calm(game);
+    const leader = game.state.factions[0]!;
+    quiet(game, leader);
+    const held = game.ownedWorlds(leader.id).map((w) => w.at);
+    const near = (f: Faction) => game.ownedWorlds(f.id).some((w) => held.some((at) => distanceBetween(w.at, at) <= 4));
+    const [prey, other, third] = game.state.factions.slice(1).filter(near) as [Faction, Faction, Faction];
+    for (const f of [prey, other, third]) for (const w of game.ownedWorlds(f.id)) Object.assign(game.worldState(w.at), { defence: 0, navy: null });
+    game.state.fleets = [];
+    game.newFleet(leader.id, leader.capital, "main", [game.newShip("Broadsword-Mercenary-Cruiser"), game.newShip("Broadsword-Mercenary-Cruiser")]);
+    // Nine tenths of the way to winning.
+    game.state.options.victoryShare = game.holding(leader.id).worlds / game.victoryTarget().worlds / 0.9;
+    const r = relationOf(game, leader.id, prey.id)!;
+    const week = () => {
+      Object.assign(r, { score: 0, base: 0 });
+      delete r.cause;
+      game.state.day += 7;
+      diplomacy(game);
+      return r.cause;
+    };
+    expect(week()).toBe("hungry for more worlds");
+    expect(r.score).toBeLessThan(-5);
+    // One war of its own choosing still leaves room for another, two do not.
+    Object.assign(relationOf(game, leader.id, other.id)!, { war: true, declaredBy: leader.id, since: game.state.day });
+    expect(week()).toBe("hungry for more worlds");
+    Object.assign(relationOf(game, leader.id, third.id)!, { war: true, declaredBy: leader.id, since: game.state.day });
+    expect(week()).not.toBe("hungry for more worlds");
+    // Unless one of them has nothing left it could take.
+    for (const w of game.ownedWorlds(third.id)) game.worldState(w.at).defence = 1e9;
+    expect(week()).toBe("hungry for more worlds");
+    for (const f of [other, third]) Object.assign(relationOf(game, leader.id, f.id)!, { war: false, since: 0 });
+    // Nor with a neighbour stronger than itself.
+    game.newFleet(prey.id, prey.capital, "main", [1, 2, 3].map(() => game.newShip("Broadsword-Mercenary-Cruiser")));
+    expect(week()).not.toBe("hungry for more worlds");
+  });
+
   it("sours only the victim's friends nearby, and not those already at war with the aggressor", () => {
     const game = newGame({}, 0, "CASCADE");
     const near = (f: Faction, places: readonly string[]) => game.ownedWorlds(f.id).some((w) => places.some((at) => distanceBetween(w.at, at) <= 4));
