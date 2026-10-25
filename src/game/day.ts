@@ -65,7 +65,8 @@ export function locExists(game: Game, system: string, loc: Loc): boolean {
 export function refuelLoc(game: Game, fleet: Fleet): Loc | null {
   const world = game.world(fleet.system);
   const hostile = game.hostile(fleet.owner, game.worldState(fleet.system).owner);
-  const perShip = fleet.ships.filter((s) => !game.carried(fleet, s)).map((s) => fuelSources(world, game.cls(s), hostile));
+  const carried = game.carriedShips(fleet);
+  const perShip = fleet.ships.filter((s) => !carried.has(s.id)).map((s) => fuelSources(world, game.cls(s), hostile));
   if (perShip.some((sources) => sources.length === 0)) return null;
   // Places every ship can use, the best first: refined fuel at a starport,
   // then the gas giant, then unrefined at the world.
@@ -118,7 +119,8 @@ function stepJump(game: Game, fleet: Fleet, order: Extract<Order, { kind: "jump"
   }
   const parsecs = distanceBetween(fleet.system, next);
   const driveOk = parsecs <= game.fleetJump(fleet);
-  const tanksOk = fleet.ships.every((s) => game.carried(fleet, s) || game.cls(s).fuelCapacity + 1e-9 >= jumpFuel(game.cls(s).tons, parsecs));
+  const carried = game.carriedShips(fleet);
+  const tanksOk = fleet.ships.every((s) => carried.has(s.id) || game.cls(s).fuelCapacity + 1e-9 >= jumpFuel(game.cls(s).tons, parsecs));
   if (driveOk && tanksOk && canRefuelAt(game, fleet, fleet.system)) {
     const loc = refuelLoc(game, fleet);
     if (loc !== null) {
@@ -141,8 +143,9 @@ function stepJump(game: Game, fleet: Fleet, order: Extract<Order, { kind: "jump"
 
 function depart(game: Game, fleet: Fleet, to: string): void {
   const parsecs = distanceBetween(fleet.system, to);
+  const carried = game.carriedShips(fleet);
   for (const s of fleet.ships) {
-    if (!game.carried(fleet, s)) s.fuel = Math.max(0, s.fuel - jumpFuel(game.cls(s).tons, parsecs));
+    if (!carried.has(s.id)) s.fuel = Math.max(0, s.fuel - jumpFuel(game.cls(s).tons, parsecs));
   }
   let days = JUMP_DAYS;
   const rough = fleet.ships.some((s) => s.unrefined && !game.cls(s).fuelProcessor);
