@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { bundledDesigns, Catalogue } from "../catalogue/catalogue";
 import { damageAgainst } from "../catalogue/shipclass";
+import { parseSec } from "../sector/sec";
 import { parseSectorFile } from "../sector/sectorfile";
 import { distanceBetween } from "../sector/hex";
 import { planAi } from "./ai";
@@ -10,7 +11,7 @@ import type { Game } from "./game";
 import { routeTo } from "./nav";
 import { captureDays, defenceMax, jumpFuel } from "./rules";
 import { parseGame, serialise } from "./save";
-import { createGame, DEFAULT_OPTIONS } from "./setup";
+import { createGame, DEFAULT_OPTIONS, hasAllegiances } from "./setup";
 import { aiSetup, buyStarting, endTurn, orderBuild, runDays } from "./turn";
 import type { GameOptions } from "./types";
 import { STANDING_PRESETS } from "./types";
@@ -448,5 +449,51 @@ describe("a whole game", () => {
     runDays(a, 30);
     runDays(b, 30);
     expect(serialise(a)).toBe(serialise(b));
+  });
+});
+
+describe("Empires from allegiances", () => {
+  // A made-up subsector: two separate stretches of the Imperium, a Zhodani
+  // stretch, a client state and some non-aligned worlds.
+  const line = (at: string, name: string, uwp: string, allegiance: string) => `${at}\t${name}\t${uwp}\t\t\t\t703\t${allegiance}\tG2 V`;
+  const rows: string[] = ["Hex\tName\tUWP\tBases\tRemarks\tZone\tPBG\tAllegiance\tStars"];
+  for (let r = 1; r <= 6; r++) rows.push(line(`010${r}`, r === 3 ? "Regina" : `Im${r}`, r === 3 ? "A788899-C" : "B555666-9", "ImDd"));
+  for (let r = 1; r <= 5; r++) rows.push(line(`060${r}`, r === 2 ? "Efate" : `Ef${r}`, r === 2 ? "A777777-B" : "B555666-9", "ImDd"));
+  for (const at of ["0308", "0309", "0310", "0408", "0409"]) rows.push(line(at, `Zh${at}`, "B555666-9", "ZhIN"));
+  for (const at of ["0807", "0808", "0809", "0810"]) rows.push(line(at, `Cs${at}`, "C555666-8", "CsIm"));
+  for (const at of ["0301", "0302", "0303", "0304"]) rows.push(line(at, `Na${at}`, "C555666-8", "NaHu"));
+  const charted = {
+    ...parseSec(rows.join("\n"), "Test Reach"),
+    polities: [
+      { code: "ImDd", name: "Third Imperium, Domain of Deneb", short: "Imperium" },
+      { code: "ZhIN", name: "Zhodani Consulate, Iadr Nsobl Province", short: "Consulate" },
+      { code: "CsIm", name: "Client state, Third Imperium", short: "NA" },
+      { code: "NaHu", name: "Non-Aligned, Human-dominated", short: "NA" },
+    ],
+  };
+  const start = (empiresFrom: "mains" | "allegiance") =>
+    createGame({ name: "a", sector: charted, area: ["A"], players: [], options: { ...DEFAULT_OPTIONS, empiresFrom }, designs, seed: "ALLEGIANCE" });
+
+  it("makes each polity's Mains its Empires and leaves the non-aligned independent", () => {
+    expect(hasAllegiances(charted)).toBe(true);
+    expect(hasAllegiances(sector)).toBe(false);
+    const game = start("allegiance");
+    const names = game.state.factions.map((f) => `${f.allegiance} ${f.name}`).sort();
+    expect(names.slice(1)).toEqual(["ImDd Third Imperium (Efate)", "ImDd Third Imperium (Regina)", "ZhIN Zhodani Consulate"]);
+    // A client state is a small state of its own, named as any Main is.
+    expect(names[0]).toMatch(/^CsIm Cs0807 \w+$/);
+    expect(game.state.factions.find((f) => f.name === "Third Imperium (Regina)")!.capital).toBe("0103");
+    for (const at of ["0301", "0302", "0303", "0304"]) expect(game.worldState(at).owner).toBeNull();
+    expect(game.state.sector.polities?.length).toBe(4);
+    // The allegiance survives a save.
+    expect(parseGame(serialise(game)).state.factions.map((f) => f.allegiance).sort()).toEqual(["CsIm", "ImDd", "ImDd", "ZhIN"]);
+  });
+
+  it("ignores allegiance when Empires come from Mains", () => {
+    const game = start("mains");
+    expect(game.state.factions.every((f) => f.allegiance === undefined)).toBe(true);
+    // The non-aligned worlds are a Main like any other, and so an Empire.
+    expect(game.state.factions).toHaveLength(5);
+    expect(game.worldState("0301").owner).not.toBeNull();
   });
 });

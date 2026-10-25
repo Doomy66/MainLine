@@ -6,6 +6,7 @@
 import type { Design } from "../shipdesign/engine/design";
 import { subsectorOf } from "../sector/hex";
 import { mainsIn, type Main } from "../sector/mains";
+import { claimedBy, polityMains } from "../sector/polities";
 import type { SectorData, World } from "../sector/sec";
 import { Game } from "./game";
 import { colourTerritories, factionColour, polityName } from "./names";
@@ -22,6 +23,7 @@ export const DEFAULT_OPTIONS: GameOptions = {
   startingWealth: 1,
   buildSpeed: 0.25,
   factionMinWorlds: 4,
+  empiresFrom: "mains",
   newsLag: 0,
   fullFog: false,
 };
@@ -32,9 +34,38 @@ export function worldsInArea(sector: SectorData, area: readonly string[]): World
   return sector.worlds.filter((w) => letters.has(subsectorOf(w.hex)));
 }
 
+/** Where an Empire starts: a Main, and the polity it belongs to when Empires come from allegiances. */
+export type Start = Main & { readonly allegiance?: string };
+
 /** The Mains that become factions, longest first. */
-export function factionMains(sector: SectorData, area: readonly string[], minWorlds: number): Main[] {
-  return mainsIn(worldsInArea(sector, area)).filter((m) => m.hexes.length >= minWorlds);
+export function factionMains(
+  sector: SectorData,
+  area: readonly string[],
+  options: Pick<GameOptions, "factionMinWorlds" | "empiresFrom">,
+): Start[] {
+  const inArea = worldsInArea(sector, area);
+  if (options.empiresFrom === "allegiance") return polityMains(inArea, options.factionMinWorlds);
+  return mainsIn(inArea).filter((m) => m.hexes.length >= options.factionMinWorlds);
+}
+
+/** Whether any world in the sector belongs to somebody, so Empires can come from allegiances. */
+export function hasAllegiances(sector: SectorData): boolean {
+  return sector.worlds.some((w) => claimedBy(w) !== null);
+}
+
+/**
+ * An Empire's name from the polity it belongs to: "Third Imperium", or
+ * "Third Imperium (Regina)" where the polity is several Empires. Null where
+ * the polity has no name to give, or is a client state, whose Mains are each
+ * a small state of their own and are named as any Main is.
+ */
+export function empireName(start: Start, sector: SectorData, all: readonly Start[]): string | null {
+  const code = start.allegiance;
+  if (code === undefined || code.startsWith("Cs")) return null;
+  const polity = sector.polities?.find((p) => p.code === code);
+  const base = polity?.name.split(",")[0]!.trim() ?? "";
+  if (base === "") return null;
+  return all.filter((m) => m.allegiance === code).length > 1 ? `${base} (${start.name})` : base;
 }
 
 /** MCr a week a Main's worlds pay together. */
@@ -74,7 +105,7 @@ export function createGame(spec: NewGame): Game {
   const rng = new Rng(seedOf(spec.seed));
   const inArea = worldsInArea(spec.sector, spec.area);
   const byHex = new Map(inArea.map((w) => [w.at, w]));
-  const mains = factionMains(spec.sector, spec.area, spec.options.factionMinWorlds);
+  const mains = factionMains(spec.sector, spec.area, spec.options);
   const humans = new Map(spec.players.map((p, i) => [p.capital, { ...p, index: i }]));
   const colours = colourTerritories(
     mains.map((m) => ({ key: m.capital, hexes: m.hexes, human: humans.get(m.capital)?.index })),
@@ -89,11 +120,12 @@ export function createGame(spec: NewGame): Game {
     for (const at of main.hexes) owner.set(at, id);
     factions.push({
       id,
-      name: polityName(byHex.get(main.capital)!.name, rng),
+      name: empireName(main, spec.sector, mains) ?? polityName(byHex.get(main.capital)!.name, rng),
       colour: colours.get(main.capital) ?? factionColour(i, human !== undefined, human?.index ?? 0),
       human: human !== undefined,
       playerName: human?.name ?? "",
       main: main.name,
+      ...(main.allegiance === undefined ? {} : { allegiance: main.allegiance }),
       capital: main.capital,
       credits: startingCredits(main, byHex, spec.options),
       alive: true,
@@ -126,7 +158,7 @@ export function createGame(spec: NewGame): Game {
   const state: GameState = {
     version: 1,
     name: spec.name,
-    sector: { name: spec.sector.name, worlds: inArea },
+    sector: { name: spec.sector.name, worlds: inArea, ...(spec.sector.polities === undefined ? {} : { polities: spec.sector.polities }) },
     area: [...spec.area],
     day: 0,
     factions,

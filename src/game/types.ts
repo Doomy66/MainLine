@@ -218,6 +218,8 @@ export interface Faction {
   playerName: string;
   /** The Main it began on. */
   readonly main: string;
+  /** The polity it began as part of, by its Allegiance code, where it began from one. */
+  readonly allegiance?: string;
   capital: string;
   /** MCr. */
   credits: number;
@@ -322,6 +324,11 @@ export interface GameOptions {
   buildSpeed: number;
   /** Mains shorter than this are left as independent worlds. */
   factionMinWorlds: number;
+  /**
+   * Where the Empires come from: the sector's Mains, whoever's worlds they are,
+   * or each allegiance's own Mains. Games from before the choice used Mains.
+   */
+  empiresFrom?: "mains" | "allegiance";
   /**
    * How fast news reaches a capital: the jump rating of the couriers that carry
    * it, a week a jump. Zero is instantly. Fleets on the spot act on their

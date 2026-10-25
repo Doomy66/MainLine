@@ -36,13 +36,7 @@ export function mainsIn(worlds: readonly World[], shortest = SHORTEST_MAIN): Mai
       }
     }
     if (group.length < shortest) continue;
-    const capital = [...group].sort(
-      (a, b) =>
-        b.uwp.population - a.uwp.population ||
-        starportRank(a.uwp.starport) - starportRank(b.uwp.starport) ||
-        b.uwp.tl - a.uwp.tl ||
-        a.at.localeCompare(b.at),
-    )[0]!;
+    const capital = [...group].sort(capitalFirst)[0]!;
     mains.push({
       name: capital.name,
       hexes: group.map((w) => w.at).sort((a, b) => a.localeCompare(b)),
@@ -50,6 +44,16 @@ export function mainsIn(worlds: readonly World[], shortest = SHORTEST_MAIN): Mai
     });
   }
   return mains.sort((a, b) => b.hexes.length - a.hexes.length || a.name.localeCompare(b.name));
+}
+
+/** The world a Main is ruled from sorts first: most people, then the best port, then tech. */
+export function capitalFirst(a: World, b: World): number {
+  return (
+    b.uwp.population - a.uwp.population ||
+    starportRank(a.uwp.starport) - starportRank(b.uwp.starport) ||
+    b.uwp.tl - a.uwp.tl ||
+    a.at.localeCompare(b.at)
+  );
 }
 
 /** A before B before C, so the better port sorts first. */

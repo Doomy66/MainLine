@@ -40,7 +40,10 @@ of writing, this is 100% Claude generated to my exacting requirements.
 
 **Setting up.** Pick a sector and the subsectors in play. Every chain of at
 least four worlds becomes an Empire; smaller chains and lone worlds are
-independent and there to be taken. Players pick their Empires and share one
+independent and there to be taken. A sector whose worlds belong to polities, as
+an official one's do, can instead start with them: each polity's worlds are
+grouped into Empires of its own, and non-aligned worlds start independent.
+Players pick their Empires and share one
 screen, taking turns. Each faction starts with credits in proportion to what
 its worlds are worth, or with equal shares if you choose, and spends them on a
 first fleet from the whole catalogue. A slider multiplies every opening

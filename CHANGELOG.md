@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- A sector whose worlds belong to polities, such as an official one imported in PlanetHex, can start with
+  them: under Empires from, choose Existing allegiances and each polity's worlds become Empires of its
+  own, named for it, such as Darrian Confederation or Third Imperium (Regina). Non-aligned worlds start
+  independent. Mains, ignoring allegiance, starts as before. The new game screen warns when an Empire
+  starts close to winning.
+- A world with both a naval and a scout base, written A in a sector file, shows both.
 - Sectors are opened from the `.sector` file PlanetHex saves rather than the `.sec` beside it. Mainline
   carries PlanetHex's generator and rolls the same worlds from the file, so one file does, and the two
   sectors that come with the game are unchanged. An official sector imported in PlanetHex opens the same

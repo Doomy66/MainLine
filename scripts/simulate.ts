@@ -2,7 +2,7 @@
  * Plays a whole game with the computer on every side and prints how it went:
  * who holds what, how many battles, how many ships lost. For tuning the rules.
  *
- *   npx vite-node scripts/simulate.ts [file.sector] [days] [seed] [letters]
+ *   npx vite-node scripts/simulate.ts [file.sector] [days] [seed] [letters] [mains|allegiance]
  */
 import { readFileSync } from "node:fs";
 import { bundledDesigns } from "../src/catalogue/catalogue";
@@ -11,14 +11,14 @@ import { createGame, DEFAULT_OPTIONS } from "../src/game/setup";
 import { aiSetup, runDays } from "../src/game/turn";
 import { income } from "../src/game/rules";
 
-const [file = "sectors/Driftwater-Reach.sector", daysText = "200", seed = "SIM", letters = "ABCDEFGHIJKLMNOP"] = process.argv.slice(2);
+const [file = "sectors/Driftwater-Reach.sector", daysText = "200", seed = "SIM", letters = "ABCDEFGHIJKLMNOP", empiresFrom = "mains"] = process.argv.slice(2);
 const sector = parseSectorFile(readFileSync(file, "utf8"));
 const game = createGame({
   name: "Simulation",
   sector,
   area: letters.split(""),
   players: [],
-  options: DEFAULT_OPTIONS,
+  options: { ...DEFAULT_OPTIONS, empiresFrom: empiresFrom === "allegiance" ? "allegiance" : "mains" },
   designs: bundledDesigns(),
   seed,
 });

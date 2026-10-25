@@ -140,7 +140,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Government"), h("dd", {}, describeGovernment(u.government)),
       h("dt", {}, "Law level"), h("dd", {}, String(u.law)),
       h("dt", {}, "Tech level"), h("dd", {}, String(u.tl)),
-      h("dt", {}, "Bases"), h("dd", {}, w.bases === "" ? "None" : w.bases.split("").map((b) => (b === "N" ? "Naval" : b === "S" ? "Scout" : b)).join(", ")),
+      h("dt", {}, "Bases"), h("dd", {}, w.bases === "" ? "None" : w.bases.split("").map((b) => (b === "N" ? "Naval" : b === "S" ? "Scout" : b === "A" ? "Naval, Scout" : b)).join(", ")),
       h("dt", {}, "Stars"), h("dd", {}, w.stars || "—"),
       h("dt", {}, "Gas giants"), h("dd", {}, String(w.pbg.giants)),
       h("dt", {}, "Belts"), h("dd", {}, String(w.pbg.belts)),

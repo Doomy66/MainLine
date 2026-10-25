@@ -7,14 +7,14 @@
 
 import { bundledDesigns } from "../catalogue/catalogue";
 import { SUBSECTOR_LETTERS } from "../sector/hex";
-import type { Main } from "../sector/mains";
 import type { SectorData } from "../sector/sec";
 import { parseSectorFile, SECTOR_EXTENSION } from "../sector/sectorfile";
 import type { Game } from "../game/game";
 import { colourTerritories } from "../game/names";
 import { distanceBetween } from "../sector/hex";
 import { chooseFile } from "../game/save";
-import { createGame, DEFAULT_OPTIONS, factionMains, mainIncome, startingCredits, worldsInArea } from "../game/setup";
+import { createGame, DEFAULT_OPTIONS, empireName, factionMains, hasAllegiances, mainIncome, startingCredits, worldsInArea, type Start } from "../game/setup";
+import { people } from "../game/rules";
 import { aiSetup } from "../game/turn";
 import type { GameOptions } from "../game/types";
 import { h, kids } from "./dom";
@@ -61,15 +61,37 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
   const mapBox = h("div", { class: "setup-map" }, map.element);
   root.replaceChildren(h("div", { class: "setup" }, side, mapBox));
 
-  let mains: Main[] = [];
+  let mains: Start[] = [];
   const colours = new Map<string, string>();
 
   function sector(): SectorData {
     return sectors.get(sectorKey)!;
   }
 
+  /**
+   * A warning when an Empire starts close to winning: with allegiances, a
+   * polity that holds most of the area in play can start at the victory line.
+   */
+  function earlyLead(): string | null {
+    const peopled = worldsInArea(sector(), [...area]).filter((w) => w.uwp.population > 0);
+    const byPeople = options.victoryBy === "population";
+    const measure = (ats: readonly string[]) => {
+      const held = new Set(ats);
+      return peopled.filter((w) => held.has(w.at)).reduce((t, w) => t + (byPeople ? people(w) : 1), 0);
+    };
+    const total = measure(peopled.map((w) => w.at));
+    if (total === 0) return null;
+    const lead = mains.map((m) => ({ m, share: measure(m.hexes) / total })).sort((a, b) => b.share - a.share)[0];
+    if (lead === undefined || lead.share < options.victoryShare * 0.8) return null;
+    const what = byPeople ? "people" : "peopled worlds";
+    const name = empireName(lead.m, sector(), mains) ?? lead.m.name;
+    return lead.share >= options.victoryShare
+      ? `${name} starts with ${Math.round(lead.share * 100)}% of the ${what} in play, enough to win at once. Play fewer subsectors, raise the victory share, or take Empires from Mains.`
+      : `${name} starts with ${Math.round(lead.share * 100)}% of the ${what} in play, close to the ${Math.round(options.victoryShare * 100)}% that wins.`;
+  }
+
   function recompute(): void {
-    mains = factionMains(sector(), [...area], options.factionMinWorlds);
+    mains = factionMains(sector(), [...area], options);
     recolour();
     for (const p of players) {
       if (p.capital !== "" && !mains.some((m) => m.capital === p.capital)) p.capital = "";
@@ -138,6 +160,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
       {
         onchange: (e: Event) => {
           sectorKey = (e.target as HTMLSelectElement).value;
+          options.empiresFrom = hasAllegiances(sector()) ? "allegiance" : "mains";
           gameName = "";
           recompute();
           render();
@@ -157,6 +180,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             const data = parseSectorFile(file.text, stem);
             sectors.set(data.name, data);
             sectorKey = data.name;
+            options.empiresFrom = hasAllegiances(data) ? "allegiance" : "mains";
             gameName = "";
             message = "";
           } catch (error) {
@@ -223,7 +247,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
             render();
           },
         },
-        h("td", {}, h("span", { class: "chip", style: `background:${colours.get(m.capital)}` }), m.name),
+        h("td", {}, h("span", { class: "chip", style: `background:${colours.get(m.capital)}` }), empireName(m, sector(), mains) ?? m.name),
         h("td", { class: "r num" }, m.hexes.length),
         h("td", { class: "num" }, capital.uwpText),
         h("td", { class: "r num" }, topTl),
@@ -284,6 +308,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
     );
 
     const factionsCount = mains.length;
+    const headStart = earlyLead();
     const canStart = players.length > 0 && players.every((p) => p.capital !== "" && p.name.trim() !== "") && factionsCount >= 2;
     const name = gameName || `${sector().name} campaign`;
 
@@ -326,7 +351,34 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           },
         }),
       ),
-      h("p", { class: "hint" }, "The computer plays every Empire no player takes. Smaller chains and lone worlds are independent, there to be taken. Click an Empire, here or on the map, to give it to the highlighted player."),
+      hasAllegiances(sector())
+        ? h(
+            "div",
+            { class: "opt" },
+            h("label", {}, "Empires from"),
+            h(
+              "select",
+              {
+                onchange: (e: Event) => {
+                  options.empiresFrom = (e.target as HTMLSelectElement).value as "mains" | "allegiance";
+                  recompute();
+                  render();
+                },
+              },
+              h("option", { value: "allegiance", selected: options.empiresFrom === "allegiance" }, "Existing allegiances"),
+              h("option", { value: "mains", selected: options.empiresFrom !== "allegiance" }, "Mains, ignoring allegiance"),
+            ),
+          )
+        : null,
+      h(
+        "p",
+        { class: "hint" },
+        options.empiresFrom === "allegiance"
+          ? "Each polity's worlds become Empires of its own, one for each part of it a ship can cross. Non-aligned worlds and polities too small to be an Empire are independent, there to be taken. "
+          : "Smaller chains and lone worlds are independent, there to be taken. ",
+        "The computer plays every Empire no player takes. Click an Empire, here or on the map, to give it to the highlighted player.",
+      ),
+      headStart === null ? null : h("p", { class: "error" }, headStart),
       h(
         "div",
         { class: "mains" },
