@@ -459,6 +459,8 @@ dl.props dd { margin: 0; }
 .attention .atext { min-width: 0; flex: 1; }
 .attention .alert.siege .amark, .attention .alert.enemy .amark, .attention .alert.lost .amark, .attention .alert.fallen .amark { color: var(--bad); }
 .attention .alert.fleets .amark, .attention .alert.slips .amark { color: #f4dfa6; }
+.attention .alert.offer .amark { color: #c792ea; }
+.attention .answer { display: flex; gap: 4px; flex: none; }
 
 /* A fleet's admiral. */
 .admiral.on { border-left: 3px solid var(--accent); padding-left: 8px; }

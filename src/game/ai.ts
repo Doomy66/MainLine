@@ -204,14 +204,14 @@ function knownThreat(game: Game, faction: Faction, at: string, sees: ReadonlySet
 }
 
 /**
- * The nearest world of its own that can mend a fleet: any starport that
+ * The nearest world of its own or an ally's that can mend a fleet: any starport that
  * repairs hulls, or, for broken drives, one of class A to C, the only ones
  * that fix them.
  */
 function nearestRepairYard(game: Game, fleet: Fleet, broken: boolean): string[] | null | "here" {
   const good = (at: string) => {
     const port = game.world(at).uwp.starport;
-    return game.worldState(at).owner === fleet.owner && repairRate(port) > 0 && (!broken || fixesCrits(port));
+    return game.friendlyPort(fleet.owner, at) && repairRate(port) > 0 && (!broken || fixesCrits(port));
   };
   if (good(fleet.system)) return "here";
   const map = jumpMap(game, fleet);

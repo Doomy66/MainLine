@@ -21,7 +21,7 @@ import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
 import { round, ships } from "./game";
 import { canRefuelAt, shareFuel, spareFuel } from "./nav";
-import { diplomacy, onBattle, onCapture, onSiege } from "./relations";
+import { allied, diplomacy, onBattle, onCapture, onSiege } from "./relations";
 import {
   CAPTURED_DEFENCE,
   captureDays,
@@ -191,7 +191,7 @@ function refuel(game: Game, fleet: Fleet): void {
   }
 }
 
-/** Repairs, and reloads, at a starport the fleet's owner holds. */
+/** Repairs, and reloads, at a starport the fleet's owner or an ally holds. */
 function dockyard(game: Game, fleet: Fleet): void {
   const world = game.world(fleet.system);
   const port = world.uwp.starport;
@@ -342,7 +342,8 @@ function sieges(game: Game): void {
     const besiegers = here.filter(
       (f) => f.standing.besiege && besieging(f) && f.owner !== ws.owner && (ws.owner === null || game.hostile(f.owner, ws.owner)) && game.fleetArmed(f),
     );
-    const defended = here.some((f) => f.owner === ws.owner && game.fleetArmed(f));
+    // An ally's fleet in orbit defends the world as the owner's own would.
+    const defended = here.some((f) => (f.owner === ws.owner || (ws.owner !== null && allied(game, f.owner, ws.owner))) && game.fleetArmed(f));
     if (besiegers.length === 0 || defended) {
       ws.siege = null;
       // Defences rebuild only when nobody is sitting in orbit shooting at them.
@@ -707,8 +708,8 @@ export function advanceDay(game: Game): void {
       }
       case "repair": {
         const world = game.world(fleet.system);
-        if (game.worldState(fleet.system).owner !== fleet.owner || repairRate(world.uwp.starport) === 0) {
-          notice(game, fleet.owner, `${fleet.name} cannot repair at ${world.name}: it needs a class A to D starport you hold.`, fleet.system);
+        if (!game.friendlyPort(fleet.owner, fleet.system) || repairRate(world.uwp.starport) === 0) {
+          notice(game, fleet.owner, `${fleet.name} cannot repair at ${world.name}: it needs a class A to D starport you or an ally hold.`, fleet.system);
           fleet.order = null;
         } else {
           fleet.loc = "main";
@@ -773,7 +774,7 @@ export function advanceDay(game: Game): void {
   for (const fleet of s.fleets) {
     if (fleet.transit !== null || battled.has(`${fleet.system}|${fleet.loc}`)) continue;
     if (refuelling.has(fleet)) refuel(game, fleet);
-    if (fleet.loc === "main" && game.worldState(fleet.system).owner === fleet.owner) dockyard(game, fleet);
+    if (fleet.loc === "main" && game.friendlyPort(fleet.owner, fleet.system)) dockyard(game, fleet);
   }
 
   sieges(game);

@@ -30,7 +30,7 @@ import { chooseFile } from "../game/save";
 import { buyStarting, orderBuild, sellStarting } from "../game/turn";
 import { describeTemper, oddsWanted, withdrawAt } from "../game/temper";
 import { admiralText, alerts, fleetStatus, type Alert, type FleetState, type FleetStatus } from "../game/attention";
-import type { Admiral, Build, Engage, Faction, Fleet, Loc, LogEntry, StandingOrders, TargetPriority } from "../game/types";
+import type { Admiral, Build, Engage, Faction, Fleet, Loc, LogEntry, Offer, StandingOrders, TargetPriority } from "../game/types";
 import { LOC_NAMES, STANDING_PRESETS } from "../game/types";
 import { visibleSystems } from "../game/visibility";
 import {
@@ -48,7 +48,7 @@ import type { World } from "../sector/sec";
 import { h, mcr, meter, pct, tons } from "./dom";
 import { emblem, kindIcon, withEmblems } from "./emblems";
 import { planning, whereIs, type Ctx } from "./gameview";
-import { declareWar, describeScore, relationOf } from "../game/relations";
+import { answerOffer, declareWar, describeScore, leaveAlliance, makeOffer, offerBetween, relationOf, standing } from "../game/relations";
 
 const LOCS: Loc[] = ["main", "gg", "belt", "deep"];
 
@@ -387,7 +387,7 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
   // Fuel carried beyond what each ship keeps for its own jump, and how much the others lack.
   const pooled = spareFuel(game, f);
   const canShare = pooled.spare > 0.5 && pooled.short > 0.5;
-  const repairHere = game.worldState(here).owner === f.owner && repairRate(world.uwp.starport) > 0;
+  const repairHere = game.friendlyPort(f.owner, here) && repairRate(world.uwp.starport) > 0;
 
   const moveButtons = LOCS.filter((l) => locExists(game, here, l)).map((l) =>
     h("button", { class: f.loc === l ? "small on" : "small", disabled: inJump || f.loc === l, onclick: () => set({ kind: "move", to: l }, `${f.name} will move to the ${LOC_NAMES[l].toLowerCase()}.`) }, LOC_NAMES[l].replace("Main world orbit", "Orbit")),
@@ -491,7 +491,7 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
           },
           fuelHere || !canShare ? "Refuel" : "Share fuel",
         ),
-        h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport you hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
+        h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport you or an ally hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
         h("button", { disabled: f.order === null || inJump, onclick: () => set(null, `${f.name}'s orders are cancelled.`) }, "Cancel"),
         inJump || game.worldState(here).owner !== f.owner
           ? null
@@ -1067,6 +1067,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
                   },
                   `${f.personality}: ${describeTemper(f.temper)}`,
                 ),
+            itsAffairs(ctx, f) === null ? null : h("div", { class: "hint" }, itsAffairs(ctx, f)!),
           ),
           h("td", { class: "r num" }, n),
           h("td", { class: "r num", title: share(p, target.people) + " of the sector" }, describeHeadcount(p)),
@@ -1097,9 +1098,29 @@ export function empirePane(ctx: Ctx): HTMLElement {
   );
 }
 
+/** Accept and Decline for an offer made to you. */
+function answerButtons(ctx: Ctx, offer: Offer): HTMLElement {
+  const { game } = ctx;
+  const from = game.faction(offer.from);
+  const what = offer.kind === "peace" ? "peace" : "an alliance";
+  const answer = (yes: boolean) => (e: Event) => {
+    e.stopPropagation();
+    answerOffer(game, offer, yes);
+    ctx.say(yes ? `You accept ${from.name}'s offer of ${what}.` : `You turn down ${from.name}'s offer of ${what}.`);
+    ctx.refresh();
+  };
+  return h(
+    "span",
+    { class: "answer" },
+    h("button", { class: "small", onclick: answer(true) }, "Accept"),
+    h("button", { class: "small", onclick: answer(false) }, "Decline"),
+  );
+}
+
 /**
- * How another Empire stands with you: at war, or at peace and how warmly, and
- * a way to end the peace. Ending a war takes both sides, and is to come.
+ * How another Empire stands with you, at war, at peace and how warmly, or
+ * allied, with what you can do about it: declare war, offer peace, propose an
+ * alliance or leave one, and answer an offer it has made you.
  */
 function standingWith(ctx: Ctx, f: Faction): HTMLElement {
   const { game, me } = ctx;
@@ -1107,27 +1128,54 @@ function standingWith(ctx: Ctx, f: Faction): HTMLElement {
   const r = relationOf(game, me.id, f.id);
   if (r === undefined) return h("td", { class: "bad" }, "War");
   const title = `Score ${Math.round(r.score)} of -100 to 100${r.cause !== undefined ? `; soured ${r.cause}` : ""}`;
-  if (r.war) return h("td", { class: "bad", title }, "War");
-  return h(
-    "td",
-    { title },
-    `Peace, ${describeScore(r.score)} `,
-    f.alive && game.state.phase === "play"
-      ? h(
-          "button",
-          {
-            class: "small",
-            onclick: () => {
-              if (!window.confirm(`Declare war on ${f.name}? Its friends will think the worse of you, and only both sides together can make peace again.`)) return;
-              declareWar(game, me.id, f.id, "by its own choice");
-              ctx.say(`You are at war with ${f.name}.`);
-              ctx.refresh();
-            },
-          },
-          "Declare war",
-        )
-      : null,
-  );
+  const open = f.alive && game.state.phase === "play";
+  const pending = offerBetween(game, me.id, f.id);
+  const act = (label: string, run: () => void, hint = "") => h("button", { class: "small", title: hint, onclick: run }, label);
+  const offer = (kind: Offer["kind"]) => () => {
+    const why = makeOffer(game, me.id, f.id, kind);
+    ctx.say(why ?? `You offer ${f.name} ${kind === "peace" ? "peace" : "an alliance"}. It answers tomorrow${f.human ? ", or when its player does" : ""}.`);
+    ctx.refresh();
+  };
+  const actions = !open
+    ? []
+    : pending?.to === me.id
+      ? [answerButtons(ctx, pending)]
+      : pending !== undefined
+        ? [h("span", { class: "muted" }, ` ${pending.kind === "peace" ? "peace" : "alliance"} offered`)]
+        : r.war
+          ? [act("Offer peace", offer("peace"), "A computer Empire weighs the war, its losses and its other enemies")]
+          : r.allied === true
+            ? [
+                act("Leave alliance", () => {
+                  if (!window.confirm(`Leave your alliance with ${f.name}? You stay at peace, but it will think the worse of you.`)) return;
+                  leaveAlliance(game, me.id, f.id);
+                  ctx.say(`You are no longer allied with ${f.name}.`);
+                  ctx.refresh();
+                }),
+              ]
+            : [
+                act("Propose alliance", offer("alliance"), "A computer Empire wants a warm standing, and likes a common enemy"),
+                act("Declare war", () => {
+                  if (!window.confirm(`Declare war on ${f.name}? Its friends will think the worse of you, and only both sides together can make peace again.`)) return;
+                  declareWar(game, me.id, f.id, "by its own choice");
+                  ctx.say(`You are at war with ${f.name}.`);
+                  ctx.refresh();
+                }),
+              ];
+  const label = r.war ? "War" : r.allied === true ? "Allied" : `Peace, ${describeScore(r.score)}`;
+  return h("td", { class: r.war ? "bad" : r.allied === true ? "good" : "", title }, `${label} `, actions);
+}
+
+/** Whom a computer Empire is allied with and at war with, in a line. */
+function itsAffairs(ctx: Ctx, f: Faction): string | null {
+  const { game } = ctx;
+  if (game.state.relations === undefined) return null;
+  const others = game.state.factions.filter((g) => g.alive && g.id !== f.id);
+  const names = (list: readonly Faction[]) => (list.length <= 3 ? list.map((g) => g.name).join(", ") : `${list.slice(0, 3).map((g) => g.name).join(", ")} and ${list.length - 3} more`);
+  const allies = others.filter((g) => standing(game, f.id, g.id) === "alliance");
+  const enemies = others.filter((g) => standing(game, f.id, g.id) === "war");
+  const parts = [allies.length > 0 ? `allied with ${names(allies)}` : "", enemies.length > 0 ? `at war with ${names(enemies)}` : "at peace with all"].filter((p) => p !== "");
+  return parts.join("; ");
 }
 
 /** What winning counts, people or worlds: changeable at any time, like the fog. */
@@ -1216,7 +1264,7 @@ function fogSettings(ctx: Ctx): HTMLElement {
 
 /* Reports ---------------------------------------------------------------- */
 
-const ALERT_MARKS: Record<Alert["kind"], string> = { siege: "◎", enemy: "⚠", lost: "✸", fallen: "⚑", fleets: "?", slips: "⚒" };
+const ALERT_MARKS: Record<Alert["kind"], string> = { siege: "◎", enemy: "⚠", lost: "✸", fallen: "⚑", fleets: "?", slips: "⚒", offer: "✉" };
 
 /** The day's to-do list, each line a way straight to the place or fleet. */
 function attentionPanel(ctx: Ctx, goto: (at: string) => void): HTMLElement | null {
@@ -1233,7 +1281,8 @@ function attentionPanel(ctx: Ctx, goto: (at: string) => void): HTMLElement | nul
         {
           class: `alert ${a.kind}`,
           onclick: () => {
-            if (a.fleet !== undefined) ctx.selectFleet(a.fleet, true);
+            if (a.offer !== undefined) ctx.setTab("empire");
+            else if (a.fleet !== undefined) ctx.selectFleet(a.fleet, true);
             else if (a.yard !== undefined) {
               ctx.yard = a.yard;
               ctx.setTab("yard");
@@ -1243,6 +1292,7 @@ function attentionPanel(ctx: Ctx, goto: (at: string) => void): HTMLElement | nul
         h("span", { class: "amark" }, ALERT_MARKS[a.kind]),
         // One span, so the text wraps as a sentence rather than in columns.
         h("span", { class: "atext" }, withEmblems(a.text, ctx.game.state.factions)),
+        a.offer === undefined ? null : answerButtons(ctx, a.offer),
       ),
     ),
   );

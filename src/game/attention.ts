@@ -6,7 +6,8 @@
 
 import type { Game } from "./game";
 import { captureDays } from "./rules";
-import type { Faction, Fleet } from "./types";
+import { offersTo } from "./relations";
+import type { Faction, Fleet, Offer } from "./types";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
 
@@ -69,12 +70,14 @@ export function admiralText(game: Game, f: Fleet): string {
 }
 
 export interface Alert {
-  readonly kind: "siege" | "enemy" | "lost" | "fallen" | "fleets" | "slips";
+  readonly kind: "siege" | "enemy" | "lost" | "fallen" | "fleets" | "slips" | "offer";
   readonly text: string;
   readonly at?: string;
   readonly fleet?: string;
   /** Opens the shipyard at this yard. */
   readonly yard?: string;
+  /** An offer of peace or alliance to answer. */
+  readonly offer?: Offer;
 }
 
 /** The day's to-do list for a player, most urgent first. */
@@ -82,6 +85,12 @@ export function alerts(game: Game, me: Faction): Alert[] {
   const out: Alert[] = [];
   const day = game.state.day;
   const lagged = game.state.options.newsLag > 0;
+
+  // Offers of peace and alliance, waiting on an answer.
+  for (const offer of offersTo(game, me.id)) {
+    const from = game.faction(offer.from);
+    out.push({ kind: "offer", offer, text: `${from.name} offers you ${offer.kind === "peace" ? "peace" : "an alliance"}` });
+  }
 
   // Worlds of ours under siege.
   for (const w of game.ownedWorlds(me.id)) {

@@ -24,7 +24,7 @@ import type { SectorData, World } from "../sector/sec";
 import type { Game } from "./game";
 import { isWeekEnd } from "./rules";
 import { Rng, seedOf } from "./rng";
-import type { Faction, Relation } from "./types";
+import type { Faction, Offer, Relation } from "./types";
 
 /** At or below this, a pair at peace goes to war. */
 export const WAR_AT = -40;
@@ -257,18 +257,24 @@ function weekly(game: Game): void {
   }
 }
 
-/** War and peace, as the scores now stand, and the week's slow changes on a week's end. */
+/** War, peace and alliances, as the scores now stand; offers answered; and the week's slow changes on a week's end. */
 export function diplomacy(game: Game): void {
   const relations = game.state.relations;
   if (relations === undefined) return;
-  if (isWeekEnd(game.state.day)) weekly(game);
+  answerOffers(game);
+  if (isWeekEnd(game.state.day)) {
+    weekly(game);
+    proposals(game);
+  }
   const ids = new Map(alive(game).map((f) => [f.id, f]));
   for (const [key, r] of Object.entries(relations)) {
     const [a, b] = key.split("|") as [string, string];
     const fa = ids.get(a);
     const fb = ids.get(b);
     if (fa === undefined || fb === undefined) continue;
-    if (!r.war && r.score <= WAR_AT) {
+    if (r.allied === true && r.score < ALLY_BREAK) {
+      endAlliance(game, a, b, `${fa.name} and ${fb.name} are allies no longer.`);
+    } else if (!r.war && r.score <= WAR_AT) {
       // Only the computer declares war of its own accord: the Empire whose
       // grievance it is, or the bolder of the two.
       const computers = [fa, fb].filter((f) => !f.human);
@@ -286,17 +292,22 @@ export function diplomacy(game: Game): void {
 export function declareWar(game: Game, by: string, on: string, why: string): void {
   const r = relationOf(game, by, on);
   if (r === undefined || r.war) return;
+  const betrayed = r.allied === true;
   r.war = true;
+  r.allied = false;
   r.since = game.state.day;
   r.score = Math.min(r.score, WAR_AT);
+  withdrawOffers(game, by, on);
   const aggressor = game.faction(by);
   const victim = game.faction(on);
-  // Breaking a peace is noticed by the victim's friends.
+  // Breaking a peace is noticed by the victim's friends, and turning on an
+  // ally by everyone.
   for (const f of alive(game)) {
     if (f.id === by || f.id === on) continue;
-    if ((relationOf(game, f.id, on)?.score ?? 0) >= 40) shift(game, f.id, by, -10, { text: `over its war on ${victim.name}`, who: f.id });
+    if ((relationOf(game, f.id, on)?.score ?? 0) >= 40) shift(game, f.id, by, betrayed ? -20 : -10, { text: `over its war on ${victim.name}`, who: f.id });
+    else if (betrayed) shift(game, f.id, by, -5, { text: `over its betrayal of ${victim.name}`, who: f.id });
   }
-  announce(game, [by, on], `${aggressor.name} declares war on ${victim.name}, ${why}.`);
+  announce(game, [by, on], `${aggressor.name} ${betrayed ? "turns on its ally" : "declares war on"} ${victim.name}, ${why}.`);
 }
 
 /** Two Empires at war make peace. */
@@ -305,6 +316,8 @@ export function makePeace(game: Game, a: string, b: string): void {
   if (r === undefined || !r.war) return;
   r.war = false;
   r.since = game.state.day;
+  // A peace starts no colder than the line it was made at.
+  r.score = Math.max(r.score, PEACE_AT);
   delete r.cause;
   delete r.causeBy;
   announce(game, [a, b], `${game.faction(a).name} and ${game.faction(b).name} make peace.`);
@@ -315,4 +328,198 @@ function announce(game: Game, parties: readonly string[], text: string): void {
   game.log({ to: parties, kind: "diplomacy", text, wake: true, firsthand: parties, about: parties });
   const others = everyone.filter((id) => !parties.includes(id));
   if (others.length > 0) game.log({ to: others, kind: "diplomacy", text });
+}
+
+/* Alliances ------------------------------------------------------------------ */
+
+/**
+ * Allies are friends who have said so. They see what each other sees, their
+ * fleets in the same place fight on the same side, and each can refuel and
+ * repair at the other's ports. Each still wins or loses alone, so an ally is
+ * always a rival in the end.
+ */
+export function allied(game: Game, a: string, b: string): boolean {
+  if (a === b) return false;
+  return relationOf(game, a, b)?.allied === true;
+}
+
+/** The Empires a faction is allied with. */
+export function alliesOf(game: Game, id: string): string[] {
+  return alive(game)
+    .filter((f) => allied(game, id, f.id))
+    .map((f) => f.id);
+}
+
+/** Where a pair stands, in a word. */
+export function standing(game: Game, a: string, b: string): "war" | "peace" | "alliance" {
+  if (atWar(game, a, b)) return "war";
+  return allied(game, a, b) ? "alliance" : "peace";
+}
+
+/** At or above this, a computer Empire will be an ally. */
+export const ALLY_AT = 50;
+/**
+ * The most allies a computer Empire keeps. Without a limit every Empire of a
+ * big polity allied with every other, and the polity was one Empire again.
+ */
+const MOST_ALLIES = 2;
+/** Below this, an alliance falls back to peace. */
+const ALLY_BREAK = 25;
+/** Days between offers between the same two Empires. */
+const OFFER_EVERY = 21;
+/** Days a player has to answer an offer before it lapses. */
+const OFFER_LASTS = 14;
+
+function formAlliance(game: Game, a: string, b: string): void {
+  const r = relationOf(game, a, b);
+  if (r === undefined || r.war || r.allied === true) return;
+  r.allied = true;
+  r.since = game.state.day;
+  announce(game, [a, b], `${game.faction(a).name} and ${game.faction(b).name} become allies.`);
+}
+
+function endAlliance(game: Game, a: string, b: string, text: string): void {
+  const r = relationOf(game, a, b);
+  if (r === undefined || r.allied !== true) return;
+  r.allied = false;
+  r.since = game.state.day;
+  announce(game, [a, b], text);
+}
+
+/** A player leaves an alliance, back to peace, which the old ally takes badly. */
+export function leaveAlliance(game: Game, by: string, from: string): void {
+  shift(game, by, from, -20, { text: `over ${game.faction(by).name} leaving their alliance`, who: from });
+  endAlliance(game, by, from, `${game.faction(by).name} leaves its alliance with ${game.faction(from).name}.`);
+}
+
+/* Offers --------------------------------------------------------------------- */
+
+/** An offer waiting for an answer between two Empires, either way. */
+export function offerBetween(game: Game, a: string, b: string): Offer | undefined {
+  return (game.state.offers ?? []).find((o) => (o.from === a && o.to === b) || (o.from === b && o.to === a));
+}
+
+/** Offers waiting on an Empire's answer. */
+export function offersTo(game: Game, id: string): Offer[] {
+  return (game.state.offers ?? []).filter((o) => o.to === id);
+}
+
+/**
+ * One Empire offers another peace, or an alliance. A computer Empire answers
+ * the next day; a player answers when they choose, within two weeks. Null
+ * when it is made, or why it cannot be.
+ */
+export function makeOffer(game: Game, from: string, to: string, kind: Offer["kind"]): string | null {
+  const r = relationOf(game, from, to);
+  if (r === undefined) return "There is no talking to them.";
+  if (kind === "peace" && !r.war) return "You are not at war.";
+  if (kind === "alliance" && (r.war || r.allied === true)) return r.war ? "Make peace first." : "You are already allies.";
+  if (offerBetween(game, from, to) !== undefined) return "An offer between you is already waiting for an answer.";
+  game.state.offers = [...(game.state.offers ?? []), { from, to, kind, day: game.state.day }];
+  r.offered = game.state.day;
+  const text = `${game.faction(from).name} offers ${game.faction(to).name} ${kind === "peace" ? "peace" : "an alliance"}.`;
+  game.log({ to: [from, to], kind: "diplomacy", text, wake: true, firsthand: [from, to], about: [from, to] });
+  return null;
+}
+
+/** An offer answered, yes or no. */
+export function answerOffer(game: Game, offer: Offer, yes: boolean): void {
+  game.state.offers = (game.state.offers ?? []).filter((o) => o !== offer);
+  const from = game.faction(offer.from);
+  const to = game.faction(offer.to);
+  if (!from.alive || !to.alive) return;
+  if (yes) {
+    if (offer.kind === "peace") makePeace(game, offer.from, offer.to);
+    else formAlliance(game, offer.from, offer.to);
+    return;
+  }
+  // A refusal stings a little.
+  shift(game, offer.from, offer.to, -3);
+  const text = `${to.name} turns down ${from.name}'s offer of ${offer.kind === "peace" ? "peace" : "an alliance"}.`;
+  game.log({ to: [offer.from, offer.to], kind: "diplomacy", text, wake: true, firsthand: [offer.from, offer.to], about: [offer.from, offer.to] });
+}
+
+function withdrawOffers(game: Game, a: string, b: string): void {
+  if (game.state.offers === undefined) return;
+  game.state.offers = game.state.offers.filter((o) => !((o.from === a && o.to === b) || (o.from === b && o.to === a)));
+}
+
+/** The computer answers what has waited a day, and offers to players lapse unanswered. */
+function answerOffers(game: Game): void {
+  const day = game.state.day;
+  for (const offer of [...(game.state.offers ?? [])]) {
+    const to = game.faction(offer.to);
+    if (to.human) {
+      if (day - offer.day >= OFFER_LASTS) {
+        game.state.offers = (game.state.offers ?? []).filter((o) => o !== offer);
+        game.log({ to: [offer.from, offer.to], kind: "diplomacy", text: `${game.faction(offer.from).name}'s offer to ${to.name} lapses unanswered.` });
+      }
+      continue;
+    }
+    if (offer.day >= day) continue;
+    answerOffer(game, offer, willing(game, to, offer.from, offer.kind));
+  }
+}
+
+/** An Empire's share of what wins, as a fraction of it. */
+function nearVictory(game: Game, id: string): number {
+  const target = game.victoryTarget();
+  const of = target.by === "population" ? target.people : target.worlds;
+  const held = game.holding(id);
+  return of === 0 ? 0 : (target.by === "population" ? held.people : held.worlds) / of / game.state.options.victoryShare;
+}
+
+function strengthOf(game: Game, id: string): number {
+  return game.fleetsOf(id).reduce((t, f) => t + game.fleetStrength(f), 0);
+}
+
+/**
+ * Whether a computer Empire would take peace or an alliance with another. Peace
+ * comes easier to the less bold, to one losing the war or with other wars on
+ * its hands, and harder while the fighting is fresh. An alliance wants a warm
+ * standing, comes easier against a common enemy and harder to the careful, and
+ * never with an Empire close to winning.
+ */
+function willing(game: Game, who: Faction, other: string, kind: Offer["kind"]): boolean {
+  const r = relationOf(game, who.id, other);
+  if (r === undefined) return false;
+  const enemies = (id: string) => alive(game).filter((f) => f.id !== id && atWar(game, id, f.id)).map((f) => f.id);
+  if (kind === "peace") {
+    if (!r.war) return false;
+    const mine = strengthOf(game, who.id);
+    const theirs = strengthOf(game, other);
+    const ratio = theirs <= 0 ? 10 : mine / theirs;
+    let will = r.score + 20 * (1 - who.temper.aggression);
+    will += 8 * (enemies(who.id).length - 1);
+    if (ratio < 0.67) will += 20;
+    if (ratio > 1.5) will -= 20;
+    if (game.state.day - (r.clash ?? -Infinity) < 7) will -= 15;
+    return will >= 0;
+  }
+  if (r.war || r.allied === true || nearVictory(game, other) > 0.6) return false;
+  if (alliesOf(game, who.id).length >= MOST_ALLIES) return false;
+  const theirEnemies = new Set(enemies(other));
+  const common = enemies(who.id).filter((id) => theirEnemies.has(id)).length;
+  return r.score + 15 * Math.min(common, 2) - 15 * who.temper.caution >= ALLY_AT;
+}
+
+/**
+ * A week's offers from the computer: peace to a player it would make peace
+ * with, and an alliance to a friend, player or computer, when it would have
+ * one. Not more often than every three weeks between the same two. Peace
+ * between two computer Empires comes as their standing mends, without asking.
+ */
+function proposals(game: Game): void {
+  const day = game.state.day;
+  const living = alive(game);
+  for (const f of living) {
+    if (f.human) continue;
+    for (const g of living) {
+      if (g.id === f.id) continue;
+      const r = relationOf(game, f.id, g.id);
+      if (r === undefined || day - (r.offered ?? -Infinity) < OFFER_EVERY || offerBetween(game, f.id, g.id) !== undefined) continue;
+      if (r.war && g.human && willing(game, f, g.id, "peace")) makeOffer(game, f.id, g.id, "peace");
+      else if (!r.war && r.allied !== true && r.score >= ALLY_AT && willing(game, f, g.id, "alliance")) makeOffer(game, f.id, g.id, "alliance");
+    }
+  }
 }

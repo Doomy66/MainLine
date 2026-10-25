@@ -43,8 +43,9 @@ least four worlds becomes an Empire; smaller chains and lone worlds are
 independent and there to be taken. A sector whose worlds belong to polities, as
 an official one's do, can instead start with them: each polity's worlds are
 grouped into Empires of its own, and non-aligned worlds start independent.
-Empires start at war or at peace with one another, and war and peace come and go
-as worlds change hands. Players pick their Empires and share one
+Empires start at war or at peace with one another, and war, peace and alliances
+come and go as worlds change hands; players make and answer offers of peace and
+alliance. Players pick their Empires and share one
 screen, taking turns. Each faction starts with credits in proportion to what
 its worlds are worth, or with equal shares if you choose, and spends them on a
 first fleet from the whole catalogue. A slider multiplies every opening

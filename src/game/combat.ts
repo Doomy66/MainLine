@@ -27,6 +27,7 @@
 
 import { strengthOf, type Attack, type ShipClass } from "../catalogue/shipclass";
 import type { Game } from "./game";
+import { allied } from "./relations";
 import type { Rng } from "./rng";
 import { defenceArmour, defenceAttacks, defenceFireControl, defenceMax, ROUNDS_PER_DAY } from "./rules";
 import type { Fleet, Loc, Ship, TargetPriority } from "./types";
@@ -577,7 +578,14 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
     });
   }
   if (parties.length < 2) return null;
-  const war: War = (a, b) => game.hostile(a, b);
+  // Allies in the same place fight on the same side: an Empire fights
+  // whoever is at war with an ally of its present here, as well as its own
+  // enemies.
+  const present = [...new Set(parties.map((p) => p.side).filter((s): s is string => s !== null))];
+  const war: War = (a, b) =>
+    game.hostile(a, b) ||
+    (!allied(game, a, b) &&
+      present.some((x) => x !== a && x !== b && ((allied(game, a, x) && game.hostile(x, b)) || (allied(game, b, x) && game.hostile(a, x)))));
   const opening = engagements(parties, war);
   if (opening.size === 0) return null;
 

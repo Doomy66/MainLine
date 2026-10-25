@@ -358,6 +358,18 @@ export interface Relation {
   causeBy?: string;
   /** The last day they fought or took a world from each other. */
   clash?: number;
+  /** Allies: friends who have said so. */
+  allied?: boolean;
+  /** The last day either offered the other peace or an alliance. */
+  offered?: number;
+}
+
+/** Peace or an alliance, offered and waiting for an answer. */
+export interface Offer {
+  readonly from: string;
+  readonly to: string;
+  readonly kind: "peace" | "alliance";
+  readonly day: number;
 }
 
 export interface GameState {
@@ -375,6 +387,8 @@ export interface GameState {
    * from before relations have none, and everyone is at war with everyone.
    */
   relations?: Record<string, Relation>;
+  /** Offers of peace and alliance waiting for an answer. */
+  offers?: Offer[];
   designs: Record<string, Design>;
   rng: number;
   nextId: number;

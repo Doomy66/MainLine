@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Alliances and diplomacy. Empires can be allies: they see what each other sees, their fleets in the same
+  place fight on the same side, an ally's fleet in orbit stops a siege, and each can repair at the other's
+  ports. From the Empire tab you can offer peace, propose an alliance and leave one, as well as declare
+  war; the computer answers the next day, weighing the standing, the war and common enemies. The computer
+  makes offers too, which wait under Needs attention to be accepted or declined. A computer Empire keeps
+  at most two allies and will not ally with one close to winning.
 - War and peace. Empires are no longer all at war with all: each pair has a standing and is at war or at
   peace. Empires at peace do not fight or besiege each other and can buy fuel at each other's ports.
   Empires of one polity start as friends, and Empires from Mains start mostly at peace, with a few wars

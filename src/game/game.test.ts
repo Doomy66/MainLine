@@ -9,7 +9,10 @@ import { planAi } from "./ai";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
 import { routeTo } from "./nav";
-import { atWar, declareWar, diplomacy, PEACE_AT, relationOf, WAR_AT } from "./relations";
+import { atWar, declareWar, diplomacy, makeOffer, offersTo, PEACE_AT, relationOf, standing, WAR_AT } from "./relations";
+import { alerts } from "./attention";
+import { battleAt } from "./combat";
+import { visibleSystems } from "./visibility";
 import { captureDays, defenceMax, jumpFuel } from "./rules";
 import { parseGame, serialise } from "./save";
 import { createGame, DEFAULT_OPTIONS, hasAllegiances } from "./setup";
@@ -583,5 +586,126 @@ describe("war and peace", () => {
     const [a, b] = game.state.factions;
     expect(atWar(game, a!.id, b!.id)).toBe(true);
     expect(game.hostile(a!.id, null)).toBe(false);
+  });
+});
+
+describe("alliances and offers", () => {
+  /** Three computer Empires, the first two allies, both at war with the third. */
+  function three() {
+    const game = newGame({}, 0, "ALLY");
+    game.state.phase = "play";
+    game.state.day = 1;
+    const [a, b, c] = game.state.factions as [Faction, Faction, Faction];
+    const set = (x: Faction, y: Faction, war: boolean, score: number, allies = false) => {
+      const r = relationOf(game, x.id, y.id)!;
+      r.war = war;
+      r.score = score;
+      r.allied = allies;
+    };
+    set(a, b, false, 80, true);
+    set(a, c, false, 0);
+    set(b, c, true, -60);
+    return { game, a, b, c };
+  }
+
+  it("lets a player offer peace, which the computer answers the next day", () => {
+    const game = newGame({}, 1, "OFFER");
+    game.state.phase = "play";
+    const me = game.humans()[0]!;
+    const other = game.state.factions.find((f) => !f.human)!;
+    const r = relationOf(game, me.id, other.id)!;
+    r.war = true;
+    r.score = 40;
+    r.clash = -100;
+    expect(makeOffer(game, me.id, other.id, "peace")).toBeNull();
+    expect(makeOffer(game, me.id, other.id, "peace")).not.toBeNull();
+    diplomacy(game);
+    expect(r.war).toBe(true);
+    game.state.day++;
+    diplomacy(game);
+    expect(r.war).toBe(false);
+    expect(game.state.offers).toEqual([]);
+  });
+
+  it("brings a computer offer to a player's Needs attention, and lets it lapse unanswered", () => {
+    const game = newGame({}, 1, "OFFER");
+    game.state.phase = "play";
+    const me = game.humans()[0]!;
+    const other = game.state.factions.find((f) => !f.human)!;
+    const r = relationOf(game, me.id, other.id)!;
+    r.war = false;
+    r.allied = false;
+    makeOffer(game, other.id, me.id, "alliance");
+    expect(alerts(game, me).some((x) => x.kind === "offer" && x.text.includes("an alliance"))).toBe(true);
+    game.state.day += 14;
+    diplomacy(game);
+    expect(offersTo(game, me.id)).toEqual([]);
+    expect(r.allied).toBe(false);
+  });
+
+  it("forms alliances between computer Empires that are firm friends", () => {
+    const { game, a, c } = three();
+    const r = relationOf(game, a.id, c.id)!;
+    r.score = 95;
+    expect(makeOffer(game, a.id, c.id, "alliance")).toBeNull();
+    game.state.day++;
+    diplomacy(game);
+    expect(r.allied).toBe(true);
+    expect(game.state.log.some((e) => e.text === `${a.name} and ${c.name} become allies.`)).toBe(true);
+  });
+
+  it("lets allies see what each other sees, and repair at each other's ports", () => {
+    const { game, a, b } = three();
+    const theirs = game.ownedWorlds(b.id)[0]!.at;
+    expect(visibleSystems(game, a.id).has(theirs)).toBe(true);
+    expect(game.friendlyPort(a.id, theirs)).toBe(true);
+    relationOf(game, a.id, b.id)!.allied = false;
+    expect(visibleSystems(game, a.id).has(theirs)).toBe(false);
+    expect(game.friendlyPort(a.id, theirs)).toBe(false);
+  });
+
+  it("fights beside an ally against its enemy, though at peace with that enemy itself", () => {
+    const { game, a, b, c } = three();
+    const at = game.ownedWorlds(c.id)[0]!.at;
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== at);
+    const ship = () => [game.newShip("Broadsword-Mercenary-Cruiser")];
+    const mine = game.newFleet(a.id, at, "deep", ship());
+    game.newFleet(b.id, at, "deep", ship());
+    game.newFleet(c.id, at, "deep", ship());
+    for (const f of game.fleetsAt(at, "deep")) f.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    const report = battleAt(game, at, "deep");
+    expect(report).not.toBeNull();
+    expect(report!.factions).toContain(a.id);
+    expect(report!.lines.some((l) => l.includes(`${mine.ships[0]!.name} (Broadsword`) && l.includes("→"))).toBe(true);
+  });
+
+  it("holds off a siege of an ally's world with its fleet in orbit", () => {
+    const { game, a, b, c } = three();
+    // Kept still for the test: no computer orders move the fleets away.
+    for (const f of [a, c]) (f as { human: boolean }).human = true;
+    const world = game.ownedWorlds(b.id).find((w) => w.at !== b.capital) ?? game.world(b.capital);
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== world.at);
+    game.worldState(world.at).defence = 0;
+    game.worldState(world.at).navy = null;
+    const enemy = game.newFleet(c.id, world.at, "main", [game.newShip("Broadsword-Mercenary-Cruiser")]);
+    // Neither fleet picks a fight with the other: the enemy only besieges.
+    enemy.standing = { ...STANDING_PRESETS["Seek and destroy"]!, engage: "none" };
+    const friend = game.newFleet(a.id, world.at, "main", [game.newShip("Patrol-Corvette")]);
+    friend.standing = { ...STANDING_PRESETS["Seek and destroy"]!, engage: "none", besiege: false };
+    advanceDay(game);
+    expect(game.worldState(world.at).siege).toBeNull();
+    // Without the ally there, the siege begins.
+    game.state.fleets = game.state.fleets.filter((f) => f !== friend);
+    advanceDay(game);
+    expect(game.worldState(world.at).siege?.by).toBe(c.id);
+  });
+
+  it("makes turning on an ally a betrayal everyone notices", () => {
+    const { game, a, b, c } = three();
+    const before = relationOf(game, c.id, a.id)!.score;
+    declareWar(game, a.id, b.id, "for the test");
+    expect(standing(game, a.id, b.id)).toBe("war");
+    expect(game.state.log.some((e) => e.text === `${a.name} turns on its ally ${b.name}, for the test.`)).toBe(true);
+    expect(relationOf(game, c.id, a.id)!.score).toBeLessThan(before);
   });
 });
