@@ -50,7 +50,7 @@ import {
 import type { Build, Faction, Fleet, Loc, Order, Sighting } from "./types";
 import type { World } from "../sector/sec";
 import { describeHeadcount } from "../sector/uwp";
-import { LOC_NAMES } from "./types";
+import { LOC_NAMES, STANDING_PRESETS } from "./types";
 import { visibleSystems } from "./visibility";
 
 /** Whether a system has anywhere to be at a given place. */
@@ -623,6 +623,47 @@ function deliverOrders(game: Game): void {
   }
 }
 
+/**
+ * An Empire with no world left is no more. Its ships go over to whoever holds
+ * the system they are in, or the one they are jumping to: to the Empire there,
+ * whatever their quarrel, or into an independent world's defences. Ships still
+ * on the slips are cancelled with it.
+ */
+function dissolve(game: Game, f: Faction): void {
+  const s = game.state;
+  f.alive = false;
+  f.builds = [];
+  for (const ws of Object.values(s.worlds)) if (ws.siege?.by === f.id) ws.siege = null;
+  const gone: string[] = [];
+  for (const fleet of game.fleetsOf(f.id)) {
+    const at = fleet.transit?.to ?? fleet.system;
+    const owner = game.worldState(at).owner;
+    const world = game.world(at).name;
+    const count = ships(fleet.ships.length);
+    if (owner !== null && owner !== f.id && game.faction(owner).alive) {
+      fleet.owner = owner;
+      fleet.name = `${fleet.name} of ${f.name}`;
+      fleet.order = null;
+      fleet.standing = { ...STANDING_PRESETS["Guard"]! };
+      delete fleet.admiral;
+      delete fleet.fighting;
+      gone.push(`${count} at ${world} go over to ${game.faction(owner).name}`);
+    } else {
+      // Their hulls join the world's batteries, above what it could build
+      // itself, until they are shot away.
+      const ws = game.worldState(at);
+      ws.defence += fleet.ships.reduce((t, sh) => t + Math.max(0, game.cls(sh).hull - sh.damage), 0);
+      s.fleets = s.fleets.filter((x) => x !== fleet);
+      gone.push(`${count} at ${world} join its defences`);
+    }
+  }
+  game.log({
+    to: s.factions.map((x) => x.id),
+    kind: "lost",
+    text: `${f.name} is no more: its last world is lost${gone.length === 0 ? "" : `. Of its ships, ${gone.join("; ")}`}.`,
+  });
+}
+
 function endings(game: Game): void {
   const s = game.state;
   // A player's high-water mark, for the end of the game.
@@ -631,32 +672,7 @@ function endings(game: Game): void {
     if (f.peak === undefined || worlds > f.peak.worlds) f.peak = { worlds, day: s.day };
   }
   for (const f of s.factions) {
-    if (!f.alive || f.builds.length > 0 || game.ownedWorlds(f.id).length > 0) continue;
-    const fleets = game.fleetsOf(f.id);
-    const left = fleets.reduce((n, fl) => n + fl.ships.length, 0);
-    if (left === 0) {
-      f.alive = false;
-      game.log({
-        to: s.factions.map((x) => x.id),
-        kind: "lost",
-        text: `${f.name} is no more: no worlds, no ships.`,
-      });
-      continue;
-    }
-    // Boats with no jump drive and no world to serve can never take one back,
-    // unless they are already holding one under siege, so the Empire is done.
-    const canJump = fleets.some((fl) => fl.ships.some((sh) => game.cls(sh).jump > 0));
-    const besieging = Object.values(s.worlds).some((ws) => ws.siege?.by === f.id);
-    if (canJump || besieging) continue;
-    s.fleets = s.fleets.filter((fl) => fl.owner !== f.id);
-    f.alive = false;
-    game.log({
-      to: s.factions.map((x) => x.id),
-      kind: "lost",
-      text: `${f.name} is no more: with no world left and no ship that can jump, ${
-        left === 1 ? "the crew of its last ship gives up the fight and goes its own way" : `the crews of its last ${left} ships give up the fight and go their own way`
-      }.`,
-    });
+    if (f.alive && game.ownedWorlds(f.id).length === 0) dissolve(game, f);
   }
   const target = game.victoryTarget();
   const alive = s.factions.filter((f) => f.alive);

@@ -25,8 +25,9 @@
   Empires at peace with it when its own cannot build a warship. In test games it takes more worlds and
   sits on less unspent money.
 - A fallen capital's government moves to a world that is not under siege, at the heart of the Empire.
-- An Empire with no worlds and no ship that can jump is finished, and a game with no Empire left ends
-  with no winner.
+- An Empire that loses its last world is finished. Its ships go over to whoever holds the system they
+  are in or jumping to, or join an independent world's defences, and its orders at the yards lapse. A
+  game with no Empire left ends with no winner.
 - Battle reports of big battles list the heaviest fire, damage and criticals of each round and sum up the
   rest, so long games save far smaller.
 - Days with big carrier fleets take a fraction of a second rather than several.

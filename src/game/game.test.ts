@@ -438,24 +438,32 @@ describe("the end of an Empire", () => {
     f.builds = [];
   }
 
-  it("comes when it has no world left and nothing that can jump to take one", () => {
+  it("comes with its last world, and its ships go over to whoever holds the system they are in or bound for", () => {
     const game = newGame({}, 1, "ZOMBIE");
     game.state.phase = "play";
     game.state.day = 1;
-    const [boats, jumper] = game.state.factions.filter((f) => !f.human);
-    for (const f of [boats!, jumper!]) {
-      (f as { human: boolean }).human = true; // kept still for the test
-      strip(game, f);
-    }
-    const at = game.state.sector.worlds.find((w) => game.worldState(w.at).owner === null && game.fleetsAt(w.at).length === 0)!.at;
-    game.newFleet(boats!.id, at, "deep", [game.newShip("Dragon-System-Defence-Boat"), game.newShip("Dragon-System-Defence-Boat")]);
-    game.newFleet(jumper!.id, at, "gg", [game.newShip("Patrol-Corvette")]);
+    const [gone, taker] = game.state.factions.filter((f) => !f.human) as [Faction, Faction];
+    for (const f of [gone, taker]) (f as { human: boolean }).human = true; // kept still for the test
+    strip(game, gone);
+    gone.builds = [{ classId: "Patrol-Corvette", at: taker.capital, name: "Never Launched", done: 99 }];
+    const free = game.state.sector.worlds.find((w) => game.worldState(w.at).owner === null && game.fleetsAt(w.at).length === 0)!.at;
+    const before = game.worldState(free).defence;
+    const boats = game.newFleet(gone.id, free, "deep", [game.newShip("Dragon-System-Defence-Boat"), game.newShip("Dragon-System-Defence-Boat")]);
+    const there = game.newFleet(gone.id, taker.capital, "gg", [game.newShip("Patrol-Corvette")]);
+    const jumping = game.newFleet(gone.id, free, "deep", [game.newShip("Patrol-Corvette")]);
+    jumping.transit = { from: free, to: taker.capital, depart: 1, arrive: 8 };
+    game.worldState(taker.capital).siege = null;
     advanceDay(game);
-    expect(boats!.alive).toBe(false);
-    expect(game.fleetsOf(boats!.id)).toEqual([]);
-    expect(game.state.log.some((e) => e.text.startsWith(`${boats!.name} is no more`) && e.text.includes("last 2 ships"))).toBe(true);
-    // A ship with a jump drive can still go and take a world back.
-    expect(jumper!.alive).toBe(true);
+    expect(gone.alive).toBe(false);
+    expect(gone.builds).toEqual([]);
+    expect(game.fleetsOf(gone.id)).toEqual([]);
+    // In an Empire's system, the Empire has them, in jump or not.
+    expect(there.owner).toBe(taker.id);
+    expect(jumping.owner).toBe(taker.id);
+    // In an independent system, their hulls join the world's defences.
+    expect(game.state.fleets).not.toContain(boats);
+    expect(game.worldState(free).defence).toBeGreaterThan(before);
+    expect(game.state.log.some((e) => e.text.startsWith(`${gone.name} is no more: its last world is lost`) && e.text.includes(`go over to ${taker.name}`))).toBe(true);
   });
 
   it("with no Empire left at all, ends the game with nobody the winner", () => {
