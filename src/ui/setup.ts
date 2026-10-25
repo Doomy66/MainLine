@@ -8,7 +8,8 @@
 import { bundledDesigns } from "../catalogue/catalogue";
 import { SUBSECTOR_LETTERS } from "../sector/hex";
 import type { Main } from "../sector/mains";
-import { parseSec, type SectorData } from "../sector/sec";
+import type { SectorData } from "../sector/sec";
+import { parseSectorFile, SECTOR_EXTENSION } from "../sector/sectorfile";
 import type { Game } from "../game/game";
 import { colourTerritories } from "../game/names";
 import { distanceBetween } from "../sector/hex";
@@ -19,7 +20,7 @@ import type { GameOptions } from "../game/types";
 import { h, kids } from "./dom";
 import { createMap } from "./map";
 
-const bundledSectors = import.meta.glob("../../sectors/*.sec", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
+const bundledSectors = import.meta.glob("../../sectors/*.sector", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
 
 interface PlayerSlot {
   name: string;
@@ -38,9 +39,9 @@ const QUADRANTS: Record<string, string> = {
 export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBack: () => void): void {
   const sectors = new Map<string, SectorData>();
   for (const [path, text] of Object.entries(bundledSectors)) {
-    const stem = (path.split("/").pop() ?? path).replace(/\.sec$/, "").replace(/-/g, " ");
+    const stem = (path.split("/").pop() ?? path).replace(/\.sector$/, "").replace(/-/g, " ");
     try {
-      sectors.set(stem, parseSec(text, stem));
+      sectors.set(stem, parseSectorFile(text, stem));
     } catch (error) {
       console.warn(`Setup: ${path} left out.`, error);
     }
@@ -149,11 +150,11 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
       "button",
       {
         onclick: async () => {
-          const file = await chooseFile(".sec,.tab,.txt");
+          const file = await chooseFile(SECTOR_EXTENSION);
           if (file === null) return;
           try {
             const stem = file.name.replace(/\.[^.]+$/, "").replace(/-/g, " ");
-            const data = parseSec(file.text, stem);
+            const data = parseSectorFile(file.text, stem);
             sectors.set(data.name, data);
             sectorKey = data.name;
             gameName = "";
@@ -166,7 +167,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           map.resetView();
         },
       },
-      "Load a PlanetHex .sec…",
+      "Load a PlanetHex .sector…",
     );
 
     const areaGrid = h(
@@ -177,6 +178,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
           "button",
           {
             class: area.has(l) ? "small on" : "small",
+            title: sector().subsectorNames?.[l] ?? `Subsector ${l}`,
             onclick: () => {
               if (area.has(l)) {
                 if (area.size > 1) area.delete(l);
@@ -301,7 +303,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
         { class: "hint" },
         `${sector().worlds.length} systems. Make a sector of your own in `,
         h("a", { href: "https://doomy66.github.io/PlanetHex/", target: "_blank", rel: "noopener" }, "PlanetHex"),
-        `: every sector it saves comes with a .sec file beside it. Sparse or Rift density plays best; at Standard, one Empire can swallow half the sector.`,
+        `, save it, and load the .sector file here. Sparse or Rift density plays best; at Standard, one Empire can swallow half the sector.`,
       ),
       message === "" ? null : h("p", { class: "error" }, message),
       h("h2", {}, "Area in play"),

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { bundledDesigns, Catalogue } from "../catalogue/catalogue";
 import { damageAgainst } from "../catalogue/shipclass";
-import { parseSec } from "../sector/sec";
+import { parseSectorFile } from "../sector/sectorfile";
 import { distanceBetween } from "../sector/hex";
 import { planAi } from "./ai";
 import { advanceDay } from "./day";
@@ -15,7 +15,7 @@ import { aiSetup, buyStarting, endTurn, orderBuild, runDays } from "./turn";
 import type { GameOptions } from "./types";
 import { STANDING_PRESETS } from "./types";
 
-const sector = parseSec(readFileSync("sectors/Driftwater-Reach.sec", "utf8"));
+const sector = parseSectorFile(readFileSync("sectors/Driftwater-Reach.sector", "utf8"));
 const designs = bundledDesigns();
 
 function newGame(options: Partial<GameOptions> = {}, players = 0, seed = "TEST"): Game {

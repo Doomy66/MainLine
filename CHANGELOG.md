@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Sectors are opened from the `.sector` file PlanetHex saves rather than the `.sec` beside it. Mainline
+  carries PlanetHex's generator and rolls the same worlds from the file, so one file does, and the two
+  sectors that come with the game are unchanged. An official sector imported in PlanetHex opens the same
+  way, with its subsector names, which show when you hover over a letter under Area in play.
 - The help has a new section, The ships: every warship in the catalogue with its tonnage, price, tech
   level, jump and armour, how it ranks against fleets and against worlds from fought-out trials, and a
   note on its strengths and weaknesses.

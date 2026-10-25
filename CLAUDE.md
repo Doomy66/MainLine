@@ -3,7 +3,7 @@
 Turn-based Traveller strategy game. Vite + TypeScript, no framework, vitest.
 
 - `npm test` must pass before a commit; it includes a 100-day all-computer game.
-- `npx vite-node scripts/simulate.ts sectors/Driftwater-Reach.sec 300` plays a whole game and prints how it went. Use it after changing combat, sieges, the economy or the AI.
+- `npx vite-node scripts/simulate.ts sectors/Driftwater-Reach.sector 300` plays a whole game and prints how it went. Use it after changing combat, sieges, the economy or the AI.
 - `npx vite-node scripts/check-ships.ts` validates every `.ship` in `ships/`.
 
 ## Keep in step
@@ -14,7 +14,8 @@ Turn-based Traveller strategy game. Vite + TypeScript, no framework, vitest.
 
 ## Where things come from
 
-- Sectors are PlanetHex `.sec` exports. The game never generates worlds.
+- Sectors are PlanetHex `.sector` files. A generated one holds only its seed, so its worlds are rolled by `src/planethex/`, a verbatim copy of PlanetHex's generator. Do not edit it here; change PlanetHex and run `npx vite-node scripts/copy-planethex.ts`. A test checks the bundled sectors still roll the same worlds.
+- Official Traveller sectors are Mongoose's data and must never be committed or bundled, not even as test fixtures. Players import them in PlanetHex themselves.
 - `src/shipdesign/` is a verbatim copy of the Traveller-Ship-Design engine. Do not edit it here; change it there and copy it over.
 - Ship classes are `.ship` files in `ships/`, with sources in `ships/SOURCES.md`.
 - Saves are one `.game` JSON file holding the whole state, sector and designs included.

@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { bundledDesigns } from "../catalogue/catalogue";
-import { parseSec } from "../sector/sec";
+import { parseSectorFile } from "../sector/sectorfile";
 import { distanceBetween } from "../sector/hex";
 import { advanceDay } from "./day";
 import { routeTo } from "./nav";
 import { tenderCost, TENDER_JUMP } from "./rules";
 import { createGame, DEFAULT_OPTIONS } from "./setup";
 
-const sector = parseSec(readFileSync("sectors/Driftwater-Reach.sec", "utf8"));
+const sector = parseSectorFile(readFileSync("sectors/Driftwater-Reach.sector", "utf8"));
 
 function setup() {
   const probe = createGame({ name: "t", sector, area: "ABCDEFGHIJKLMNOP".split(""), players: [], options: { ...DEFAULT_OPTIONS, newsLag: 0 }, designs: bundledDesigns(), seed: "TENDER" });

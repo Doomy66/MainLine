@@ -2,10 +2,14 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { distanceBetween, hexDistance, parseHex, subsectorOf } from "./hex";
 import { mainsIn } from "./mains";
+import { createHash } from "node:crypto";
 import { parseSec } from "./sec";
+import { parseSectorFile } from "./sectorfile";
+import { newSectorDoc } from "../planethex/sector";
+import { newSubsectorDoc } from "../planethex/subsector";
 import { parseUwp } from "./uwp";
 
-const drift = parseSec(readFileSync("sectors/Driftwater-Reach.sec", "utf8"));
+const drift = parseSectorFile(readFileSync("sectors/Driftwater-Reach.sector", "utf8"));
 
 describe("hexes", () => {
   it("reads sector hexes and refuses others", () => {
@@ -50,6 +54,46 @@ describe("a PlanetHex sector file", () => {
   it("refuses something that is not one", () => {
     expect(() => parseSec("hello\nworld")).toThrow();
     expect(() => parseSec("")).toThrow();
+    expect(() => parseSectorFile("hello")).toThrow();
+    expect(() => parseSectorFile(JSON.stringify({ level: "planet", version: 1 }))).toThrow();
+  });
+
+  it("rolls the bundled sectors' worlds exactly as before", () => {
+    // Fingerprints of every world the two bundled sectors held when they were
+    // shipped as .sec files. A PlanetHex change copied into src/planethex that
+    // rolls them differently would change the sectors under everybody's feet,
+    // and fails here instead.
+    const fingerprint = (stem: string) => {
+      const s = parseSectorFile(readFileSync(`sectors/${stem}.sector`, "utf8"));
+      return `${s.worlds.length} ${createHash("sha256").update(JSON.stringify(s.worlds)).digest("hex").slice(0, 16)}`;
+    };
+    expect(fingerprint("Driftwater-Reach")).toBe("456 f44f19ad8c0b0c61");
+    expect(fingerprint("Spandrel-Verge")).toBe("403 ef2308b5bb336240");
+  });
+
+  it("reads a published sector's worlds, allegiances and names as given", () => {
+    const doc = newSectorDoc("TESTSEED", "Somewhere", "none");
+    const sub = newSubsectorDoc("SUBSEED", "A", "none", "First Reach");
+    sub.overrides = [
+      { at: "0101", present: true, name: "Capital", uwp: "A788899-C", bases: "N", zone: "", stars: "G2 V", pbg: "703", allegiance: "ImDd" },
+      { at: "0102", present: true, name: "Outpost", uwp: "C540344-8", bases: "", zone: "A", stars: "M2 V", pbg: "100", allegiance: "NaHu" },
+    ];
+    doc.subsectors = [{ letter: "A", doc: sub }];
+    doc.charted = {
+      borders: [{ allegiance: "ImDd", hexes: ["0101"], label: "", labelAt: "0101" }],
+      routes: [{ from: "0101", to: "0102" }],
+      allegiances: [{ code: "ImDd", name: "Third Imperium, Domain of Deneb", short: "Imperium" }],
+    };
+    const s = parseSectorFile(JSON.stringify(doc));
+    expect(s.name).toBe("Somewhere");
+    expect(s.worlds.map((w) => `${w.at} ${w.name} ${w.uwpText} ${w.allegiance} ${w.zone}`)).toEqual([
+      "0101 Capital A788899-C ImDd ",
+      "0102 Outpost C540344-8 NaHu A",
+    ]);
+    expect(s.worlds[0]!.pbg).toEqual({ multiplier: 7, belts: 0, giants: 3 });
+    expect(s.polities).toEqual([{ code: "ImDd", name: "Third Imperium, Domain of Deneb", short: "Imperium" }]);
+    expect(s.subsectorNames).toEqual({ A: "First Reach" });
+    expect(s.routes).toEqual([{ from: "0101", to: "0102" }]);
   });
 
   it("finds Mains: every world on one is a jump from another on it", () => {

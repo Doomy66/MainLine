@@ -1,6 +1,7 @@
 /**
  * Reading a sector file: the T5 tab separated format PlanetHex writes beside a
- * saved sector, one system per line under a header row.
+ * saved sector, one system per line under a header row. A `.sector` document is
+ * read by turning it into this format first; sectorfile.ts says how.
  *
  * The header decides which column is which, so a file from TravellerMap or
  * any other tool that writes the same columns reads too. Lines starting with
@@ -25,11 +26,31 @@ export interface World {
   /** Population multiplier, planetoid belts, gas giants. */
   readonly pbg: { readonly multiplier: number; readonly belts: number; readonly giants: number };
   readonly stars: string;
+  /**
+   * Who holds it, as the four letter code: ImDd, ZhIN, or Na for nobody. Absent
+   * from games saved before it was read.
+   */
+  readonly allegiance?: string;
+}
+
+/** A polity a sector's Allegiance column names, as a `.sector` document spells it out. */
+export interface Polity {
+  readonly code: string;
+  /** "Third Imperium, Domain of Deneb". */
+  readonly name: string;
+  /** "Imperium": short enough for a label. */
+  readonly short: string;
 }
 
 export interface SectorData {
   readonly name: string;
   readonly worlds: readonly World[];
+  /** The polities behind the Allegiance codes, where the `.sector` names them. */
+  readonly polities?: readonly Polity[];
+  /** Subsector names by letter, where the `.sector` has them. */
+  readonly subsectorNames?: Readonly<Record<string, string>>;
+  /** The express boat network, as hex to hex legs. */
+  readonly routes?: readonly { readonly from: string; readonly to: string }[];
 }
 
 export function parseSec(text: string, fallbackName = "Unnamed sector"): SectorData {
@@ -69,6 +90,7 @@ export function parseSec(text: string, fallbackName = "Unnamed sector"): SectorD
       zone: get("zone"),
       pbg: { multiplier: Number(pbg[0]) || 0, belts: Number(pbg[1]) || 0, giants: Number(pbg[2]) || 0 },
       stars: get("stars"),
+      allegiance: get("allegiance") || "Na",
     });
   }
   if (header === null) throw new Error("That file has no header row, so it is not a sector file.");

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { bundledDesigns } from "../catalogue/catalogue";
-import { parseSec } from "../sector/sec";
+import { parseSectorFile } from "../sector/sectorfile";
 import { distanceBetween } from "../sector/hex";
 import { advanceDay } from "./day";
 import type { Game } from "./game";
@@ -9,7 +9,7 @@ import { createGame, DEFAULT_OPTIONS } from "./setup";
 import type { GameOptions } from "./types";
 import { STANDING_PRESETS } from "./types";
 
-const sector = parseSec(readFileSync("sectors/Driftwater-Reach.sec", "utf8"));
+const sector = parseSectorFile(readFileSync("sectors/Driftwater-Reach.sector", "utf8"));
 const designs = bundledDesigns();
 
 /** A game with one human, playing from day one, and nobody else's fleets about. */

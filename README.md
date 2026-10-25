@@ -16,14 +16,15 @@ of writing, this is 100% Claude generated to my exacting requirements.
 
 ## Where things come from
 
-- **The sector is PlanetHex's.** Every sector
-  [PlanetHex](https://doomy66.github.io/PlanetHex/) saves comes with a `.sec`
-  file beside it, in the standard tab-separated sector format with one system
-  per line. Mainline reads that file and nothing else, so it generates no worlds of
-  its own. The map is drawn the way PlanetHex draws its sector map, with the
-  same hexes, dots and colours, so a sector looks the same in both. Two sectors
-  come with the game in [sectors/](sectors/), each with the `.sector` file that
-  opens it in PlanetHex.
+- **The sector is PlanetHex's.** Mainline opens the `.sector` file
+  [PlanetHex](https://doomy66.github.io/PlanetHex/) saves. A generated sector's
+  file holds little more than its seed, so Mainline carries a copy of PlanetHex's
+  generator in [src/planethex/](src/planethex/) and rolls the same worlds from
+  it; Mainline invents none of its own. The map is drawn the way PlanetHex draws
+  its sector map, with the same hexes, dots and colours, so a sector looks the
+  same in both. Two sectors come with the game in [sectors/](sectors/). To play
+  an official Traveller sector, import it in PlanetHex, save it and load the
+  `.sector`; that data is Mongoose's and none of it comes with the game.
 - **The ships are the Ship Designer's.** A ship class is a `.ship` file from
   the [Traveller Ship Designer](https://doomy66.github.io/Traveller-Ship-Design/),
   run through a copy of its High Guard engine in
@@ -147,7 +148,7 @@ computer on every side. `npm run build` typechecks and bundles. To watch a whole
 game play itself and print how it went:
 
 ```
-npx vite-node scripts/simulate.ts sectors/Driftwater-Reach.sec 300
+npx vite-node scripts/simulate.ts sectors/Driftwater-Reach.sector 300
 ```
 
 `npx vite-node scripts/check-ships.ts` runs every catalogue ship through the
