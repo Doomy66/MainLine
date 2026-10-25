@@ -115,7 +115,8 @@ yards, and worlds far from the new capital, or with little law, breaking away.
 for more people, higher tech, a better starport and a rich or industrial
 economy.
 Upkeep comes out of the same treasury. Worlds you hold repair and rearm your
-ships.
+ships; a naval base does so as a class A port and a scout base as a class B,
+though neither builds.
 
 **Shipyards.** What a world can build depends on its starport:
 - class A builds starships;

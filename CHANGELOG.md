@@ -24,6 +24,9 @@
   It keeps at most twenty small craft outside hangars and saves for warships, and builds at the yards of
   Empires at peace with it when its own cannot build a warship. In test games it takes more worlds and
   sits on less unspent money.
+- A naval base repairs and rearms ships as a class A starport does, and a scout base as a class B,
+  whatever the world's own starport; neither builds. A world written with an A base, a naval and a scout
+  base together, now has the naval base's defences too.
 - A restless Empire picks a quarrel only with a neighbour that has a world near enough and weak enough
   for it to take, not with one far stronger. A peace ends the two Empires' sieges of each other at once.
   An offer of alliance from an Empire that has found its allies elsewhere is withdrawn rather than left

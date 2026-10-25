@@ -16,7 +16,7 @@ import { attackDamage, damageAgainst, STRENGTH_ARMOUR, type ShipClass } from "..
 import type { Catalogue } from "../catalogue/catalogue";
 import type { Game } from "./game";
 import { canRefuelAt, jumpMap, pathIn, routeTo, spareFuel } from "./nav";
-import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, income, repairRate, ROUNDS_PER_DAY, yardPrice } from "./rules";
+import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, income, repairPort, repairRate, ROUNDS_PER_DAY, yardPrice } from "./rules";
 import { relationOf } from "./relations";
 import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
@@ -322,7 +322,7 @@ function knownThreat(game: Game, faction: Faction, at: string, sees: ReadonlySet
  */
 function nearestRepairYard(game: Game, fleet: Fleet, broken: boolean): string[] | null | "here" {
   const good = (at: string) => {
-    const port = game.world(at).uwp.starport;
+    const port = repairPort(game.world(at));
     return game.friendlyPort(fleet.owner, at) && repairRate(port) > 0 && (!broken || fixesCrits(port));
   };
   if (good(fleet.system)) return "here";

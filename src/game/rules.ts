@@ -7,6 +7,7 @@
 
 import type { World } from "../sector/sec";
 import type { Attack, ShipClass } from "../catalogue/shipclass";
+import { starportRank } from "../sector/mains";
 import type { Loc } from "./types";
 
 /** A jump takes a week, as it always has: 148 + 6D hours, called seven days. */
@@ -96,12 +97,23 @@ export function income(world: World): number {
   return Math.round(value * 100) / 100;
 }
 
+// A in a sector file is a naval base and a scout base together.
 export function hasNavalBase(world: World): boolean {
-  return /N/.test(world.bases);
+  return /[NA]/.test(world.bases);
 }
 
 export function hasScoutBase(world: World): boolean {
-  return /S/.test(world.bases);
+  return /[SA]/.test(world.bases);
+}
+
+/**
+ * The class of starport a world repairs ships as. A naval base has the
+ * dockyards of a class A port and a scout base those of a class B, whatever the
+ * world's own starport; neither builds anything.
+ */
+export function repairPort(world: World): string {
+  const ports = [world.uwp.starport, hasNavalBase(world) ? "A" : "", hasScoutBase(world) ? "B" : ""].filter((p) => p !== "");
+  return ports.sort((a, b) => starportRank(a) - starportRank(b))[0]!;
 }
 
 /**

@@ -22,6 +22,7 @@ import {
   TENDER_JUMP,
   tenderCost,
   jumpFuel,
+  repairPort,
   repairRate,
   whyNotBuild,
   yardPrice,
@@ -387,7 +388,7 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
   // Fuel carried beyond what each ship keeps for its own jump, and how much the others lack.
   const pooled = spareFuel(game, f);
   const canShare = pooled.spare > 0.5 && pooled.short > 0.5;
-  const repairHere = game.friendlyPort(f.owner, here) && repairRate(world.uwp.starport) > 0;
+  const repairHere = game.friendlyPort(f.owner, here) && repairRate(repairPort(world)) > 0;
 
   const moveButtons = LOCS.filter((l) => locExists(game, here, l)).map((l) =>
     h("button", { class: f.loc === l ? "small on" : "small", disabled: inJump || f.loc === l, onclick: () => set({ kind: "move", to: l }, `${f.name} will move to the ${LOC_NAMES[l].toLowerCase()}.`) }, LOC_NAMES[l].replace("Main world orbit", "Orbit")),
@@ -491,7 +492,7 @@ function fleetDetail(ctx: Ctx, f: Fleet): HTMLElement {
           },
           fuelHere || !canShare ? "Refuel" : "Share fuel",
         ),
-        h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport you or an ally hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
+        h("button", { disabled: inJump || !repairHere, title: repairHere ? "" : "Needs a class A–D starport, or a naval or scout base, that you or an ally hold", onclick: () => set({ kind: "repair" }, `${f.name} will put in for repairs.`) }, "Repair"),
         h("button", { disabled: f.order === null || inJump, onclick: () => set(null, `${f.name}'s orders are cancelled.`) }, "Cancel"),
         inJump || game.worldState(here).owner !== f.owner
           ? null

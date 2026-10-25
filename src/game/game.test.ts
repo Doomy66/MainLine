@@ -13,7 +13,7 @@ import { alliesOf, answerOffer, atWar, declareWar, diplomacy, makeOffer, offerBe
 import { alerts } from "./attention";
 import { battleAt } from "./combat";
 import { visibleSystems } from "./visibility";
-import { captureDays, defenceMax, jumpFuel } from "./rules";
+import { captureDays, defenceMax, jumpFuel, repairPort, slipsAt } from "./rules";
 import { parseGame, serialise } from "./save";
 import { BIGGEST_START, createGame, DEFAULT_OPTIONS, factionMains, hasAllegiances, victoryLine, worldsInArea } from "./setup";
 import { mainsIn } from "../sector/mains";
@@ -427,6 +427,19 @@ describe("losing a capital", () => {
     expect(game.worldState(capital).owner).toBe(me.id);
     expect(watched.map((w) => w.at)).not.toContain(victim.capital);
     expect(game.fleetsAt(victim.capital).some((f) => f.owner === me.id)).toBe(false);
+  });
+});
+
+describe("bases", () => {
+  it("repair as a class A port at a naval base and a class B at a scout base, but build nothing", () => {
+    const any = newGame({}, 0, "BASES").state.sector.worlds[0]!;
+    const world = (port: string, bases: string) => ({ ...any, uwp: { ...any.uwp, starport: port }, bases });
+    expect(repairPort(world("E", "N"))).toBe("A");
+    expect(repairPort(world("X", "S"))).toBe("B");
+    expect(repairPort(world("D", "A"))).toBe("A");
+    expect(repairPort(world("C", ""))).toBe("C");
+    expect(repairPort(world("A", "S"))).toBe("A");
+    expect(slipsAt(world("E", "N"))).toBe(0);
   });
 });
 

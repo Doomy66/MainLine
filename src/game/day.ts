@@ -35,6 +35,7 @@ import {
   jumpFuel,
   MISSILE_MCR,
   reloads,
+  repairPort,
   repairRate,
   ROUGH_JUMP_CHANCE_ON_2D,
   hiresTenders,
@@ -197,7 +198,7 @@ function refuel(game: Game, fleet: Fleet): void {
 /** Repairs, and reloads, at a starport the fleet's owner or an ally holds. */
 function dockyard(game: Game, fleet: Fleet): void {
   const world = game.world(fleet.system);
-  const port = world.uwp.starport;
+  const port = repairPort(world);
   const faction = game.faction(fleet.owner);
   const rate = repairRate(port);
   for (const s of fleet.ships) {
@@ -226,7 +227,7 @@ function dockyard(game: Game, fleet: Fleet): void {
     } else if (hull && !fixesCrits(port)) {
       // A port that only patches hulls has done all it can.
       fleet.order = null;
-      notice(game, fleet.owner, `${fleet.name}'s hulls are patched up at ${world.name}, but a class ${port} starport cannot fix damaged drives or weapons: that needs a class A to C starport.`, fleet.system);
+      notice(game, fleet.owner, `${fleet.name}'s hulls are patched up at ${world.name}, but a class ${port} starport cannot fix damaged drives or weapons: that needs a class A to C starport, or a naval or scout base.`, fleet.system);
     }
   }
 }
@@ -785,8 +786,8 @@ export function advanceDay(game: Game): void {
       }
       case "repair": {
         const world = game.world(fleet.system);
-        if (!game.friendlyPort(fleet.owner, fleet.system) || repairRate(world.uwp.starport) === 0) {
-          notice(game, fleet.owner, `${fleet.name} cannot repair at ${world.name}: it needs a class A to D starport you or an ally hold.`, fleet.system);
+        if (!game.friendlyPort(fleet.owner, fleet.system) || repairRate(repairPort(world)) === 0) {
+          notice(game, fleet.owner, `${fleet.name} cannot repair at ${world.name}: it needs a class A to D starport, or a naval or scout base, that you or an ally hold.`, fleet.system);
           fleet.order = null;
         } else {
           fleet.loc = "main";
