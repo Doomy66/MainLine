@@ -361,6 +361,7 @@ export function declareWar(game: Game, by: string, on: string, why: string): voi
   if (r === undefined || r.war) return;
   const betrayed = r.allied === true;
   r.war = true;
+  r.declaredBy = by;
   r.allied = false;
   r.since = game.state.day;
   r.score = Math.min(r.score, WAR_AT);

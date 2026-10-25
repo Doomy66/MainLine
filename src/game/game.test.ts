@@ -1139,3 +1139,103 @@ describe("alliances and offers", () => {
     expect(relationOf(game, c.id, a.id)!.score).toBeLessThan(before);
   });
 });
+
+describe("the computer's sieges and yards", () => {
+  /** A computer fleet in orbit of a small independent world it could take, with fuel to be had there. */
+  function inOrbit(seed: string) {
+    const game = newGame({}, 0, seed);
+    game.state.phase = "play";
+    game.state.day = 10;
+    const ai = game.state.factions[0]!;
+    const world = game.state.sector.worlds.find(
+      (w) => game.worldState(w.at).owner === null && w.uwp.population >= 1 && w.uwp.population <= 4 && "ABC".includes(w.uwp.starport) && game.fleetsAt(w.at).length === 0,
+    )!;
+    const fleet = game.newFleet(ai.id, world.at, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")), "Strike");
+    fleet.standing = { ...STANDING_PRESETS["Patrol"]! };
+    return { game, ai, world, fleet };
+  }
+
+  it("records who declared a war", () => {
+    const game = newGame({}, 0, "DECLARE");
+    const [a, b] = game.state.factions as [Faction, Faction];
+    const r = relationOf(game, a.id, b.id)!;
+    r.war = false;
+    declareWar(game, b.id, a.id, "for the test");
+    expect(r.declaredBy).toBe(b.id);
+  });
+
+  it("keeps a fleet it has pulled back out of the fight for the day", () => {
+    const { game, ai, fleet } = inOrbit("PULLED");
+    fleet.fighting = { at: fleet.system, loc: "main", since: 7, last: 9 };
+    planAi(game, ai);
+    expect(fleet.standing.engage).toBe("none");
+  });
+
+  it("leaves alone for a while a world that drove a fleet off", () => {
+    const { game, ai, fleet } = inOrbit("DRIVEN");
+    fleet.fighting = { at: fleet.system, loc: "main", since: 3, last: 5 };
+    planAi(game, ai);
+    expect(fleet.standing.besiege).toBe(false);
+    // Weeks later it is fair game again.
+    game.state.day = 40;
+    fleet.order = null;
+    planAi(game, ai);
+    expect(fleet.standing.besiege).toBe(true);
+  });
+
+  it("garrisons a fleet with no fuel at a world of its own with none to be had", () => {
+    const game = newGame({}, 0, "STRANDED");
+    game.state.phase = "play";
+    game.state.day = 10;
+    const ai = game.state.factions[0]!;
+    const dry = game.state.sector.worlds.find((w) => w.pbg.giants === 0 && w.uwp.hydrographics === 0 && !"ABCD".includes(w.uwp.starport))!;
+    game.worldState(dry.at).owner = ai.id;
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== dry.at);
+    const ship = game.newShip("Patrol-Corvette");
+    ship.fuel = 0;
+    const fleet = game.newFleet(ai.id, dry.at, "main", [ship], "Stranded");
+    planAi(game, ai);
+    expect(fleet.order?.kind).toBe("garrison");
+  });
+
+  /** Two Empires at peace, the second holding every class A yard, and the first's class B ones. */
+  function yards(seed: string, players = 0) {
+    const game = newGame({}, players, seed);
+    game.state.phase = "play";
+    game.state.day = 1;
+    const [a, b] = game.state.factions as [Faction, Faction];
+    for (const w of game.state.sector.worlds) {
+      if (w.uwp.starport === "A" || (w.uwp.starport === "B" && game.worldState(w.at).owner === a.id)) game.worldState(w.at).owner = b.id;
+    }
+    const r = relationOf(game, a.id, b.id)!;
+    r.war = false;
+    r.score = 30;
+    return { game, a, b, r };
+  }
+
+  it("lets an Empire build at the yard of one at peace with it, dearer, and not at one at war", () => {
+    const { game, a, b, r } = yards("FRIENDYARD", 1);
+    expect(a.human).toBe(true);
+    const yard = game.ownedWorlds(b.id).find((w) => w.uwp.starport === "A" && w.uwp.tl >= 12)!;
+    a.credits = 10_000;
+    expect(orderBuild(game, a, "Patrol-Corvette", yard.at)).toBe("");
+    expect(a.credits).toBeCloseTo(10_000 - game.catalogue.get("Patrol-Corvette").cost * 1.2);
+    // She is delivered there.
+    a.builds[0]!.work = 1;
+    game.replanYard(yard.at);
+    advanceDay(game);
+    expect(game.fleetsAt(yard.at).some((f) => f.owner === a.id)).toBe(true);
+    declareWar(game, b.id, a.id, "for the test");
+    expect(r.war).toBe(true);
+    expect(orderBuild(game, a, "Patrol-Corvette", yard.at)).not.toBe("");
+  });
+
+  it("has the computer build at a friendly yard when its own cannot build a warship", () => {
+    const { game, a, b } = yards("FRIENDAI");
+    a.credits = 5_000;
+    a.builds = [];
+    planAi(game, a);
+    expect(a.builds.length).toBeGreaterThan(0);
+    expect(game.worldState(a.builds[0]!.at).owner).toBe(b.id);
+  });
+});

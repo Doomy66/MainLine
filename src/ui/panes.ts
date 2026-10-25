@@ -171,10 +171,10 @@ export function systemPane(ctx: Ctx): HTMLElement {
     ws.owner === me.id && yard && game.state.phase === "play"
       ? h("div", { class: "row", style: "margin-top:8px" }, h("button", { class: "small", onclick: () => { ctx.yard = at; ctx.setTab("yard"); } }, "Shipyard here"))
       : null,
-    ws.owner === null && w.uwp.starport === "A" && game.state.phase === "play"
-      ? h("div", { class: "row", style: "margin-top:8px" }, h("button", { class: "small", onclick: () => { ctx.yard = at; ctx.setTab("yard"); } }, "Commission here (independent yard)"))
+    ws.owner !== me.id && !game.hostile(me.id, ws.owner) && w.uwp.starport === "A" && game.state.phase === "play"
+      ? h("div", { class: "row", style: "margin-top:8px" }, h("button", { class: "small", onclick: () => { ctx.yard = at; ctx.setTab("yard"); } }, `Commission here (${ws.owner === null ? "independent" : `${game.faction(ws.owner).name}'s`} yard)`))
       : null,
-    yard && (ws.owner === me.id || ws.owner === null) ? slipsHere(ctx, at) : null,
+    yard && (ws.owner === me.id || ws.owner === null || (w.uwp.starport === "A" && !game.hostile(me.id, ws.owner))) ? slipsHere(ctx, at) : null,
     locBlocks,
     departed.length === 0
       ? null
@@ -203,7 +203,7 @@ function summariseClasses(game: Game, f: Fleet): string {
 /**
  * A yard's slips at a glance: what is on each and when she is due, and what
  * waits for one. Only at yards the player may build at; another Empire's ship
- * at an independent yard is shown as taken, not named.
+ * at a yard not the player's own is shown as taken, not named.
  */
 function slipsHere(ctx: Ctx, at: string): HTMLElement | null {
   const { game, me } = ctx;
@@ -879,7 +879,14 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
   const independent = game.state.sector.worlds
     .filter((w) => w.uwp.starport === "A" && game.worldState(w.at).owner === null)
     .sort(byYard);
-  const yards = [...own, ...independent];
+  // An Empire not at war with you builds for you too, at the same markup.
+  const friendly = game.state.sector.worlds
+    .filter((w) => {
+      const owner = game.worldState(w.at).owner;
+      return w.uwp.starport === "A" && owner !== null && owner !== me.id && !game.hostile(me.id, owner);
+    })
+    .sort(byYard);
+  const yards = [...own, ...independent, ...friendly];
   if (ctx.yard === null || !yards.some((w) => w.at === ctx.yard)) ctx.yard = own.find((w) => w.uwp.starport === "A")?.at ?? yards[0]?.at ?? null;
   const yard = ctx.yard === null ? undefined : game.world(ctx.yard);
   const isOwn = yard !== undefined && game.worldState(yard.at).owner === me.id;
@@ -889,6 +896,13 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
     { onchange: (e: Event) => { ctx.yard = (e.target as HTMLSelectElement).value; ctx.refresh(); } },
     own.length > 0 ? h("optgroup", { label: "Your yards" }, own.map((w) => h("option", { value: w.at, selected: w.at === ctx.yard }, `${w.name} (${w.uwp.starport}, TL${w.uwp.tl})`))) : null,
     independent.length > 0 ? h("optgroup", { label: "Independent yards, 20% dearer" }, independent.map((w) => h("option", { value: w.at, selected: w.at === ctx.yard }, `${w.name} (TL${w.uwp.tl}, ${distanceBetween(me.capital, w.at)} pc)`))) : null,
+    friendly.length > 0
+      ? h(
+          "optgroup",
+          { label: "Yards of Empires at peace with you, 20% dearer" },
+          friendly.map((w) => h("option", { value: w.at, selected: w.at === ctx.yard }, `${w.name} (${game.faction(game.worldState(w.at).owner!).name}, TL${w.uwp.tl}, ${distanceBetween(me.capital, w.at)} pc)`)),
+        )
+      : null,
   );
 
   const today = game.state.day;
@@ -925,7 +939,7 @@ export function shipyardPane(ctx: Ctx): HTMLElement {
     "div",
     {},
     h("h3", {}, "Shipyard"),
-    h("p", { class: "hint" }, "A class A yard builds starships, class B spacecraft without a jump drive, class C small craft under 100 tons; none above its world's tech level. Independent class A yards build for anyone at a markup. New ships join a Yard fleet in orbit."),
+    h("p", { class: "hint" }, "A class A yard builds starships, class B spacecraft without a jump drive, class C small craft under 100 tons; none above its world's tech level. Independent class A yards, and those of Empires at peace with you, build for you at a markup. New ships join a Yard fleet in orbit."),
     yards.length === 0 ? h("p", { class: "warn" }, "No yard will build for you.") : h("div", { class: "row" }, picker, h("span", { class: "credits" }, mcr(me.credits))),
     h(
       "div",

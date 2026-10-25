@@ -48,12 +48,12 @@ export function sellStarting(game: Game, faction: Faction, shipId: string): void
   game.removeEmptyFleets();
 }
 
-/** Lay down a ship at a yard the faction holds. Returns why not, or "". */
+/** Lay down a ship at a yard the faction holds, an independent one, or one of an Empire not at war with it. Returns why not, or "". */
 export function orderBuild(game: Game, faction: Faction, classId: string, at: string): string {
   const cls = game.catalogue.get(classId);
   const world = game.world(at);
   const owner = game.worldState(at).owner;
-  if (owner !== faction.id && owner !== null) return `${world.name} belongs to ${game.faction(owner).name}.`;
+  if (owner !== faction.id && owner !== null && game.hostile(faction.id, owner)) return `${world.name} belongs to ${game.faction(owner).name}, which is at war with you.`;
   if (!canBuildAt(world, cls)) return `${world.name} cannot build the ${cls.name}: ${whyNotBuild(world, cls)}.`;
   const price = yardPrice(cls, owner === faction.id);
   if (price > faction.credits + 1e-9) return `The ${cls.name} costs MCr${price.toFixed(2)} here; the treasury has MCr${faction.credits.toFixed(2)}.`;

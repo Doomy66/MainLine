@@ -360,6 +360,8 @@ export interface Relation {
   causeBy?: string;
   /** The last day they fought or took a world from each other. */
   clash?: number;
+  /** Who declared the war, or the last one: the computer goes after Empires it chose to fight. */
+  declaredBy?: string;
   /** Allies: friends who have said so. */
   allied?: boolean;
   /** The last day either offered the other peace or an alliance. */

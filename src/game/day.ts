@@ -444,9 +444,9 @@ function yards(game: Game): void {
     const due = faction.builds.filter(finished);
     faction.builds = faction.builds.filter((b) => !finished(b));
     for (const b of due) {
-      // A yard that has changed hands since the order keeps the ship.
+      // A yard held by an Empire at war with the buyer keeps the ship.
       const owner = game.worldState(b.at).owner;
-      if (owner !== faction.id && owner !== null) continue;
+      if (owner !== faction.id && owner !== null && game.hostile(faction.id, owner)) continue;
       const built = game.commission(b.classId, b.name);
       const ship = built[0]!;
       const waiting = game

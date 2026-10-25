@@ -15,9 +15,11 @@
 import { attackDamage, damageAgainst, STRENGTH_ARMOUR, type ShipClass } from "../catalogue/shipclass";
 import type { Catalogue } from "../catalogue/catalogue";
 import type { Game } from "./game";
-import { canRefuelAt, jumpMap, pathIn, routeTo } from "./nav";
-import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, fixesCrits, income, repairRate, yardPrice } from "./rules";
+import { canRefuelAt, jumpMap, pathIn, routeTo, spareFuel } from "./nav";
+import { buildDaysFor, canBuildAt, defenceArmour, defenceAttacks, defenceMax, fixesCrits, income, repairRate, ROUNDS_PER_DAY, yardPrice } from "./rules";
+import { relationOf } from "./relations";
 import { distanceBetween } from "../sector/hex";
+import type { World } from "../sector/sec";
 import { visibleSystems } from "./visibility";
 import type { Faction, Fleet, StandingOrders, Temper } from "./types";
 import { STANDING_PRESETS } from "./types";
@@ -184,6 +186,119 @@ function defenceStrength(game: Game, at: string): number {
   return BATTERY_WEIGHT * Math.sqrt(ws.defence * (1 + defenceArmour(world) / 3) * fire) + boats;
 }
 
+/**
+ * Damage a hit of so many dice does through so much armour, on average, with
+ * the Effect of about two that a hit usually carries. Unlike the strength
+ * measure's reckoning it does not keep a share of every hit: a gun too light
+ * for the rock does nothing to it at all.
+ */
+const throughCache = new Map<string, number>();
+function through(dice: number, armour: number): number {
+  const key = `${dice}|${armour}`;
+  let held = throughCache.get(key);
+  if (held === undefined) {
+    // Every total the dice can roll, and how many ways.
+    let ways = [1];
+    for (let d = 0; d < dice; d++) {
+      const next = new Array<number>(ways.length + 6).fill(0);
+      ways.forEach((w, total) => {
+        for (let face = 1; face <= 6; face++) next[total + face]! += w;
+      });
+      ways = next;
+    }
+    const all = Math.pow(6, dice);
+    held = ways.reduce((sum, w, total) => sum + (w * Math.max(0, total + 2 - armour)) / all, 0);
+    throughCache.set(key, held);
+  }
+  return held;
+}
+
+/**
+ * Days a fleet's guns would take to silence a world's defences as they stand,
+ * hitting about half the time: how long a siege would be, or whether the
+ * world's armour leaves it nothing to shoot at.
+ */
+function daysToSilence(game: Game, fleet: Fleet, at: string): number {
+  const ws = game.worldState(at);
+  if (ws.defence <= 0) return 0;
+  // The defences of a world nobody lives on never come out to fight, so they
+  // are never silenced: a naval base on an empty rock cannot be taken by siege.
+  if (game.world(at).uwp.population === 0) return Infinity;
+  const armour = defenceArmour(game.world(at));
+  let perRound = 0;
+  for (const s of fleet.ships) {
+    for (const a of game.cls(s).attacks) {
+      const hit = through(Math.round(a.dice), a.meson ? 0 : Math.max(0, armour - a.ap));
+      perRound += hit * a.multiple * a.count * a.perSalvo * (a.ion ? 0.5 : 1);
+    }
+  }
+  const perDay = perRound * 0.5 * ROUNDS_PER_DAY;
+  return perDay <= 0 ? Infinity : ws.defence / perDay;
+}
+
+/** A world a fleet's guns could not silence in a month: not worth sitting in orbit of. */
+const HOPELESS_DAYS = 30;
+
+/**
+ * The days a siege still looks to need before the defences are silenced and
+ * the boats gone, at the rate it has gone in the days it has run. A siege that
+ * has knocked down nothing never ends.
+ */
+function siegeDaysLeft(game: Game, at: string, days: number): number {
+  const world = game.world(at);
+  const ws = game.worldState(at);
+  const max = defenceMax(world);
+  const navy = game.navyOf(at);
+  const left = Math.max(max > 0 ? ws.defence / max : 0, navy.full > 0 ? navy.boats / navy.full : 0);
+  if (left <= 0) return 0;
+  const rate = (1 - left) / Math.max(1, days);
+  return rate <= 0 ? Infinity : left / rate;
+}
+
+/** A siege that looks to need more than another week at the rate so far is given up. */
+const SIEGE_PATIENCE = 7;
+
+/**
+ * How long a world that has driven a fleet off is left alone by it: the
+ * defences rebuild in ten days, so coming straight back is the same fight
+ * again.
+ */
+const DRIVEN_OFF_DAYS = 28;
+
+/**
+ * Whether a world drove this fleet off lately: it fought in orbit there, the
+ * fighting stopped without the world's defences silenced, and the fleet has
+ * not been back to it for long. The fleet's own record of where it last
+ * fought is all it goes by, so a save keeps it.
+ */
+function drivenOff(game: Game, faction: Faction, fleet: Fleet, at: string): boolean {
+  const f = fleet.fighting;
+  if (f === undefined || f.at !== at || f.loc !== "main") return false;
+  const since = game.state.day - f.last;
+  if (since <= 1 || since > DRIVEN_OFF_DAYS) return false;
+  return game.worldState(at).siege?.by !== faction.id;
+}
+
+/**
+ * Empires this one went to war with by its own choice. Its staff go after
+ * their worlds at longer odds than anyone else's: a war declared is a war
+ * fought, not a quarrel left to cool. Reaching further for them, or prizing
+ * them above other worlds, lost more than it won in trials.
+ */
+function chosenFoes(game: Game, faction: Faction): Set<string> {
+  const out = new Set<string>();
+  if (game.state.relations === undefined) return out;
+  for (const g of game.state.factions) {
+    if (!g.alive || g.id === faction.id) continue;
+    const r = relationOf(game, faction.id, g.id);
+    if (r?.war === true && r.declaredBy === faction.id) out.add(g.id);
+  }
+  return out;
+}
+
+/** How much worse odds the staff take against an Empire they chose to fight. */
+const FOE_ODDS = 0.75;
+
 /** Enemy strength a faction believes is at a system: what it sees, or last saw. */
 function knownThreat(game: Game, faction: Faction, at: string, sees: ReadonlySet<string>): number {
   if (sees.has(at)) {
@@ -223,19 +338,47 @@ function nearestRepairYard(game: Game, fleet: Fleet, broken: boolean): string[] 
   return best === null ? null : pathIn(map, fleet.system, best.at);
 }
 
+/** Small craft: a Snub, a fighter, a pinnace. */
+const SMALL_CRAFT_TONS = 100;
+/**
+ * The most small craft an Empire keeps outside its carriers' hangars. They are
+ * cheap and count for a lot by the strength measure, so a poor Empire would
+ * otherwise put every few MCr into one more, hundreds of them in the end, and
+ * never save for a warship that could go anywhere.
+ */
+const SMALL_CRAFT_MOST = 20;
+
 function build(game: Game, faction: Faction): void {
   if (faction.credits < RESERVE_MCR + 10) return;
   const own = game.ownedWorlds(faction.id).filter((w) => w.uwp.starport === "A" || w.uwp.starport === "B");
+  const classes = game.catalogue.all();
+  const nearest = (a: World, b: World) => distanceBetween(a.at, faction.capital) - distanceBetween(b.at, faction.capital);
   // Independent yards too, the nearest few to the capital, at their markup.
   const foreign = game.state.sector.worlds
     .filter((w) => w.uwp.starport === "A" && game.worldState(w.at).owner === null)
-    .sort((a, b) => distanceBetween(a.at, faction.capital) - distanceBetween(b.at, faction.capital))
+    .sort(nearest)
     .slice(0, 2);
-  const yards = [...own, ...foreign];
+  // A yard with a long queue is somewhere else's job.
+  const busyYard = (w: World) => game.scheduleAt(w.at, 1).start > game.state.day + 14;
+  // Where none of those can build a warship that can go anywhere, or all that
+  // can are busy, the nearest of an ally's or a friendly Empire's, at the
+  // same markup: a rich Empire with only low-tech ports is not left with
+  // nowhere to spend.
+  const strikeTl = Math.min(...classes.filter((c) => fighting(c) && c.jump >= STRIKE_JUMP).map((c) => c.tl));
+  const warships = (w: World) => w.uwp.starport === "A" && w.uwp.tl >= strikeTl;
+  const friendly = [...own, ...foreign].some((w) => warships(w) && !busyYard(w))
+    ? []
+    : game.state.sector.worlds
+        .filter((w) => {
+          const owner = game.worldState(w.at).owner;
+          return warships(w) && owner !== null && owner !== faction.id && !game.hostile(faction.id, owner);
+        })
+        .sort(nearest)
+        .slice(0, 2);
+  const yards = [...own, ...foreign, ...friendly];
   if (yards.length === 0) return;
   // Not everything at once: a build queue a few deep is enough.
   if (faction.builds.length >= 3 + yards.length) return;
-  const classes = game.catalogue.all();
   // Mostly ships that can go somewhere; a guard boat only when the guard at the
   // capital has fallen below a fifth of the faction's strength.
   const total = game.fleetsOf(faction.id).reduce((s, f) => s + game.fleetStrength(f), 0);
@@ -249,16 +392,26 @@ function build(game: Game, faction: Faction): void {
   const kept = armour === undefined ? [] : classes.filter(fighting).map((c) => (damageAgainst(c, 0) > 0 ? damageAgainst(c, armour) / damageAgainst(c, 0) : 1));
   const average = kept.length === 0 ? 1 : kept.reduce((s, x) => s + x, 0) / kept.length;
   const suits = (cls: ShipClass) => (armour === undefined ? 1 : 1 - weight + weight * Math.min(2, fitAgainst(cls, armour, average)));
-  // A yard with a long queue is somewhere else's job.
-  const busy = new Set(yards.filter((w) => game.scheduleAt(w.at, 1).start > game.state.day + 14).map((w) => w.at));
+  const busy = new Set(yards.filter(busyYard).map((w) => w.at));
+  const counts = new Map<string, number>();
+  let small = 0;
+  for (const f of game.fleetsOf(faction.id)) {
+    const aboard = game.hangared(f);
+    for (const sh of f.ships) {
+      counts.set(sh.classId, (counts.get(sh.classId) ?? 0) + 1);
+      if (game.cls(sh).tons < SMALL_CRAFT_TONS && !aboard.has(sh.id)) small++;
+    }
+  }
+  // Enough small craft, and the money waits for something bigger.
+  const tooSmall = (cls: ShipClass) => cls.tons < SMALL_CRAFT_TONS && small >= SMALL_CRAFT_MOST;
   for (const w of yards) {
     if (busy.has(w.at)) continue;
     for (const cls of classes) {
       const mine = game.worldState(w.at).owner === faction.id;
       const price = yardPrice(cls, mine);
-      if (!fighting(cls) || price > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
+      if (!fighting(cls) || price > faction.credits - RESERVE_MCR || !canBuildAt(w, cls) || tooSmall(cls)) continue;
       if (cls.jump < STRIKE_JUMP && !(wantGuard && w.at === faction.capital)) continue;
-      const already = game.fleetsOf(faction.id).reduce((n, f) => n + f.ships.filter((sh) => sh.classId === cls.id).length, 0);
+      const already = counts.get(cls.id) ?? 0;
       // Slips are few, so a rich faction puts its money into bigger hulls
       // rather than a queue of cheap ones.
       const score = (game.catalogue.strengthWithFighters(cls) / price) * Math.pow(price, wealth) * Math.pow(0.9, already) * suits(cls) * (0.9 + 0.2 * game.rng.next());
@@ -271,7 +424,7 @@ function build(game: Game, faction: Faction): void {
     for (const w of own) {
       if (busy.has(w.at)) continue;
       for (const cls of classes) {
-        if (!fighting(cls) || cls.jump > 0 || cls.cost > faction.credits - RESERVE_MCR || !canBuildAt(w, cls)) continue;
+        if (!fighting(cls) || cls.jump > 0 || cls.cost > faction.credits - RESERVE_MCR || !canBuildAt(w, cls) || tooSmall(cls)) continue;
         const score = (game.catalogue.strengthWithFighters(cls) / cls.cost) * Math.pow(cls.cost, wealth) * suits(cls) * (0.9 + 0.2 * game.rng.next());
         if (best === null || score > best.score) best = { cls, at: w.at, score, price: cls.cost };
       }
@@ -352,17 +505,29 @@ function mend(game: Game, fleet: Fleet): boolean {
   return false;
 }
 
-function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<string>, by: Commander = staffOf(faction)): void {
+function strike(
+  game: Game,
+  faction: Faction,
+  fleet: Fleet,
+  sees: ReadonlySet<string>,
+  by: Commander = staffOf(faction),
+  foes: ReadonlySet<string> = new Set(),
+): void {
   const here = game.worldState(fleet.system);
   const mine = game.fleetStrength(fleet);
 
   if (mend(game, fleet)) return;
 
+  // A world that sent this fleet packing lately, or whose defences its guns
+  // could not silence in a month, is no target for it.
+  const futile = (at: string) => drivenOff(game, faction, fleet, at) || daysToSilence(game, fleet, at) > HOPELESS_DAYS;
+  const chosen = (owner: string | null) => owner !== null && foes.has(owner);
+
   // At a world it does not hold: take it, or give up if it cannot.
   const takeable = (owner: string | null) => owner === null || game.hostile(faction.id, owner);
-  if (takeable(here.owner) && (by.near === undefined || distanceBetween(by.near.at, fleet.system) <= by.near.parsecs)) {
+  if (takeable(here.owner) && !futile(fleet.system) && (by.near === undefined || distanceBetween(by.near.at, fleet.system) <= by.near.parsecs)) {
     const against = defenceStrength(game, fleet.system) + knownThreat(game, faction, fleet.system, sees);
-    if (mine >= against * nerve(by.temper)) {
+    if (mine >= against * nerve(by.temper) * (chosen(here.owner) ? FOE_ODDS : 1)) {
       fleet.standing = ordersWith(by.temper, "Seek and destroy");
       if (fleet.loc !== "main") fleet.order = { kind: "move", to: "main" };
       because(fleet, `attacks ${game.world(fleet.system).name}, because ${odds(mine, against)}.`);
@@ -382,6 +547,7 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
   const margin = oddsWanted(by.temper);
   let best: { at: string; score: number; need: number } | null = null;
   let looked = 0;
+  let foeInReach: string | null = null;
   for (const [at, step] of map) {
     if (step.hops > MAX_HOPS) continue;
     if (by.near !== undefined && distanceBetween(by.near.at, at) > by.near.parsecs) continue;
@@ -390,7 +556,9 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
     const world = game.world(at);
     const need = defenceStrength(game, at) + knownThreat(game, faction, at, sees);
     looked++;
-    if (mine < need * margin) continue;
+    const foe = chosen(ws.owner);
+    if (foe) foeInReach ??= ws.owner;
+    if (mine < need * margin * (foe ? FOE_ODDS : 1) || futile(at)) continue;
     let value = income(world) * 3 + (world.uwp.population > 0 ? 2 : 0.2);
     value *= prize(by.temper, ws.owner !== null);
     if (ws.owner !== null && game.faction(ws.owner).capital === at) value *= 1.5;
@@ -412,8 +580,15 @@ function strike(game: Game, faction: Faction, fleet: Fleet, sees: ReadonlySet<st
     }
   }
 
-  // Nothing it can take: home, to wait for more.
-  goHome(game, fleet, by, looked === 0 ? "there is nothing within reach to take" : "there is nothing within reach it can beat");
+  // Nothing it can take: home, to wait for more. Against an Empire it chose
+  // to fight, home is where the strike fleets gather into one big enough.
+  const why =
+    foeInReach !== null
+      ? `the war on ${game.faction(foeInReach).name} needs a bigger fleet, and the strike fleets gather there`
+      : looked === 0
+        ? "there is nothing within reach to take"
+        : "there is nothing within reach it can beat";
+  goHome(game, fleet, by, why);
 }
 
 function goHome(game: Game, fleet: Fleet, by: Commander, why: string): void {
@@ -490,10 +665,12 @@ function respond(game: Game, faction: Faction, sees: ReadonlySet<string>): Set<s
  * A fleet that has fought in the same place three days running without
  * settling it stops: it keeps out of fights until it is on its way, so it can
  * take on fuel and go. A fleet guarding its own world fights on, and so does
- * one laying siege, unless five days have not silenced the defences.
+ * one laying siege while it is getting somewhere. Returns the fleets it pulled
+ * back, whose orders stand for the rest of the day.
  */
-function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: (f: Fleet) => Commander): void {
+function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: (f: Fleet) => Commander): Set<Fleet> {
   const today = game.state.day;
+  const pulled = new Set<Fleet>();
   for (const fleet of fleets) {
     const f = fleet.fighting;
     if (fleet.transit !== null || f === undefined || f.last !== today - 1 || f.last - f.since < 2) continue;
@@ -503,9 +680,11 @@ function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: 
     const guarding = owner === faction.id && fleet.order === null;
     if (guarding) continue;
     if (sieging) {
-      // A siege holds once the defences are silenced. Five days of fighting
-      // that has not got that far will not: give it up and go home.
-      if (game.worldState(fleet.system).siege?.by === faction.id || f.last - f.since < 4) continue;
+      // A siege holds once the defences are silenced, and while the fighting
+      // is wearing them down fast enough to get there within the week. One
+      // that is not will not: give it up and go home.
+      if (game.worldState(fleet.system).siege?.by === faction.id) continue;
+      if (siegeDaysLeft(game, fleet.system, f.last - f.since + 1) <= SIEGE_PATIENCE) continue;
       const by = byOf(fleet);
       const route = routeTo(game, fleet, by.home);
       if (route !== null) {
@@ -520,7 +699,10 @@ function standOff(game: Game, faction: Faction, fleets: readonly Fleet[], byOf: 
     if (fleet.order === null && game.fleetRange(fleet) < game.fleetJump(fleet)) fleet.order = { kind: "refuel" };
     const where = { main: "in orbit", gg: "at the gas giant", belt: "in the belt", deep: "at the jump point" }[fleet.loc];
     because(fleet, `pulls back from the fighting ${where} at ${game.world(fleet.system).name}, because ${f.last - f.since + 1} days of it have got nowhere.`);
+    // Left with nothing to do, the fleet would be sent straight back in.
+    pulled.add(fleet);
   }
+  return pulled;
 }
 
 /* Admirals ---------------------------------------------------------------- */
@@ -600,9 +782,9 @@ export function planAdmirals(game: Game, faction: Faction): void {
   const doing = (f: Fleet) => JSON.stringify([f.order, f.standing.engage, f.standing.besiege, f.standing.evade, f.standing.intercept]);
   const before = new Map(fleets.map((f) => [f, doing(f)]));
   reasons.clear();
-  standOff(game, faction, fleets, admiralOf);
+  const pulled = standOff(game, faction, fleets, admiralOf);
   for (const fleet of fleets) {
-    if (fleet.transit !== null || fleet.order !== null) continue;
+    if (fleet.transit !== null || fleet.order !== null || pulled.has(fleet)) continue;
     // Out of fuel with none to be had here: nothing an admiral can do.
     if (game.fleetJump(fleet) > 0 && game.fleetRange(fleet) < game.fleetJump(fleet) && !canRefuelAt(game, fleet, fleet.system)) {
       delete fleet.admiral;
@@ -633,15 +815,35 @@ function admiralNotice(game: Game, fleet: Fleet, text: string): void {
   game.log({ to: [fleet.owner], kind: "info", text, at: fleet.system, firsthand: [fleet.owner] });
 }
 
+/**
+ * A fleet with too little fuel to jump anywhere, at a world of its own with
+ * none to be had, will never leave: it joins the world's defences, where its
+ * guns are some use, rather than sit in orbit on its own.
+ */
+function stranded(game: Game, faction: Faction, fleet: Fleet): boolean {
+  if (game.worldState(fleet.system).owner !== faction.id || game.fleetJump(fleet) === 0 || game.fleetRange(fleet) > 0) return false;
+  if (canRefuelAt(game, fleet, fleet.system)) return false;
+  // Fuel shared out among its ships may yet take it one jump.
+  const { spare, short } = spareFuel(game, fleet, 1);
+  if (spare >= short) return false;
+  fleet.order = { kind: "garrison" };
+  because(fleet, `joins the defences of ${game.world(fleet.system).name}, because it has no fuel and there is none to be had there.`);
+  return true;
+}
+
 export function planAi(game: Game, faction: Faction): void {
+  // Yesterday's reasons are no use today, and would keep every fleet that ever was.
+  reasons.clear();
   build(game, faction);
   gather(game, faction);
   const sees = visibleSystems(game, faction.id);
   const busy = respond(game, faction, sees);
-  standOff(game, faction, game.fleetsOf(faction.id), () => staffOf(faction));
+  const pulled = standOff(game, faction, game.fleetsOf(faction.id), () => staffOf(faction));
+  const foes = chosenFoes(game, faction);
   for (const fleet of game.fleetsOf(faction.id)) {
-    if (fleet.transit !== null || fleet.order !== null || busy.has(fleet.id)) continue;
+    if (fleet.transit !== null || fleet.order !== null || busy.has(fleet.id) || pulled.has(fleet)) continue;
+    if (stranded(game, faction, fleet)) continue;
     if (fleet.name === HOME_GUARD) guard(game, faction, fleet);
-    else strike(game, faction, fleet, sees);
+    else strike(game, faction, fleet, sees, staffOf(faction), foes);
   }
 }
