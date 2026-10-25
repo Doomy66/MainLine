@@ -260,9 +260,9 @@ function defenceStrength(game: Game, at: string): number {
 
 /**
  * Whether a faction has anything it could take near its worlds: an enemy's
- * peopled world, or an independent one whose defences its whole navy could
- * beat. An independent world far beyond its strength is not something to
- * take, or a rich Empire beside one never grew restless.
+ * or an independent peopled world whose defences its whole navy could beat.
+ * A world far beyond its strength is not something to take, or a rich Empire
+ * beside one never grew restless.
  */
 function somethingToTake(game: Game, f: Faction, own: readonly World[], strength: number): boolean {
   return game.state.sector.worlds.some((w) => {
@@ -270,7 +270,7 @@ function somethingToTake(game: Game, f: Faction, own: readonly World[], strength
     const owner = game.worldState(w.at).owner;
     if (owner === f.id || (owner !== null && !atWar(game, f.id, owner))) return false;
     if (!own.some((o) => distanceBetween(o.at, w.at) <= REACH)) return false;
-    return owner !== null || defenceStrength(game, w.at) < strength;
+    return defenceStrength(game, w.at) < strength;
   });
 }
 
