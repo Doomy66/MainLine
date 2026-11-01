@@ -70,7 +70,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
   // is what the couriers have brought.
   const sees = lag > 0 ? new Set<string>() : visibleSystems(game, me.id);
   const u = w.uwp;
-  const max = defenceMax(w);
+  const max = defenceMax(game.defenceWorld(at), game.isCapital(at));
   const selected = ctx.fleet === null ? undefined : game.fleetSeenBy(me.id, ctx.fleet);
   const mineHere = selected !== undefined && selected.transit === null && selected.system === at;
   const heard = game.state.options.newsLag > 0 ? me.news : me.intel;
@@ -166,7 +166,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
         })(),
       ),
       ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dt", { class: "bad" }, "Siege"),
-      ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dd", { class: "bad" }, `${game.faction(ws.siege.by).name}, day ${ws.siege.days} of ${captureDays(w)}`),
+      ws.siege === null || (lag > 0 && ws.siege.by !== me.id && ws.owner !== me.id) ? null : h("dd", { class: "bad" }, `${game.faction(ws.siege.by).name}, day ${ws.siege.days} of ${captureDays(w, game.isCapital(at))}`),
       h("dt", {}, "Distance"), h("dd", {}, `${distanceBetween(me.capital, at)} parsecs from your capital`),
     ),
     ws.owner === me.id && yard && game.state.phase === "play"
@@ -1099,7 +1099,7 @@ export function empirePane(ctx: Ctx): HTMLElement {
       h("tr", {}, h("th", {}, "World"), h("th", {}, "UWP"), h("th", { class: "r" }, "MCr/wk"), h("th", {}, "Defences")),
       worlds.map((w) => {
         const ws = game.worldState(w.at);
-        const max = defenceMax(w);
+        const max = defenceMax(game.defenceWorld(w.at), game.isCapital(w.at));
         return h(
           "tr",
           { style: "cursor:pointer", onclick: () => ctx.selectSystem(w.at, true) },

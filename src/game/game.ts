@@ -10,7 +10,7 @@ import { distanceBetween } from "../sector/hex";
 import type { World } from "../sector/sec";
 import { Rng } from "./rng";
 import { routeTo } from "./nav";
-import { buildDaysFor, jumpFuel, MODULAR_TONS, navySize, people, slipsAt, TENDER_JUMP } from "./rules";
+import { buildDaysFor, fortified, jumpFuel, MODULAR_TONS, navySize, people, slipsAt, TENDER_JUMP } from "./rules";
 import { forecast, shares, work, type Job } from "./yard";
 import { temperFromId } from "./temper";
 import { allied, atWar } from "./relations";
@@ -124,6 +124,20 @@ export class Game {
   }
 
   /* Lookups --------------------------------------------------------------- */
+
+  /** Whether a world is the seat of the government that holds it. */
+  isCapital(at: string): boolean {
+    const owner = this.state.worlds[at]?.owner ?? null;
+    return owner !== null && this.state.factions.some((f) => f.id === owner && f.alive && f.capital === at);
+  }
+
+  /** A world as its batteries are built: a capital's to the best tech level of its Empire. */
+  defenceWorld(at: string): World {
+    const world = this.world(at);
+    if (!this.isCapital(at)) return world;
+    const best = Math.max(...this.ownedWorlds(this.state.worlds[at]!.owner!).map((w) => w.uwp.tl));
+    return fortified(world, best);
+  }
 
   world(at: string): World {
     const w = this.worlds.get(at);

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- A capital is a fortress: twice the batteries and hull points of any other world, built to the best tech
+  level of its Empire and never below TL7, and twice as long to hold out once they are silenced. A low-tech
+  capital used to have no batteries at all, and most capitals that fell were such worlds. Losing one is a disaster: its taker carries off half the treasury,
+  disorder lasts eight weeks instead of four, and worlds that break away go over to the taker if its
+  worlds are nearer than the new capital.
+
 - A besieged world holds out longer once its defences are silenced: two days plus one for every
   population digit, so eleven days for a world of billions. Help one jump away now has time to arrive.
   Small worlds still fall in a few days.

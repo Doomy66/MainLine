@@ -611,24 +611,26 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
   // A naval base on a world nobody lives on fights too: otherwise its
   // defences were never silenced and the world could never be taken.
   if (loc === "main" && (ws.defence > 0 || boats.length > 0)) {
-    const attacks = defenceAttacks(world);
+    const capital = game.isCapital(world.at);
+    const fort = game.defenceWorld(world.at);
+    const attacks = defenceAttacks(fort, capital);
     const defences: Combatant = {
       label: `${world.name} defences`,
       tons: DEFENCE_TONS,
-      hullMax: defenceMax(world),
+      hullMax: defenceMax(fort, capital),
       hull: ws.defence,
-      armour: defenceArmour(world),
+      armour: defenceArmour(fort),
       thrust: 0,
       evade: 0,
       sensorDm: 0,
-      fireControl: defenceFireControl(world),
+      fireControl: defenceFireControl(fort),
       gunnery: 1,
       attacks,
       sandcasters: 0,
-      pointDefence: world.uwp.tl >= 10 ? 2 * Math.max(1, world.uwp.population - 4) : 0,
+      pointDefence: fort.uwp.tl >= 10 ? 2 * Math.max(1, fort.uwp.population - 4) : 0,
       lasers: 0,
-      mesonScreen: world.uwp.tl >= 13 ? 1 : 0,
-      nuclearDamper: world.uwp.tl >= 12 ? 1 : 0,
+      mesonScreen: fort.uwp.tl >= 13 ? 1 : 0,
+      nuclearDamper: fort.uwp.tl >= 12 ? 1 : 0,
       missiles: 0,
       torpedoes: 0,
       pdLeft: 0,
@@ -766,7 +768,7 @@ export function battleAt(game: Game, system: string, loc: Loc): BattleReport | n
       const batteries = p.combatants.find((c) => c.tons === DEFENCE_TONS);
       if (batteries !== undefined) ws.defence = Math.max(0, Math.round(batteries.hull));
       ws.fought = game.state.day;
-      const max = defenceMax(world);
+      const max = defenceMax(game.defenceWorld(world.at), game.isCapital(world.at));
       const boatsIn = p.combatants.filter((c) => c !== batteries);
       const boatsLeft = boatsIn.filter(alive);
       if (navy !== null && navyClass !== undefined) navy.boats = boatsLeft.map((c) => c.hullMax - c.hull);

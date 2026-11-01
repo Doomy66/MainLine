@@ -23,6 +23,7 @@ import { round, ships } from "./game";
 import { canRefuelAt, shareFuel, spareFuel } from "./nav";
 import { allied, diplomacy, onBattle, onCapture, onSiege } from "./relations";
 import {
+  CAPITAL_LOOT,
   CAPTURED_DEFENCE,
   captureDays,
   DEFENCE_REGEN,
@@ -261,7 +262,7 @@ function capture(game: Game, at: string, by: string): void {
       notice(game, prev, `The ${game.catalogue.get(b.classId).name} building at ${world.name} is lost with the yard.`, at);
       return false;
     });
-    if (loser.capital === at) fallOfCapital(game, prev, at);
+    if (loser.capital === at) fallOfCapital(game, prev, at, by);
   }
 }
 
@@ -275,12 +276,18 @@ function announceOwner(game: Game, at: string, owner: string | null): void {
 }
 
 /**
- * A capital falls. Government moves to another world, the faction is thrown
- * into disorder for some weeks, and worlds that were held by the old capital's
- * authority and not much else take their chance to go their own way.
+ * A capital falls. The taker carries off half the treasury. Government moves
+ * to another world, the faction is thrown into disorder for some weeks, and
+ * worlds that were held by the old capital's authority and not much else take
+ * their chance to go their own way: over to the taker, if its worlds are
+ * nearer than the new capital, or independent.
  */
-function fallOfCapital(game: Game, factionId: string, lostAt: string): void {
+function fallOfCapital(game: Game, factionId: string, lostAt: string, by: string): void {
   const loser = game.faction(factionId);
+  const taker = game.faction(by);
+  const loot = Math.max(0, Math.floor(loser.credits * CAPITAL_LOOT));
+  loser.credits -= loot;
+  taker.credits += loot;
   const next = newCapital(game, factionId);
   if (next === undefined) return;
   loser.capital = next.at;
@@ -289,27 +296,44 @@ function fallOfCapital(game: Game, factionId: string, lostAt: string): void {
   game.log({
     to: [factionId],
     kind: "lost",
-    text: `${game.world(lostAt).name} has fallen and with it the government. ${loser.name} rules now from ${next.name}, in disorder: for ${DISORDER_DAYS} days income is cut to a quarter and the yards stand idle.`,
+    text: `${game.world(lostAt).name} has fallen and with it the government${loot > 0 ? `, and ${taker.name} has carried off MCr${loot.toLocaleString()} of the treasury` : ""}. ${loser.name} rules now from ${next.name}, in disorder: for ${DISORDER_DAYS} days income is cut to a quarter and the yards stand idle.`,
     at: next.at,
     wake: true,
     firsthand: [factionId],
   });
+  if (loot > 0) {
+    game.log({ to: [by], kind: "economy", text: `MCr${loot.toLocaleString()} of ${loser.name}'s treasury is taken at ${game.world(lostAt).name}.`, at: lostAt, firsthand: [by] });
+  }
+  const takers = game.ownedWorlds(by).map((w) => w.at);
   const gone: string[] = [];
+  const over: string[] = [];
   for (const w of game.ownedWorlds(factionId)) {
     if (w.at === next.at) continue;
-    if (game.rng.next() >= breakawayChance(w, distanceBetween(w.at, next.at))) continue;
+    const fromCapital = distanceBetween(w.at, next.at);
+    if (game.rng.next() >= breakawayChance(w, fromCapital)) continue;
+    const joins = takers.some((at) => distanceBetween(w.at, at) < fromCapital) ? by : null;
     const ws = game.worldState(w.at);
-    ws.owner = null;
+    ws.owner = joins;
     ws.siege = null;
-    gone.push(w.name);
-    announceOwner(game, w.at, null);
+    (joins === null ? gone : over).push(w.name);
+    announceOwner(game, w.at, joins);
     loser.builds = loser.builds.filter((b) => b.at !== w.at);
     game.log({
       to: everyone,
       kind: "capture",
-      text: `${w.name} (${w.uwpText}) breaks away from ${loser.name} and declares itself independent.`,
+      text: `${w.name} (${w.uwpText}) breaks away from ${loser.name} and ${joins === null ? "declares itself independent" : `goes over to ${taker.name}`}.`,
       at: w.at,
-      wake: false,
+      wake: joins !== null,
+      firsthand: joins === null ? [factionId] : [factionId, by],
+    });
+  }
+  if (over.length > 0) {
+    game.log({
+      to: [factionId],
+      kind: "lost",
+      text: `${over.length} world${over.length === 1 ? "" : "s"} went over to ${taker.name}: ${over.join(", ")}.`,
+      at: next.at,
+      wake: true,
       firsthand: [factionId],
     });
   }
@@ -362,7 +386,11 @@ function sieges(game: Game): void {
   const day = game.state.day;
   for (const world of game.state.sector.worlds) {
     const ws = game.worldState(world.at);
-    const max = defenceMax(world);
+    const capital = game.isCapital(world.at);
+    const max = defenceMax(capital ? game.defenceWorld(world.at) : world, capital);
+    // A capital's defences shrink with its Empire's best tech, or when the
+    // government moves away.
+    if (ws.defence > max) ws.defence = max;
     const here = game.fleetsAt(world.at, "main");
     const besiegers = here.filter(
       (f) => f.standing.besiege && besieging(f) && f.owner !== ws.owner && (ws.owner === null || game.hostile(f.owner, ws.owner)) && game.fleetArmed(f),
@@ -388,7 +416,7 @@ function sieges(game: Game): void {
     for (const f of besiegers) byFaction.set(f.owner, (byFaction.get(f.owner) ?? 0) + game.fleetStrength(f));
     const by = [...byFaction.entries()].sort((a, b) => b[1] - a[1])[0]![0];
     ws.siege = ws.siege?.by === by ? { by, days: ws.siege.days + 1 } : { by, days: 1 };
-    const need = captureDays(world);
+    const need = captureDays(world, capital);
     if (ws.siege.days >= need) {
       capture(game, world.at, by);
     } else if (ws.siege.days === 1 || ws.siege.days === need - 1) {

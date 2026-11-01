@@ -14,7 +14,7 @@ import { distanceBetween } from "../sector/hex";
 import { Rng, seedOf } from "./rng";
 import { temperFromId } from "./temper";
 import { startingRelations } from "./relations";
-import { defenceMax, income, people } from "./rules";
+import { defenceMax, fortified, income, people } from "./rules";
 import type { Faction, GameOptions, GameState, Personality } from "./types";
 
 export const DEFAULT_OPTIONS: GameOptions = {
@@ -225,6 +225,17 @@ export function createGame(spec: NewGame): Game {
     return 0;
   });
 
+  // A capital's batteries are built to the best tech level of its Empire.
+  const bestTl = new Map<string, number>();
+  for (const w of inArea) {
+    const o = owner.get(w.at);
+    if (o !== undefined) bestTl.set(o, Math.max(bestTl.get(o) ?? 0, w.uwp.tl));
+  }
+  const capitalOf = new Map(factions.map((f) => [f.capital, f.id]));
+  const defenceAt = (w: World) => {
+    const f = capitalOf.get(w.at);
+    return f === undefined ? defenceMax(w) : defenceMax(fortified(w, bestTl.get(f) ?? 0), true);
+  };
   const state: GameState = {
     version: 1,
     name: spec.name,
@@ -233,7 +244,7 @@ export function createGame(spec: NewGame): Game {
     day: 0,
     factions,
     worlds: Object.fromEntries(
-      inArea.map((w) => [w.at, { owner: owner.get(w.at) ?? null, defence: defenceMax(w), siege: null, fought: -1 }]),
+      inArea.map((w) => [w.at, { owner: owner.get(w.at) ?? null, defence: defenceAt(w), siege: null, fought: -1 }]),
     ),
     fleets: [],
     relations,

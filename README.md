@@ -108,10 +108,13 @@ nearby can come to its relief. Defences rebuild once nobody is shooting at
 them. An enemy fleet seen a jump from a world of yours that it could take is
 flagged in Needs attention and drawn on the map, so you can act before it comes.
 
-**Losing a capital** moves the government to a big world at the heart of
-your Empire, away from any siege, and
-throws the faction into disorder for four weeks: a quarter of the income, idle
-yards, and worlds far from the new capital, or with little law, breaking away.
+**Losing a capital** is a disaster, and a capital is a fortress to match: twice
+the defences, built to the best tech level of its Empire and never below TL7,
+and twice as long to hold out once they are silenced. Its taker
+carries off half the treasury. The government moves to a big world at the heart
+of your Empire, away from any siege, and the faction is in disorder for eight
+weeks: a quarter of the income, idle yards, and worlds far from the new capital,
+or with little law, breaking away, to the taker where its worlds are nearer.
 
 **Money.** At the end of each week every world pays its owner. It pays more
 for more people, higher tech, a better starport and a rich or industrial

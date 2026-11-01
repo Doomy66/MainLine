@@ -46,7 +46,7 @@ export function fleetStatus(game: Game, f: Fleet): FleetStatus {
   const ws = game.worldState(f.system);
   if ((ws.owner === null || game.hostile(f.owner, ws.owner)) && f.loc === "main" && f.standing.besiege && game.fleetArmed(f)) {
     if (ws.siege?.by === f.owner) {
-      const left = Math.max(0, captureDays(game.world(f.system)) - ws.siege.days);
+      const left = Math.max(0, captureDays(game.world(f.system), game.isCapital(f.system)) - ws.siege.days);
       return { state: "busy", mark: "siege", text: `Siege of ${name}: submits in ${left} day${left === 1 ? "" : "s"}` };
     }
     return { state: "busy", mark: "fight", text: `Attacking ${name}'s defences` };
@@ -97,7 +97,7 @@ export function alerts(game: Game, me: Faction): Alert[] {
   for (const w of game.ownedWorlds(me.id)) {
     const s = game.worldState(w.at).siege;
     if (s === null || s.by === me.id || !game.hostile(me.id, s.by)) continue;
-    const left = Math.max(0, captureDays(w) - s.days);
+    const left = Math.max(0, captureDays(w, game.isCapital(w.at)) - s.days);
     out.push({ kind: "siege", at: w.at, text: `${w.name} is under siege by ${game.faction(s.by).name}: it submits in ${left} day${left === 1 ? "" : "s"}` });
   }
 

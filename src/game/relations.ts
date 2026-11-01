@@ -255,12 +255,12 @@ const NAVY_WEIGHT = 7.5;
 
 /** A world's defences as a fleet strength, worked out as the computer's admirals work it out in ai.ts. */
 export function defenceStrength(game: Game, at: string): number {
-  const world = game.world(at);
+  const world = game.defenceWorld(at);
   const ws = game.worldState(at);
   const navy = game.navyOf(at);
   const boats = navy.cls === undefined ? 0 : navy.boats * navy.cls.strength * NAVY_WEIGHT;
   if (ws.defence <= 0) return boats;
-  const fire = Math.max(attackDamage(defenceAttacks(world), STRENGTH_ARMOUR), 0.5);
+  const fire = Math.max(attackDamage(defenceAttacks(world, game.isCapital(at)), STRENGTH_ARMOUR), 0.5);
   return BATTERY_WEIGHT * Math.sqrt(ws.defence * (1 + defenceArmour(world) / 3) * fire) + boats;
 }
 

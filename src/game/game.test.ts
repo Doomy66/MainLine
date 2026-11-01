@@ -13,7 +13,7 @@ import { alliesOf, answerOffer, atWar, declareWar, diplomacy, makeOffer, offerBe
 import { alerts, threats } from "./attention";
 import { battleAt } from "./combat";
 import { visibleSystems } from "./visibility";
-import { captureDays, defenceMax, jumpFuel, repairPort, slipsAt } from "./rules";
+import { captureDays, defenceMax, fortified, jumpFuel, repairPort, slipsAt } from "./rules";
 import { parseGame, serialise } from "./save";
 import { BIGGEST_START, createGame, DEFAULT_OPTIONS, factionMains, hasAllegiances, victoryLine, worldsInArea } from "./setup";
 import { mainsIn } from "../sector/mains";
@@ -143,6 +143,23 @@ describe("taking a world", () => {
     expect(game.worldState(target.at).owner).toBe(me.id);
     expect(game.state.log.some((e) => e.kind === "capture" && e.at === target.at)).toBe(true);
     expect(captureDays(target)).toBeGreaterThan(2);
+  });
+
+  it("makes a capital a fortress: twice the defences, twice as long to hold out", () => {
+    const game = newGame({}, 1);
+    const f = game.state.factions.find((x) => defenceMax(game.world(x.capital)) > 0)!;
+    const w = game.world(f.capital);
+    expect(game.isCapital(w.at)).toBe(true);
+    expect(defenceMax(w, true)).toBe(defenceMax(w) * 2);
+    expect(game.worldState(w.at).defence).toBe(defenceMax(game.defenceWorld(w.at), true));
+    // Built to the best tech level of the Empire, and never below TL7.
+    const best = Math.max(...game.ownedWorlds(f.id).map((o) => o.uwp.tl), 7);
+    expect(game.defenceWorld(w.at).uwp.tl).toBe(Math.max(w.uwp.tl, best));
+    const backward = { ...w, uwp: { ...w.uwp, tl: 4 } };
+    expect(defenceMax(backward)).toBe(0);
+    expect(defenceMax(fortified(backward, 4), true)).toBeGreaterThan(0);
+    expect(captureDays(w, true)).toBe(captureDays(w) * 2);
+    expect(captureDays({ ...w, uwp: { ...w.uwp, population: 9 } })).toBe(11);
   });
 
   it("leaves a world alone when the fleet's orders say not to besiege", () => {
@@ -376,7 +393,7 @@ describe("losing a capital", () => {
     const fleet = game.newFleet(me.id, capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
     fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
     declareWar(game, me.id, victim.id, "to test the fall of a capital");
-    for (let i = 0; i < 20 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
+    for (let i = 0; i < 40 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
     expect(game.worldState(capital).owner).toBe(me.id);
     expect(victim.capital).not.toBe(capital);
     expect(game.worldState(victim.capital).owner).toBe(victim.id);
@@ -384,6 +401,11 @@ describe("losing a capital", () => {
     const after = game.ownedWorlds(victim.id).length;
     const brokeAway = game.state.log.filter((e) => /breaks away from/.test(e.text) && e.text.includes(victim.name)).length;
     expect(after).toBe(before - 1 - brokeAway);
+    // Half the treasury goes to the taker, and worlds nearer the taker than the new capital go over to it.
+    expect(game.state.log.some((e) => e.to.includes(me.id) && e.text.includes(`of ${victim.name}'s treasury is taken`))).toBe(true);
+    for (const e of game.state.log.filter((e) => /breaks away from/.test(e.text) && e.text.includes(victim.name))) {
+      expect(game.worldState(e.at!).owner).toBe(e.text.includes("goes over to") ? me.id : null);
+    }
     // Nothing on its slips moves while the disorder lasts.
     const yard = game.ownedWorlds(victim.id).find((w) => w.uwp.starport === "A" || w.uwp.starport === "B");
     if (yard !== undefined) {
@@ -423,7 +445,7 @@ describe("losing a capital", () => {
     const fleet = game.newFleet(me.id, capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
     fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
     declareWar(game, me.id, victim.id, "to test the fall of a capital");
-    for (let i = 0; i < 20 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
+    for (let i = 0; i < 40 && game.worldState(capital).owner !== me.id; i++) advanceDay(game);
     expect(game.worldState(capital).owner).toBe(me.id);
     expect(watched.map((w) => w.at)).not.toContain(victim.capital);
     expect(game.fleetsAt(victim.capital).some((f) => f.owner === me.id)).toBe(false);

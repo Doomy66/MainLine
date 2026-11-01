@@ -117,14 +117,35 @@ export function repairPort(world: World): string {
 }
 
 /**
+ * A capital is ringed with twice the batteries and bunkers of any other world,
+ * and holds out twice as long once they are silenced: losing the seat of
+ * government should take a campaign, not a raid.
+ */
+export const CAPITAL_DEFENCE = 2;
+export const CAPITAL_HOLDS = 2;
+
+/**
+ * A capital's batteries are built to the best tech level its Empire has, and
+ * never below TL7: the seat of government buys in what it cannot make. A
+ * low-tech capital had no batteries at all, and fell to the first warship.
+ */
+export const CAPITAL_LEAST_TL = 7;
+
+/** A capital as its defences are built, given the best tech level of its Empire. */
+export function fortified(world: World, empireTl: number): World {
+  const tl = Math.max(world.uwp.tl, empireTl, CAPITAL_LEAST_TL);
+  return tl === world.uwp.tl ? world : { ...world, uwp: { ...world.uwp, tl } };
+}
+
+/**
  * Hull points of a world's defences: batteries, bunkers and the local system
  * defence boats, all counted as one target. More people and more technology
  * build more of it; a naval base adds a squadron's worth.
  */
-export function defenceMax(world: World): number {
+export function defenceMax(world: World, capital = false): number {
   const { population, tl } = world.uwp;
-  if (population === 0 || tl < 7) return hasNavalBase(world) ? 300 : 0;
-  return Math.round(population * 60 * (1 + tl / 10) + (hasNavalBase(world) ? 300 : 0));
+  const base = population === 0 || tl < 7 ? (hasNavalBase(world) ? 300 : 0) : population * 60 * (1 + tl / 10) + (hasNavalBase(world) ? 300 : 0);
+  return Math.round(base * (capital ? CAPITAL_DEFENCE : 1));
 }
 
 /** Armour of the defences: rock, and as much of it as the world can pour. */
@@ -139,10 +160,10 @@ export function defenceArmour(world: World): number {
  * A world is a fortress: it takes a squadron, not a pair of cruisers, to
  * silence one with a billion people on it.
  */
-export function defenceAttacks(world: World): Attack[] {
+export function defenceAttacks(world: World, capital = false): Attack[] {
   const { population, tl } = world.uwp;
   const batteries =
-    Math.max(0, population - 3) + (hasNavalBase(world) ? 3 : 0) + (hasScoutBase(world) ? 1 : 0);
+    (Math.max(0, population - 3) + (hasNavalBase(world) ? 3 : 0) + (hasScoutBase(world) ? 1 : 0)) * (capital ? CAPITAL_DEFENCE : 1);
   if (batteries === 0 || tl < 7) return [];
   const base = { ap: 0, count: batteries, perSalvo: 1, heavy: false, laser: false, radiation: false, meson: false, ion: false, vsShips: 0 };
   if (tl >= 14) return [{ ...base, label: "Meson battery", dice: 5, multiple: 10, ap: Infinity, heavy: true, meson: true }];
@@ -185,13 +206,15 @@ export const NAVY_REPAIR = 0.2;
  * populous world holds out for more than a jump, so a fleet one jump away
  * that sets out when the siege begins can still break it.
  */
-export function captureDays(world: World): number {
-  if (world.uwp.population === 0) return 1;
-  return 2 + world.uwp.population;
+export function captureDays(world: World, capital = false): number {
+  return (world.uwp.population === 0 ? 1 : 2 + world.uwp.population) * (capital ? CAPITAL_HOLDS : 1);
 }
 
 /** Days of disorder after a capital falls. */
-export const DISORDER_DAYS = 28;
+export const DISORDER_DAYS = 56;
+
+/** Share of the treasury the taker of a capital carries off. */
+export const CAPITAL_LOOT = 0.5;
 
 /** Share of its income a faction in disorder still collects. */
 export const DISORDER_INCOME = 0.25;

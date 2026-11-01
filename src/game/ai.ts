@@ -176,14 +176,14 @@ const BATTERY_WEIGHT = 0.75;
 const NAVY_WEIGHT = 7.5;
 
 function defenceStrength(game: Game, at: string): number {
-  const world = game.world(at);
+  const world = game.defenceWorld(at);
   const ws = game.worldState(at);
   const navy = game.navyOf(at);
   const boats = navy.cls === undefined ? 0 : navy.boats * navy.cls.strength * NAVY_WEIGHT;
   if (ws.defence <= 0) return boats;
   // The batteries reckoned as a ship is: hull made tougher by armour, times
   // their fire against an armoured hull.
-  const fire = Math.max(attackDamage(defenceAttacks(world), STRENGTH_ARMOUR), 0.5);
+  const fire = Math.max(attackDamage(defenceAttacks(world, game.isCapital(at)), STRENGTH_ARMOUR), 0.5);
   return BATTERY_WEIGHT * Math.sqrt(ws.defence * (1 + defenceArmour(world) / 3) * fire) + boats;
 }
 
@@ -222,7 +222,7 @@ function through(dice: number, armour: number): number {
 function daysToSilence(game: Game, fleet: Fleet, at: string): number {
   const ws = game.worldState(at);
   if (ws.defence <= 0) return 0;
-  const armour = defenceArmour(game.world(at));
+  const armour = defenceArmour(game.defenceWorld(at));
   let perRound = 0;
   for (const s of fleet.ships) {
     for (const a of game.cls(s).attacks) {
@@ -243,9 +243,9 @@ const HOPELESS_DAYS = 30;
  * has knocked down nothing never ends.
  */
 function siegeDaysLeft(game: Game, at: string, days: number): number {
-  const world = game.world(at);
+  const world = game.defenceWorld(at);
   const ws = game.worldState(at);
-  const max = defenceMax(world);
+  const max = defenceMax(world, game.isCapital(at));
   const navy = game.navyOf(at);
   const left = Math.max(max > 0 ? ws.defence / max : 0, navy.full > 0 ? navy.boats / navy.full : 0);
   if (left <= 0) return 0;
