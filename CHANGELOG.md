@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - A computer Empire past halfway to victory grows greedy: it sours on a weaker neighbour up to four times
   as fast, timid or bold, and a war with an Empire as strong as itself no longer stops it starting one it
