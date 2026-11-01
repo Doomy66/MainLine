@@ -216,6 +216,20 @@ export const DISORDER_DAYS = 56;
 /** Share of the treasury the taker of a capital carries off. */
 export const CAPITAL_LOOT = 0.5;
 
+/**
+ * How many times bigger, in worlds, an Empire must be for a computer Empire to
+ * surrender to it: on losing its capital to it, or when it is besieged by it
+ * with a navy outmatched as many times over.
+ */
+export const SURRENDER_SIZE = 3;
+
+/**
+ * Parsecs from the victor's worlds within which a surrendering Empire's worlds
+ * go over to it. The rest go their own way. At two, so many went independent
+ * that the victor spent years taking them back, and few games were won.
+ */
+export const SURRENDER_REACH = 4;
+
 /** Share of its income a faction in disorder still collects. */
 export const DISORDER_INCOME = 0.25;
 

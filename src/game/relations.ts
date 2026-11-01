@@ -397,10 +397,23 @@ export function diplomacy(game: Game): void {
       const aggrieved = computers.find((f) => f.id === r.causeBy);
       const by = aggrieved ?? computers.sort((x, y) => y.temper.aggression - x.temper.aggression)[0]!;
       declareWar(game, by.id, by.id === a ? b : a, r.cause ?? "as relations have broken down");
-    } else if (r.war && r.score >= PEACE_AT && !fa.human && !fb.human && game.state.day - (r.clash ?? -Infinity) >= COOLING) {
+    } else if (r.war && r.score >= PEACE_AT && !fa.human && !fb.human && game.state.day - (r.clash ?? -Infinity) >= COOLING && !pressing(game, fa, b) && !pressing(game, fb, a)) {
       makePeace(game, a, b);
     }
   }
+}
+
+/**
+ * Whether a computer Empire winning a war will not hear of peace: one half as
+ * strong again as its enemy, with a world of the enemy's in reach that it
+ * could take. A war gone quiet once ended in peace whoever was winning it, and
+ * a strong Empire let a weak one off time and again.
+ */
+function pressing(game: Game, f: Faction, enemy: string): boolean {
+  const mine = strengthOf(game, f.id);
+  if (mine < 1.5 * strengthOf(game, enemy)) return false;
+  const own = game.ownedWorlds(f.id);
+  return game.ownedWorlds(enemy).some((w) => defenceStrength(game, w.at) < mine && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
 }
 
 /** One Empire declares war on another, for everyone to hear. */

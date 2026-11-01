@@ -21,9 +21,11 @@ import { battleAt, besieging } from "./combat";
 import type { Game } from "./game";
 import { round, ships } from "./game";
 import { canRefuelAt, shareFuel, spareFuel } from "./nav";
-import { allied, diplomacy, onBattle, onCapture, onSiege } from "./relations";
+import { allied, atWar, diplomacy, onBattle, onCapture, onSiege } from "./relations";
 import {
   CAPITAL_LOOT,
+  SURRENDER_REACH,
+  SURRENDER_SIZE,
   CAPTURED_DEFENCE,
   captureDays,
   DEFENCE_REGEN,
@@ -285,6 +287,10 @@ function announceOwner(game: Game, at: string, owner: string | null): void {
 function fallOfCapital(game: Game, factionId: string, lostAt: string, by: string): void {
   const loser = game.faction(factionId);
   const taker = game.faction(by);
+  if (!loser.human && game.ownedWorlds(by).length >= SURRENDER_SIZE * (game.ownedWorlds(factionId).length + 1)) {
+    surrender(game, loser, by, `on the fall of ${game.world(lostAt).name}`);
+    return;
+  }
   const loot = Math.max(0, Math.floor(loser.credits * CAPITAL_LOOT));
   loser.credits -= loot;
   taker.credits += loot;
@@ -346,6 +352,53 @@ function fallOfCapital(game: Game, factionId: string, lostAt: string, by: string
       wake: true,
       firsthand: [factionId],
     });
+  }
+}
+
+/**
+ * A computer Empire gives up the war to one many times its size. Its worlds
+ * near the victor's go over to it, the rest declare themselves independent,
+ * the victor takes the treasury, and the Empire is no more.
+ */
+function surrender(game: Game, loser: Faction, by: string, why: string): void {
+  const taker = game.faction(by);
+  taker.credits += Math.max(0, loser.credits);
+  loser.credits = 0;
+  const takers = game.ownedWorlds(by).map((w) => w.at);
+  const over: string[] = [];
+  const gone: string[] = [];
+  for (const w of game.ownedWorlds(loser.id)) {
+    const joins = takers.some((at) => distanceBetween(w.at, at) <= SURRENDER_REACH) ? by : null;
+    const ws = game.worldState(w.at);
+    ws.owner = joins;
+    ws.siege = null;
+    (joins === null ? gone : over).push(w.name);
+    announceOwner(game, w.at, joins);
+  }
+  const everyone = game.state.factions.filter((f) => f.alive).map((f) => f.id);
+  const parts = [over.length > 0 ? `${over.join(", ")} go${over.length === 1 ? "es" : ""} over to ${taker.name}` : "", gone.length > 0 ? `${gone.join(", ")} declare${gone.length === 1 ? "s itself" : " themselves"} independent` : ""].filter((x) => x !== "");
+  game.log({ to: everyone, kind: "capture", text: `${loser.name} surrenders to ${taker.name} ${why}.${parts.length > 0 ? ` ${parts.join("; ")}.` : ""}`, wake: true, firsthand: [loser.id, by], about: [loser.id, by] });
+  dissolve(game, loser, "it has surrendered");
+}
+
+/**
+ * A computer Empire badly beaten by one many times its size, its navy
+ * outmatched as many times over and the enemy at its worlds, surrenders
+ * rather than fight on to the last world.
+ */
+function surrenders(game: Game): void {
+  const strength = (id: string) => game.fleetsOf(id).reduce((t, f) => t + game.fleetStrength(f), 0);
+  for (const f of game.state.factions) {
+    if (!f.alive || f.human) continue;
+    const own = game.ownedWorlds(f.id);
+    if (own.length === 0) continue;
+    const mine = strength(f.id);
+    const victor = game.state.factions
+      .filter((g) => g.alive && g.id !== f.id && atWar(game, f.id, g.id))
+      .filter((g) => game.ownedWorlds(g.id).length >= SURRENDER_SIZE * own.length && strength(g.id) >= SURRENDER_SIZE * mine)
+      .filter((g) => own.some((w) => game.worldState(w.at).siege?.by === g.id || game.fleetsAt(w.at).some((x) => x.owner === g.id && game.fleetArmed(x))))
+      .sort((a, b) => game.ownedWorlds(b.id).length - game.ownedWorlds(a.id).length)[0];
+    if (victor !== undefined) surrender(game, f, victor.id, "with its navy beaten and its worlds under attack");
   }
 }
 
@@ -674,7 +727,7 @@ function deliverOrders(game: Game): void {
  * whatever their quarrel, or into an independent world's defences. Ships still
  * on the slips are cancelled with it.
  */
-function dissolve(game: Game, f: Faction): void {
+function dissolve(game: Game, f: Faction, why = "its last world is lost"): void {
   const s = game.state;
   f.alive = false;
   f.builds = [];
@@ -705,7 +758,7 @@ function dissolve(game: Game, f: Faction): void {
   game.log({
     to: s.factions.map((x) => x.id),
     kind: "lost",
-    text: `${f.name} is no more: its last world is lost${gone.length === 0 ? "" : `. Of its ships, ${gone.join("; ")}`}.`,
+    text: `${f.name} is no more: ${why}${gone.length === 0 ? "" : `. Of its ships, ${gone.join("; ")}`}.`,
   });
 }
 
@@ -886,6 +939,7 @@ export function advanceDay(game: Game): void {
   sieges(game);
   yards(game);
   if (isWeekEnd(day)) economy(game);
+  if (isWeekEnd(day)) surrenders(game);
   intel(game, lost);
   diplomacy(game);
   endings(game);

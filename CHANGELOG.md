@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Wars are fought to a finish. A computer Empire winning a war, half as strong again in ships with a
+  world of its enemy's in reach that it could take, no longer makes peace just because the fighting has
+  paused. A computer Empire beaten by one three times its size in worlds surrenders, when it loses its
+  capital to it or when its navy is outmatched three times over with the enemy at its worlds: its worlds
+  within four parsecs of the victor's go over to it and the rest go independent. Players never surrender.
+  Games now often have a winner: half of ten all-computer test games were won by day 1000, where none were
+  before.
+
 - A capital is a fortress: twice the batteries and hull points of any other world, built to the best tech
   level of its Empire and never below TL7, and twice as long to hold out once they are silenced. A low-tech
   capital used to have no batteries at all, and most capitals that fell were such worlds. Losing one is a disaster: its taker carries off half the treasury,

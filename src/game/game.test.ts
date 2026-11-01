@@ -452,6 +452,70 @@ describe("losing a capital", () => {
   });
 });
 
+describe("surrender", () => {
+  /** A small computer Empire with no ships, and the player grown three times its size and more. */
+  function outmatched(seed: string): { game: Game; me: Faction; victim: Faction } {
+    const game = newGame({}, 1, seed);
+    game.state.phase = "play";
+    game.state.day = 1;
+    const me = game.humans()[0]!;
+    const victim = game.state.factions.filter((f) => !f.human && game.ownedWorlds(f.id).length >= 2).sort((a, b) => game.ownedWorlds(a.id).length - game.ownedWorlds(b.id).length)[0]!;
+    const need = 3 * (game.ownedWorlds(victim.id).length + 1);
+    for (const w of game.state.sector.worlds) {
+      if (game.ownedWorlds(me.id).length >= need) break;
+      const owner = game.worldState(w.at).owner;
+      if (w.uwp.population > 0 && owner !== me.id && owner !== victim.id) game.worldState(w.at).owner = me.id;
+    }
+    game.state.fleets = game.state.fleets.filter((f) => f.owner !== victim.id);
+    victim.builds = [];
+    return { game, me, victim };
+  }
+
+  it("comes from a computer Empire whose capital falls to one three times its size", () => {
+    const { game, me, victim } = outmatched("GIVEUP");
+    const capital = victim.capital;
+    const theirs = game.ownedWorlds(victim.id).map((w) => w.at);
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== capital);
+    game.worldState(capital).defence = 0;
+    const fleet = game.newFleet(me.id, capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    fleet.standing = { ...STANDING_PRESETS["Seek and destroy"]! };
+    declareWar(game, me.id, victim.id, "to test a surrender");
+    const credits = victim.credits;
+    for (let i = 0; i < 40 && victim.alive; i++) advanceDay(game);
+    expect(victim.alive).toBe(false);
+    expect(victim.credits).toBe(0);
+    expect(credits).toBeGreaterThanOrEqual(0);
+    expect(game.state.log.some((e) => e.text.startsWith(`${victim.name} surrenders to ${me.name}`))).toBe(true);
+    // Its worlds go over to us or go their own way; none stays with it.
+    for (const at of theirs) expect([me.id, null]).toContain(game.worldState(at).owner);
+  });
+
+  it("comes from a computer Empire beaten many times over, with the enemy at its worlds", () => {
+    const { game, me, victim } = outmatched("GIVEUP");
+    const at = game.ownedWorlds(victim.id).find((w) => w.at !== victim.capital)!.at;
+    const fleet = game.newFleet(me.id, at, "deep", Array.from({ length: 2 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    fleet.standing = { ...fleet.standing, intercept: false, besiege: false };
+    // At peace, nobody surrenders.
+    for (let i = 0; i < 7; i++) advanceDay(game);
+    expect(victim.alive).toBe(true);
+    declareWar(game, me.id, victim.id, "to test a surrender");
+    for (let i = 0; i < 7 && victim.alive; i++) advanceDay(game);
+    expect(victim.alive).toBe(false);
+    expect(game.state.log.some((e) => e.text.startsWith(`${victim.name} surrenders to ${me.name} with its navy beaten`))).toBe(true);
+  });
+
+  it("never comes from a player", () => {
+    const { game, me, victim } = outmatched("GIVEUP");
+    (victim as { human: boolean }).human = true;
+    const at = game.ownedWorlds(victim.id).find((w) => w.at !== victim.capital)!.at;
+    const fleet = game.newFleet(me.id, at, "deep", Array.from({ length: 2 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    fleet.standing = { ...fleet.standing, intercept: false, besiege: false };
+    declareWar(game, me.id, victim.id, "to test a surrender");
+    for (let i = 0; i < 7; i++) advanceDay(game);
+    expect(victim.alive).toBe(true);
+  });
+});
+
 describe("bases", () => {
   it("repair as a class A port at a naval base and a class B at a scout base, but build nothing", () => {
     const any = newGame({}, 0, "BASES").state.sector.worlds[0]!;
@@ -826,6 +890,25 @@ describe("war and peace", () => {
     diplomacy(game);
     expect(r.war).toBe(true);
     game.state.day += 14;
+    diplomacy(game);
+    expect(r.war).toBe(false);
+  });
+
+  it("will not make peace while winning, with something of the enemy's in reach to take", () => {
+    const game = newGame({}, 0, "PRESS");
+    const computers = game.state.factions;
+    const pair = computers.flatMap((a) => computers.filter((b) => b.id > a.id).map((b) => [a, b] as const)).find(([a, b]) => game.ownedWorlds(a.id).some((x) => game.ownedWorlds(b.id).some((y) => distanceBetween(x.at, y.at) <= 3)))!;
+    const [a, b] = pair;
+    game.state.fleets = game.state.fleets.filter((f) => f.owner !== a.id && f.owner !== b.id);
+    game.newFleet(a.id, a.capital, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    game.newFleet(b.id, b.capital, "main", [game.newShip("Patrol-Corvette")]);
+    const r = relationOf(game, a.id, b.id)!;
+    Object.assign(r, { war: true, since: 0, score: PEACE_AT + 20, clash: -100 });
+    game.state.day = 30;
+    diplomacy(game);
+    expect(r.war).toBe(true);
+    // With the fleets gone neither is winning, and they make peace.
+    game.state.fleets = game.state.fleets.filter((f) => f.owner !== a.id && f.owner !== b.id);
     diplomacy(game);
     expect(r.war).toBe(false);
   });

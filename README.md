@@ -116,6 +116,13 @@ of your Empire, away from any siege, and the faction is in disorder for eight
 weeks: a quarter of the income, idle yards, and worlds far from the new capital,
 or with little law, breaking away, to the taker where its worlds are nearer.
 
+**Surrender.** A computer Empire beaten by one three times its size in worlds
+gives up: when that Empire takes its capital, or when its navy is outmatched
+three times over with the enemy at its worlds. Its worlds within four parsecs of
+the victor's go over to it, the rest go independent, and the victor takes the
+treasury. A computer Empire that is winning a war will not make peace while it
+still has something to take. Players never surrender.
+
 **Money.** At the end of each week every world pays its owner. It pays more
 for more people, higher tech, a better starport and a rich or industrial
 economy.
