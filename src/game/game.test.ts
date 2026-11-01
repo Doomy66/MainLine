@@ -1026,7 +1026,7 @@ describe("war and peace", () => {
     game.state.options.victoryShare = game.holding(leader.id).worlds / game.victoryTarget().worlds / 0.9;
     const r = relationOf(game, leader.id, prey.id)!;
     const week = () => {
-      Object.assign(r, { score: 0, base: 0 });
+      Object.assign(r, { score: 0, base: 0, war: false, since: 0 });
       delete r.cause;
       game.state.day += 7;
       diplomacy(game);
@@ -1042,7 +1042,23 @@ describe("war and peace", () => {
     // Unless one of them has nothing left it could take.
     for (const w of game.ownedWorlds(third.id)) game.worldState(w.at).defence = 1e9;
     expect(week()).toBe("hungry for more worlds");
+    // Nor one with an Empire as strong as itself, which is no war of conquest.
+    for (const w of game.ownedWorlds(third.id)) game.worldState(w.at).defence = 0;
+    expect(week()).not.toBe("hungry for more worlds");
+    const equal = game.newFleet(third.id, third.capital, "main", [game.newShip("Broadsword-Mercenary-Cruiser"), game.newShip("Broadsword-Mercenary-Cruiser")]);
+    expect(week()).toBe("hungry for more worlds");
+    game.state.fleets = game.state.fleets.filter((f) => f !== equal);
     for (const f of [other, third]) Object.assign(relationOf(game, leader.id, f.id)!, { war: false, since: 0 });
+    // Past halfway even a timid Empire grows greedy: nine tenths of the way
+    // there it sours many times faster than at two fifths.
+    (leader.temper as { aggression: number }).aggression = 0;
+    week();
+    const late = -r.score;
+    game.state.options.victoryShare = game.holding(leader.id).worlds / game.victoryTarget().worlds / 0.4;
+    week();
+    const early = -r.score;
+    expect(early).toBeGreaterThan(0);
+    expect(late).toBeGreaterThan(10 * early);
     // Nor with a neighbour stronger than itself.
     game.newFleet(prey.id, prey.capital, "main", [1, 2, 3].map(() => game.newShip("Broadsword-Mercenary-Cruiser")));
     expect(week()).not.toBe("hungry for more worlds");

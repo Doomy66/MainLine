@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A computer Empire past halfway to victory grows greedy: it sours on a weaker neighbour up to four times
+  as fast, timid or bold, and a war with an Empire as strong as itself no longer stops it starting one it
+  can win. It picks its prey the weakest first, and no longer goes to war with every weaker neighbour in
+  the same week.
+
 - Wars are fought to a finish. A computer Empire winning a war, half as strong again in ships with a
   world of its enemy's in reach that it could take, no longer makes peace just because the fighting has
   paused. A computer Empire beaten by one three times its size in worlds surrenders, when it loses its

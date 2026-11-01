@@ -55,6 +55,10 @@ const AMBITION_FROM = 0.25;
 const AMBITION = 10;
 /** Wars of its own choosing an ambitious Empire will have at once. */
 const AMBITIOUS_WARS = 2;
+/** Share of the way to victory past which ambition grows into greed, timid or not. */
+const GREED_FROM = 0.5;
+/** How many times over ambition has grown at victory's door. */
+const GREED = 3;
 
 export function relationKey(a: string, b: string): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
@@ -360,15 +364,27 @@ function weekly(game: Game): void {
     const strength = strengthOf(game, f.id);
     if (own.length === 0 || strength <= 0) continue;
     const takeable = (g: Faction) => owned.get(g.id)!.some((w) => defenceStrength(game, w.at) < strength && own.some((o) => distanceBetween(o.at, w.at) <= REACH));
-    const chosen = living.filter((g) => g.id !== f.id && atWar(game, f.id, g.id) && relationOf(game, f.id, g.id)?.declaredBy === f.id && takeable(g));
+    // A war on an Empire as strong as itself is no war of conquest, and does
+    // not hold it back from one: a leader locked with an equal let a weaker
+    // neighbour sit at peace beside it for years.
+    const chosen = living.filter((g) => g.id !== f.id && atWar(game, f.id, g.id) && relationOf(game, f.id, g.id)?.declaredBy === f.id && strengthOf(game, g.id) < strength && takeable(g));
     if (chosen.length >= AMBITIOUS_WARS) continue;
-    const hunger = (AMBITION * (Math.min(1, share) - AMBITION_FROM)) / (1 - AMBITION_FROM) * (0.5 + f.temper.aggression);
-    for (const g of living) {
-      if (g.id === f.id || atWar(game, f.id, g.id) || allied(game, f.id, g.id) || strengthOf(game, g.id) >= strength) continue;
+    // Past halfway it grows greedy, the bold and the timid alike, or a timid
+    // leader sat a step short of victory for ever.
+    const near = Math.min(1, share);
+    const greed = near <= GREED_FROM ? 1 : 1 + (GREED * (near - GREED_FROM)) / (1 - GREED_FROM);
+    const temper = near <= GREED_FROM ? 0.5 + f.temper.aggression : Math.max(0.5 + f.temper.aggression, 1);
+    const hunger = (AMBITION * (near - AMBITION_FROM)) / (1 - AMBITION_FROM) * temper * greed;
+    const prey = living.filter((g) => {
+      if (g.id === f.id || atWar(game, f.id, g.id) || allied(game, f.id, g.id) || strengthOf(game, g.id) >= strength) return false;
       const r = relationOf(game, f.id, g.id);
-      if (r !== undefined && r.since > 0 && game.state.day - r.since < RESTLESS_AFTER) continue;
-      if (takeable(g)) shift(game, f.id, g.id, -hunger, { text: "hungry for more worlds", who: f.id });
-    }
+      if (r !== undefined && r.since > 0 && game.state.day - r.since < RESTLESS_AFTER) return false;
+      return takeable(g);
+    });
+    // Only as many as it has room for, the weakest first: soured on all its
+    // weaker neighbours at once, a greedy Empire went to war with every one.
+    const marked = prey.sort((a, b) => strengthOf(game, a.id) - strengthOf(game, b.id)).slice(0, AMBITIOUS_WARS - chosen.length);
+    for (const g of marked) shift(game, f.id, g.id, -hunger, { text: "hungry for more worlds", who: f.id });
   }
 }
 
