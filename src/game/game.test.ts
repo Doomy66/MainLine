@@ -10,7 +10,7 @@ import { advanceDay } from "./day";
 import type { Game } from "./game";
 import { routeTo } from "./nav";
 import { alliesOf, answerOffer, atWar, declareWar, diplomacy, makeOffer, offerBetween, offersTo, onCapture, PEACE_AT, relationOf, standing, WAR_AT } from "./relations";
-import { alerts } from "./attention";
+import { alerts, threats } from "./attention";
 import { battleAt } from "./combat";
 import { visibleSystems } from "./visibility";
 import { captureDays, defenceMax, jumpFuel, repairPort, slipsAt } from "./rules";
@@ -1186,6 +1186,33 @@ describe("alliances and offers", () => {
     expect(alerts(game, me).filter((a) => a.kind === "enemy").map((a) => a.text)).toEqual([`${enemy.name} at ${there.name}: 1 ship`]);
     game.state.day = 29;
     expect(alerts(game, me).some((a) => a.kind === "enemy")).toBe(false);
+  });
+
+  it("warns of an enemy fleet a jump from a world of ours it could take", () => {
+    const game = newGame({}, 1);
+    game.state.phase = "play";
+    const me = game.humans()[0]!;
+    const enemy = game.state.factions.find((f) => !f.human)!;
+    for (const r of Object.values(game.state.relations!)) Object.assign(r, { war: false, allied: false });
+    relationOf(game, me.id, enemy.id)!.war = true;
+    game.state.fleets = [];
+    // A small world of ours with no navy, and a system next to it.
+    const prey = game.state.sector.worlds.find((w) => w.uwp.population > 0 && w.uwp.population <= 3 && !/[NA]/.test(w.bases))!;
+    const there = game.state.sector.worlds.find((w) => distanceBetween(w.at, prey.at) === 1)!;
+    game.worldState(prey.at).owner = me.id;
+    // Our picket there sees them.
+    game.newFleet(me.id, there.at, "main", [game.newShip("Pinnace")]);
+    game.newFleet(enemy.id, there.at, "main", Array.from({ length: 4 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    const warned = () => alerts(game, me).filter((a) => a.kind === "threat" && a.text.includes(prey.name));
+    expect(warned().map((a) => a.at)).toEqual([there.at]);
+    expect(threats(game, me).some((t) => t.worlds.includes(prey.at))).toBe(true);
+    // Enough of our own at the world, and it is no longer in danger.
+    game.newFleet(me.id, prey.at, "main", Array.from({ length: 12 }, () => game.newShip("Broadsword-Mercenary-Cruiser")));
+    expect(warned()).toEqual([]);
+    // Nor is it from ships we are at peace with.
+    game.state.fleets = game.state.fleets.filter((f) => f.system !== prey.at);
+    relationOf(game, me.id, enemy.id)!.war = false;
+    expect(warned()).toEqual([]);
   });
 
   it("makes turning on an ally a betrayal everyone notices", () => {

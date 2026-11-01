@@ -158,7 +158,7 @@
           Other Empires' fleets are ships heading up, ringed in red; a faint dashed one is where a fleet was
           last reported, not where it is now. The system pane says when each one arrived and
           when it was last seen, and lists fleets that have gone under <em>Gone</em>, with the days they were there. A fleet in jump space is a dot on a dashed line between
-          two systems. A red dashed ring is a siege, and a burst marks a battle today.
+          two systems. A red dashed ring is a siege, and a burst marks a battle today. An amber dotted line runs from enemy ships to each world of yours they could take in one jump.
         </p>
         <table>
           <tr><th>Tab</th><th>What it is for</th></tr>
@@ -166,7 +166,7 @@
           <tr><td>Fleets</td><td>Your fleets, their orders, standing orders and ships. The list gives each fleet one line, grouped into those that need orders (idle away from home, damaged, short of fuel, hangars not full), those busy (jumping, laying siege, repairing, or under an admiral) and those at rest at home; search it by fleet, place or ship class, and sort it by name, place or strength. Tick ships to split them off into a new fleet; merge fleets in the same place. <em>Add to defences</em> gives a fleet to a world you hold, for good.</td></tr>
           <tr><td>Shipyard</td><td>Lay down new ships at a yard you hold, or at an independent one or one of an Empire at peace with you, at a fifth more. The catalogue is in four sections: warships; system defence, boats and fighters with no jump drive; capital ships of 5,000 tons and more, closed until you open it; and civilian and support ships (traders, liners, scouts), closed too. Import designs from the Ship Designer.</td></tr>
           <tr><td>Empire</td><td>Treasury, income, upkeep, what it takes to win, standings, and your worlds. The standings say how each Empire stands with you, at war, at peace and how warmly, or allied, with buttons to declare war, offer peace, propose an alliance or leave one, and whom each computer Empire is allied with and at war with.</td></tr>
-          <tr><td>Reports</td><td>Everything you have heard, newest first. Each report has an icon for its kind (battle, capture, arrival, sighting, new ship, money, loss, war and peace) and every faction it names carries its emblem, a shape in its colour. Reports that do not concern your own fleets, worlds or treasury are dimmed. Battle reports open to show every round. At the top, <em>Needs attention</em> lists what wants you today: offers of peace or alliance to accept or decline, your worlds under siege, enemies at your worlds, battles that cost you ships, worlds lost, fleets waiting on orders, and class A yards of yours with nothing on any slip. Click a line to go there.</td></tr>
+          <tr><td>Reports</td><td>Everything you have heard, newest first. Each report has an icon for its kind (battle, capture, arrival, sighting, new ship, money, loss, war and peace) and every faction it names carries its emblem, a shape in its colour. Reports that do not concern your own fleets, worlds or treasury are dimmed. Battle reports open to show every round. At the top, <em>Needs attention</em> lists what wants you today: offers of peace or alliance to accept or decline, your worlds under siege, enemies at your worlds, enemy ships a jump from worlds of yours they could take, battles that cost you ships, worlds lost, fleets waiting on orders, and class A yards of yours with nothing on any slip. Click a line to go there. Ships could take a world when their strength, as the computer's admirals reckon it, beats the world's defences and any fleets of yours or your allies' there. You know only of ships where you hold a world or have a fleet.</td></tr>
         </table>
         <p>
           <strong>Save</strong> writes the whole game to one <code>.game</code> file. The game also keeps
@@ -422,7 +422,7 @@
         <ol>
           <li>Bring armed ships into orbit with <em>Besiege</em> on in their standing orders.</li>
           <li>Silence the batteries and destroy the planetary navy. That may take several days of battle.</li>
-          <li>Hold the orbit, with none of the owner's armed ships there, until the world submits. That takes two days plus one for every two digits of population. The siege resets if you leave or are driven off.</li>
+          <li>Hold the orbit, with none of the owner's armed ships there, until the world submits. That takes two days plus one for every digit of population: eleven days for a world of billions, longer than a jump, so a fleet one jump away that sets out when the siege begins can still break it. The siege resets if you leave or are driven off.</li>
         </ol>
         <p>
           A captured world's batteries start at a quarter strength, and it has no navy: the new owner's boats

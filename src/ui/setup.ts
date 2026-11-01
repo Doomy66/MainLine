@@ -169,6 +169,7 @@ export function showSetup(root: HTMLElement, onStart: (game: Game) => void, onBa
       reach: new Set(),
       route: [],
       sieges: new Set(),
+      threats: [],
       battles: new Set(),
       inPlay,
     });

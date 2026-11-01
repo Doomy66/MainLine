@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- A besieged world holds out longer once its defences are silenced: two days plus one for every
+  population digit, so eleven days for a world of billions. Help one jump away now has time to arrive.
+  Small worlds still fall in a few days.
+- Warning before an attack: Needs attention lists enemy ships a jump from any world of yours they could
+  take, and the map draws an amber dotted line from them to each such world. You see what your worlds and
+  fleets can see, so a picket next door earns its keep.
+
 - No more winning on the first day with Empires from Mains: a Main worth more than about a third of what
   winning takes is split into several Empires, each ruled from one of its biggest worlds, which start as
   friends but can fall out. The new game screen shows which Main each came from. A world with enough

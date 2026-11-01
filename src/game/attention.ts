@@ -4,9 +4,10 @@
  * sightings the map shows.
  */
 
+import { distanceBetween } from "../sector/hex";
 import type { Game } from "./game";
 import { captureDays } from "./rules";
-import { offersTo, relationOf } from "./relations";
+import { alliesOf, defenceStrength, offersTo, relationOf } from "./relations";
 import type { Faction, Fleet, Offer } from "./types";
 import { LOC_NAMES } from "./types";
 import { visibleSystems } from "./visibility";
@@ -70,7 +71,7 @@ export function admiralText(game: Game, f: Fleet): string {
 }
 
 export interface Alert {
-  readonly kind: "siege" | "enemy" | "lost" | "fallen" | "fleets" | "slips" | "offer";
+  readonly kind: "siege" | "enemy" | "threat" | "lost" | "fallen" | "fleets" | "slips" | "offer";
   readonly text: string;
   readonly at?: string;
   readonly fleet?: string;
@@ -135,6 +136,21 @@ export function alerts(game: Game, me: Faction): Alert[] {
     out.push({ kind: "enemy", at, text: `${[...t.who].join(" and ")} at ${game.world(at).name}: ${t.ships} ship${t.ships === 1 ? "" : "s"}` });
   }
 
+  // Enemy fleets a jump from worlds of ours they could take. Worlds already
+  // under attack have their own line.
+  for (const t of threats(game, me)) {
+    const worlds = t.worlds.filter((at) => !threat.has(at) && !out.some((a) => a.kind === "siege" && a.at === at));
+    if (worlds.length === 0) continue;
+    const names = worlds.map((at) => game.world(at).name);
+    const list =
+      names.length === 1 ? names[0]! : names.length <= 4 ? `${names.slice(0, -1).join(", ")} or ${names[names.length - 1]!}` : `${names.slice(0, 3).join(", ")} or ${names.length - 3} more`;
+    out.push({
+      kind: "threat",
+      at: t.at,
+      text: `${game.faction(t.owner).name} at ${game.world(t.at).name}, ${t.ships} ship${t.ships === 1 ? "" : "s"}, could take ${list} in one jump`,
+    });
+  }
+
   // Today's losses: worlds that fell, and battles that cost us ships.
   for (const e of game.logFor(me.id, 200)) {
     if (e.day !== day) continue;
@@ -167,6 +183,83 @@ export function alerts(game: Game, me: Faction): Alert[] {
       yard: idle[0]!.at,
       text: `Idle class A yard${idle.length === 1 ? "" : "s"}, nothing on the slips: ${idle.slice(0, 4).map((w) => w.name).join(", ")}${idle.length > 4 ? `, and ${idle.length - 4} more` : ""}`,
     });
+  }
+  return out;
+}
+
+/** Enemy ships at one system that could take worlds of ours a jump away. */
+export interface Threat {
+  readonly owner: string;
+  readonly at: string;
+  readonly ships: number;
+  /** Our worlds within their jump whose defences, and our fleets there, they could beat. */
+  readonly worlds: readonly string[];
+}
+
+/**
+ * Enemy fleets, as far as we know of them, that could jump to one of our
+ * worlds and beat what is there: its batteries and navy, and our fleets and
+ * our allies'. Strength is reckoned as the computer's admirals reckon it. A
+ * world falls within days of the enemy's coming, and help a jump away takes
+ * a week, so this is the warning worth having: it comes before the attack.
+ */
+export function threats(game: Game, me: Faction): Threat[] {
+  const day = game.state.day;
+  const mine = game.ownedWorlds(me.id);
+  if (mine.length === 0) return [];
+  const live = new Map(game.state.fleets.map((f) => [f.id, f]));
+  const groups = new Map<string, { owner: string; at: string; ships: number; fleets: { strength: number; jump: number }[] }>();
+  const add = (id: string, owner: string, at: string, ships: number, strength: number) => {
+    if (!game.hostile(me.id, owner) || strength <= 0) return;
+    // How far a fleet jumps, and whether it carries guns, is plain from its
+    // ships' lines to whoever saw it.
+    const f = live.get(id);
+    if (f === undefined || !game.fleetArmed(f)) return;
+    const jump = game.fleetJump(f);
+    if (jump <= 0) return;
+    const key = `${owner}|${at}`;
+    const g = groups.get(key) ?? { owner, at, ships: 0, fleets: [] };
+    g.ships += ships;
+    g.fleets.push({ strength, jump });
+    groups.set(key, g);
+  };
+  if (game.state.options.newsLag > 0) {
+    for (const s of Object.values(me.news)) {
+      if (s.left !== undefined || day - s.day > game.lag(me.id, s.system) + 7) continue;
+      if (s.day < (relationOf(game, me.id, s.owner)?.since ?? -Infinity)) continue;
+      add(s.fleetId, s.owner, s.system, s.ships, s.strength);
+    }
+  } else {
+    const sees = visibleSystems(game, me.id);
+    for (const f of game.state.fleets) {
+      if (f.transit === null && sees.has(f.system)) add(f.id, f.owner, f.system, f.ships.length, game.fleetStrength(f));
+    }
+    // Fleets seen in the last week where we no longer have eyes.
+    for (const s of Object.values(me.intel)) {
+      if (s.left === undefined && !sees.has(s.system) && day - s.day <= 7) add(s.fleetId, s.owner, s.system, s.ships, s.strength);
+    }
+  }
+  const friends = new Set([me.id, ...(game.state.relations === undefined ? [] : alliesOf(game, me.id))]);
+  const held = new Map<string, number>();
+  const holding = (at: string) => {
+    let h = held.get(at);
+    if (h === undefined) {
+      h = defenceStrength(game, at) + game.fleetsAt(at).filter((f) => friends.has(f.owner)).reduce((t, f) => t + game.fleetStrength(f), 0);
+      held.set(at, h);
+    }
+    return h;
+  };
+  const out: Threat[] = [];
+  for (const g of groups.values()) {
+    const worlds = mine
+      .filter((w) => {
+        const d = distanceBetween(g.at, w.at);
+        if (d === 0) return false;
+        const strength = g.fleets.filter((f) => f.jump >= d).reduce((t, f) => t + f.strength, 0);
+        return strength > 0 && strength > holding(w.at);
+      })
+      .map((w) => w.at);
+    if (worlds.length > 0) out.push({ owner: g.owner, at: g.at, ships: g.ships, worlds });
   }
   return out;
 }

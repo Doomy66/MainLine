@@ -102,9 +102,11 @@ A day of battle is three rounds.
 tech level, with more at a naval base: ground batteries dug into armour that
 lasers cannot touch, and a planetary navy of system defence boats. Worlds of
 TL14 and up are fortresses, as in Traveller's setting. Silence them, keep armed ships in orbit
-with orders to besiege, and the world submits in a few days. That is two days
-plus one for every two population digits. Defences rebuild once nobody is
-shooting at them.
+with orders to besiege, and the world submits: in two days plus one for every
+population digit, so a big world holds out for more than a jump and a fleet
+nearby can come to its relief. Defences rebuild once nobody is shooting at
+them. An enemy fleet seen a jump from a world of yours that it could take is
+flagged in Needs attention and drawn on the map, so you can act before it comes.
 
 **Losing a capital** moves the government to a big world at the heart of
 your Empire, away from any siege, and

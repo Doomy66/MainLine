@@ -18,7 +18,7 @@ import { visibleSystems } from "../game/visibility";
 import { h, kids, mcr } from "./dom";
 import { emblem } from "./emblems";
 import { showVictory } from "./victory";
-import { fleetStatus } from "../game/attention";
+import { fleetStatus, threats } from "../game/attention";
 import { describePopulation, STARPORTS } from "../sector/uwp";
 import { createMap, type FleetMark, type TransitMark } from "./map";
 import { empirePane, fleetPane, reportsPane, setupPane, shipyardPane, systemPane } from "./panes";
@@ -374,13 +374,14 @@ export function showGame(root: HTMLElement, game: Game, onQuit: () => void): voi
       const mine = ws.siege.by === me.id || ws.owner === me.id;
       if (mine || (!lagged && sees.has(at))) sieges.add(at);
     }
+    const threatLines = threats(game, me).flatMap((t) => t.worlds.map((to) => ({ from: t.at, to })));
     const battles = new Set(
       game.state.log.filter((e) => e.day === game.state.day && e.kind === "combat" && e.to.includes(me.id) && e.at !== undefined).map((e) => e.at!),
     );
     shownFleets = fleets;
     shownTransits = transits;
     tipFor = "";
-    map.update({ owners, capitals, selected: ctx.system, selectedFleet: ctx.fleet, fleets, transits, range, reach, route, sieges, battles, inPlay });
+    map.update({ owners, capitals, selected: ctx.system, selectedFleet: ctx.fleet, fleets, transits, range, reach, route, sieges, threats: threatLines, battles, inPlay });
     if (ctx.choosingJump && sel !== undefined) {
       banner.style.display = "flex";
       banner.replaceChildren(

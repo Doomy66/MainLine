@@ -180,10 +180,14 @@ export function navySize(world: World): number {
 /** A planetary navy's lost boats are replaced one a week; the damaged mend a fifth a day. */
 export const NAVY_REPAIR = 0.2;
 
-/** Days a world must be held, its defences silenced, before it submits. */
+/**
+ * Days a world must be held, its defences silenced, before it submits. A
+ * populous world holds out for more than a jump, so a fleet one jump away
+ * that sets out when the siege begins can still break it.
+ */
 export function captureDays(world: World): number {
   if (world.uwp.population === 0) return 1;
-  return 2 + Math.ceil(world.uwp.population / 2);
+  return 2 + world.uwp.population;
 }
 
 /** Days of disorder after a capital falls. */

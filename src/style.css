@@ -389,6 +389,7 @@ dl.props dd { margin: 0; }
 .m-range { fill: rgba(94, 224, 122, 0.12); stroke: #5ee07a; stroke-width: 1.6; vector-effect: non-scaling-stroke; pointer-events: none; }
 .m-reach { fill: none; stroke: rgba(94, 224, 122, 0.45); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; pointer-events: none; }
 .m-siege { fill: none; stroke: var(--bad); stroke-width: 2; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.m-danger { fill: none; stroke: var(--warn); stroke-width: 1.6; stroke-dasharray: 2 4; opacity: 0.85; vector-effect: non-scaling-stroke; pointer-events: none; }
 .m-battle { fill: #ff8a5b; font-size: 18px; text-anchor: middle; pointer-events: none; }
 .m-route { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; pointer-events: none; }
 .m-transit { stroke-width: 1.8; stroke-dasharray: 4 4; opacity: 0.8; vector-effect: non-scaling-stroke; pointer-events: none; }
@@ -459,6 +460,7 @@ dl.props dd { margin: 0; }
 .attention .atext { min-width: 0; flex: 1; }
 .attention .alert.siege .amark, .attention .alert.enemy .amark, .attention .alert.lost .amark, .attention .alert.fallen .amark { color: var(--bad); }
 .attention .alert.fleets .amark, .attention .alert.slips .amark { color: #f4dfa6; }
+.attention .alert.threat .amark { color: var(--warn); }
 .attention .alert.offer .amark { color: #c792ea; }
 .attention .answer { display: flex; gap: 4px; flex: none; }
 

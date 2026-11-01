@@ -254,7 +254,7 @@ const BATTERY_WEIGHT = 0.75;
 const NAVY_WEIGHT = 7.5;
 
 /** A world's defences as a fleet strength, worked out as the computer's admirals work it out in ai.ts. */
-function defenceStrength(game: Game, at: string): number {
+export function defenceStrength(game: Game, at: string): number {
   const world = game.world(at);
   const ws = game.worldState(at);
   const navy = game.navyOf(at);

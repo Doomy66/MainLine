@@ -1280,7 +1280,7 @@ function fogSettings(ctx: Ctx): HTMLElement {
 
 /* Reports ---------------------------------------------------------------- */
 
-const ALERT_MARKS: Record<Alert["kind"], string> = { siege: "◎", enemy: "⚠", lost: "✸", fallen: "⚑", fleets: "?", slips: "⚒", offer: "✉" };
+const ALERT_MARKS: Record<Alert["kind"], string> = { siege: "◎", enemy: "⚠", threat: "△", lost: "✸", fallen: "⚑", fleets: "?", slips: "⚒", offer: "✉" };
 
 /** The day's to-do list, each line a way straight to the place or fleet. */
 function attentionPanel(ctx: Ctx, goto: (at: string) => void): HTMLElement | null {

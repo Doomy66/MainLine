@@ -103,6 +103,8 @@ export interface Overlay {
   /** A route being shown, starting where the fleet is. */
   readonly route: readonly string[];
   readonly sieges: ReadonlySet<string>;
+  /** Enemy ships that could take a world of ours in one jump, from where they are to the world. */
+  readonly threats: readonly { readonly from: string; readonly to: string }[];
   readonly battles: ReadonlySet<string>;
   /** Hexes outside the game, drawn dim. */
   readonly inPlay: ReadonlySet<string>;
@@ -242,6 +244,11 @@ export function createMap(): MapView {
     for (const at of o.sieges) {
       const { x, y } = centreAt(at);
       reachLayer.append(make("circle", { class: "m-siege", cx: x, cy: y, r: 28 }));
+    }
+    for (const t of o.threats) {
+      const a = centreAt(t.from);
+      const b = centreAt(t.to);
+      reachLayer.append(make("line", { class: "m-danger", x1: a.x, y1: a.y, x2: b.x, y2: b.y }));
     }
     for (const at of o.battles) {
       const { x, y } = centreAt(at);
