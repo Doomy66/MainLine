@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- A new class in the catalogue: the Gremlin Strike Boat, an 800-ton jump-3 raider built to run down merchants,
+  disable them with an ion cannon and board them.
+
 ## 0.5.0
 
 - A computer Empire past halfway to victory grows greedy: it sours on a weaker neighbour up to four times

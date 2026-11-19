@@ -1,0 +1,133 @@
+{
+  "name": "Gremlin Strike Boat",
+  "tl": 12,
+  "notes": "The Swan's hull rebuilt for taking other people's cargo. It runs down merchants at Thrust 5, cripples them with an ion cannon so the prize stays intact, and puts a boarding party across through a breaching tube while the grappling arm holds the target close. A particle barbette and six triple turrets deal with anyone who objects. The hold takes over 180 tons of plunder, the brig and low berths take the crew, and with scoops and a fuel processor it never has to show its face at a starport.",
+  "military": false,
+  "hull": {
+    "tons": 800,
+    "configuration": "streamlined"
+  },
+  "armour": {
+    "type": "crystaliron",
+    "protection": 4
+  },
+  "manoeuvre": 5,
+  "jump": 3,
+  "powerPlant": {
+    "type": "fusion12",
+    "tons": 44,
+    "weeks": 8
+  },
+  "bridge": {
+    "kind": "standard"
+  },
+  "computer": {
+    "processing": 20,
+    "bis": true
+  },
+  "sensors": "military",
+  "weapons": [
+    {
+      "kind": "barbette",
+      "weapon": "particle"
+    },
+    {
+      "kind": "barbette",
+      "weapon": "ionCannon"
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "pulseLaser",
+        "pulseLaser",
+        "pulseLaser"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "missileRack",
+        "missileRack",
+        "sandcaster"
+      ],
+      "quantity": 2
+    },
+    {
+      "kind": "turret",
+      "mount": "triple",
+      "weapons": [
+        "beamLaser",
+        "beamLaser",
+        "beamLaser"
+      ],
+      "quantity": 2
+    }
+  ],
+  "craft": [],
+  "systems": [
+    {
+      "perTon": "fuelProcessor",
+      "tons": 12
+    },
+    {
+      "fuelScoops": true
+    },
+    {
+      "perTon": "cargoCrane"
+    },
+    {
+      "flat": "breachingTube"
+    },
+    {
+      "flat": "grapplingArm"
+    },
+    {
+      "flat": "armoury",
+      "quantity": 1
+    },
+    {
+      "flat": "brig"
+    },
+    {
+      "flat": "medicalBay"
+    },
+    {
+      "flat": "briefingRoom"
+    },
+    {
+      "perTon": "barracks",
+      "tons": 24
+    }
+  ],
+  "staterooms": 14,
+  "lowBerths": 12,
+  "commonAreaTons": 14,
+  "software": [
+    {
+      "software": "manoeuvre"
+    },
+    {
+      "software": "library"
+    },
+    {
+      "software": "jumpControl",
+      "level": 3
+    },
+    {
+      "software": "intellect"
+    },
+    {
+      "software": "fireControl",
+      "level": 2
+    },
+    {
+      "software": "evade",
+      "level": 1
+    }
+  ],
+  "version": 1,
+  "doubleOccupancy": true
+}
