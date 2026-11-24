@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A world's details name its bases as the published sector has them: a corsair base, a naval depot, a military
+  base or a way station, where they all read Naval or Scout before. They still count as the naval or scout base
+  they did. A world with both a naval and a scout base now shows its naval star on the map.
+
 - A new class in the catalogue: the Gremlin Strike Boat, an 800-ton jump-3 raider built to run down merchants,
   disable them with an ion cannon and board them.
 

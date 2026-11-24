@@ -25,6 +25,7 @@ import {
   PAD,
 } from "../sector/hex";
 import type { World } from "../sector/sec";
+import { hasNavalBase } from "../game/rules";
 import { boxFor, pointIn, wholeOf, zoomedAt, type Box, type View } from "./viewbox";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -187,7 +188,7 @@ export function createMap(): MapView {
       g.append(port);
       if (w.pbg.giants > 0) g.append(make("circle", { class: "m-gg", cx: x + HEX_WIDE * 0.22, cy: y - HEX_HIGH * 0.2, r: 3.5 }));
       g.append(make("circle", { class: worldClass(w), cx: x, cy: y, r: dotFor(w.uwp.population) }));
-      if (/N/.test(w.bases)) {
+      if (hasNavalBase(w)) {
         const base = make("text", { class: "m-base", x: x - HEX_WIDE * 0.24, y: y - HEX_HIGH * 0.12 });
         base.textContent = "★";
         g.append(base);

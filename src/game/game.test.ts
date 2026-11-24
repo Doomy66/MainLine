@@ -13,7 +13,7 @@ import { alliesOf, answerOffer, atWar, declareWar, diplomacy, makeOffer, offerBe
 import { alerts, threats } from "./attention";
 import { battleAt } from "./combat";
 import { visibleSystems } from "./visibility";
-import { captureDays, defenceMax, fortified, jumpFuel, repairPort, slipsAt } from "./rules";
+import { captureDays, defenceMax, fortified, hasNavalBase, jumpFuel, repairPort, slipsAt } from "./rules";
 import { parseGame, serialise } from "./save";
 import { BIGGEST_START, createGame, DEFAULT_OPTIONS, factionMains, hasAllegiances, victoryLine, worldsInArea } from "./setup";
 import { mainsIn } from "../sector/mains";
@@ -1318,7 +1318,7 @@ describe("alliances and offers", () => {
     relationOf(game, me.id, enemy.id)!.war = true;
     game.state.fleets = [];
     // A small world of ours with no navy, and a system next to it.
-    const prey = game.state.sector.worlds.find((w) => w.uwp.population > 0 && w.uwp.population <= 3 && !/[NA]/.test(w.bases))!;
+    const prey = game.state.sector.worlds.find((w) => w.uwp.population > 0 && w.uwp.population <= 3 && !hasNavalBase(w))!;
     const there = game.state.sector.worlds.find((w) => distanceBetween(w.at, prey.at) === 1)!;
     game.worldState(prey.at).owner = me.id;
     // Our picket there sees them.

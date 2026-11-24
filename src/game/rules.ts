@@ -8,6 +8,7 @@
 import type { World } from "../sector/sec";
 import type { Attack, ShipClass } from "../catalogue/shipclass";
 import { starportRank } from "../sector/mains";
+import { collapseBases } from "../planethex/gen/base";
 import type { Loc } from "./types";
 
 /** A jump takes a week, as it always has: 148 + 6D hours, called seven days. */
@@ -97,13 +98,14 @@ export function income(world: World): number {
   return Math.round(value * 100) / 100;
 }
 
-// A in a sector file is a naval base and a scout base together.
+// The Bases column as PlanetHex sorts it: A is a naval base and a scout base together, and a published sector's
+// letters (a depot, a corsair or clan base, a way station) count as the naval or scout base PlanetHex draws them as.
 export function hasNavalBase(world: World): boolean {
-  return /[NA]/.test(world.bases);
+  return /[NA]/.test(collapseBases(world.bases));
 }
 
 export function hasScoutBase(world: World): boolean {
-  return /[SA]/.test(world.bases);
+  return /[SA]/.test(collapseBases(world.bases));
 }
 
 /**

@@ -46,6 +46,10 @@ import {
 import { distanceBetween } from "../sector/hex";
 import { starportRank } from "../sector/mains";
 import type { World } from "../sector/sec";
+import { publishedBasesLabel } from "../planethex/gen/base";
+
+/** "Naval, scout", "Corsair, military": the bases in words, as a sentence starts. */
+const capitalised = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 import { h, mcr, meter, pct, tons } from "./dom";
 import { emblem, kindIcon, withEmblems } from "./emblems";
 import { planning, whereIs, type Ctx } from "./gameview";
@@ -142,7 +146,7 @@ export function systemPane(ctx: Ctx): HTMLElement {
       h("dt", {}, "Government"), h("dd", {}, describeGovernment(u.government)),
       h("dt", {}, "Law level"), h("dd", {}, String(u.law)),
       h("dt", {}, "Tech level"), h("dd", {}, String(u.tl)),
-      h("dt", {}, "Bases"), h("dd", {}, w.bases === "" ? "None" : w.bases.split("").map((b) => (b === "N" ? "Naval" : b === "S" ? "Scout" : b === "A" ? "Naval, Scout" : b)).join(", ")),
+      h("dt", {}, "Bases"), h("dd", {}, w.bases === "" ? "None" : capitalised(publishedBasesLabel(w.bases))),
       h("dt", {}, "Stars"), h("dd", {}, w.stars || "—"),
       h("dt", {}, "Gas giants"), h("dd", {}, String(w.pbg.giants)),
       h("dt", {}, "Belts"), h("dd", {}, String(w.pbg.belts)),

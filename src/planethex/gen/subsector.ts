@@ -84,6 +84,11 @@ export interface SubsectorWorld {
    * the code it arrived with and the export writes it back out.
    */
   readonly allegiance: string;
+  /**
+   * The Bases column as published (HexOverride publishedBases), for a world imported from published data whose bases
+   * nobody has edited since: every letter, where `bases` is the naval and scout this application draws.
+   */
+  readonly publishedBases?: string;
 }
 
 /** What a world nobody has claimed is down as. */

@@ -19,6 +19,7 @@ import {
   type Density,
   type Subsector,
 } from "./gen/subsector";
+import { collapseBases } from "./gen/base";
 import { systemSeedFor } from "./gen/subsector";
 import { parseSystemDoc, type SystemDoc } from "./system";
 import { parseStars } from "./gen/star";
@@ -42,6 +43,13 @@ export interface HexOverride {
   readonly uwp?: string;
   /** The Bases column: "A", "N", "S" or "" for none. */
   readonly bases?: string;
+  /**
+   * The Bases column as published, every letter (C corsair, D depot, K and N naval, M military, R clan, T Tlaukhu,
+   * S scout, V exploration, W way station, E embassy), for an application that tells them apart. AppSpec 8.7. Only
+   * a world imported from published data has it. It goes with `bases`: a referee who writes other bases over the
+   * world leaves the published letters behind (wearing).
+   */
+  readonly publishedBases?: string;
   /** The Zone column: "A", "R" or "" for green. */
   readonly zone?: string;
   /** The Stars column, where the system below has been given other stars. */
@@ -365,6 +373,10 @@ function wearing(world: SubsectorWorld, override: HexOverride): SubsectorWorld {
     profile: profile ?? world.profile,
     trade: profile === null ? world.trade : tradeCodes(changed),
     bases: override.bases ?? world.bases,
+    // The published letters only while they still say what the Bases column says: edited, they are out of date.
+    ...(override.publishedBases !== undefined && collapseBases(override.publishedBases) === (override.bases ?? world.bases)
+      ? { publishedBases: override.publishedBases.trim().toUpperCase() }
+      : {}),
     zone: override.zone ?? world.zone,
     stars: override.stars === undefined ? world.stars : parseStars(override.stars, world.stars),
     allegiance: override.allegiance ?? world.allegiance,
@@ -485,6 +497,7 @@ function parseOverrides(raw: unknown): HexOverride[] {
       ...(text("name") === undefined ? {} : { name: text("name")! }),
       ...(text("uwp") === undefined ? {} : { uwp: text("uwp")! }),
       ...(code("bases") === undefined ? {} : { bases: code("bases")! }),
+      ...(text("publishedBases") === undefined ? {} : { publishedBases: text("publishedBases")! }),
       ...(code("zone") === undefined ? {} : { zone: code("zone")! }),
       ...(text("stars") === undefined ? {} : { stars: text("stars")! }),
       ...(text("allegiance") === undefined ? {} : { allegiance: text("allegiance")! }),

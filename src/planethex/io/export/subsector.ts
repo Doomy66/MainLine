@@ -37,7 +37,8 @@ export function subsectorFile(subsector: Subsector, sector = "", source?: Charte
   const lines = subsector.worlds.map((world) =>
     worldLine(planetOf(world), {
       name: world.name,
-      bases: world.bases,
+      // The published letters where the world still has them, so a sector file round-trips its bases.
+      bases: world.publishedBases ?? world.bases,
       zone: world.zone,
       stars: starsOf(world),
       pbg: pbgOf(world),
@@ -68,7 +69,8 @@ export function sectorFile(sector: Sector, name = "", source?: ChartedSource): s
   const lines = sector.worlds.map((world) =>
     worldLine(planetOf(world), {
       name: world.name,
-      bases: world.bases,
+      // The published letters where the world still has them, so a sector file round-trips its bases.
+      bases: world.publishedBases ?? world.bases,
       zone: world.zone,
       stars: starsOf(world),
       pbg: pbgOf(world),

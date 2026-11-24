@@ -44,6 +44,58 @@ export function hasScout(bases: string): boolean {
   return bases === "S" || bases === "A";
 }
 
+/**
+ * The published Bases column's letters (T5, as The Traveller Map writes them), each a base of some service. AppSpec
+ * 8.7. A map here draws two marks, naval and scout, so they collapse to those (collapseBases), but an application
+ * that tells a corsair den from a navy's depot reads the letters themselves (a world's publishedBases).
+ */
+export const PUBLISHED_BASES: Readonly<Record<string, string>> = {
+  C: "corsair",
+  D: "naval depot",
+  E: "embassy",
+  K: "naval",
+  M: "military",
+  N: "naval",
+  R: "clan",
+  S: "scout",
+  T: "Tlaukhu",
+  V: "exploration",
+  W: "way station",
+};
+/**
+ * Corsair, depot, naval, military, naval, clan, Tlaukhu - somebody's navy; and A, the older code for naval and scout
+ * together, which is also this application's own, so a column already collapsed collapses to itself.
+ */
+const NAVAL_LETTERS = "ACDKMNRT";
+/** Scout, exploration, way station - somebody's survey service; and A, naval and scout. */
+const SCOUT_LETTERS = "ASVW";
+
+/**
+ * The published Bases column in the three letters this application has. AppSpec 8.3.3.
+ *
+ * T5 writes one letter per base and several per system, telling a Vargr corsair base from an Aslan clan base from an
+ * Imperial depot. A subsector here draws two marks, naval and scout, so the letters are sorted into those two and
+ * the rest dropped; the letters themselves are kept beside them (HexOverride publishedBases). A column already in
+ * those letters comes back as it went in, so a sector file written with the published letters or without them reads
+ * the same.
+ */
+export function collapseBases(published: string): string {
+  const letters = published.trim().toUpperCase();
+  const naval = [...letters].some((one) => NAVAL_LETTERS.includes(one));
+  const scout = [...letters].some((one) => SCOUT_LETTERS.includes(one));
+  if (naval && scout) return "A";
+  if (naval) return "N";
+  if (scout) return "S";
+  return "";
+}
+
+/** The published letters in words, each kind once: "naval, scout", "corsair", "naval depot, way station". */
+export function publishedBasesLabel(published: string): string {
+  const names = [...published.trim().toUpperCase()].flatMap((one) => (one === "A" ? ["naval", "scout"] : [PUBLISHED_BASES[one] ?? one]));
+  const kept = names.filter((name, i) => name !== "" && names.indexOf(name) === i);
+  return kept.length === 0 ? "none" : kept.join(", ");
+}
+
 /** What the column letter says, in words. */
 export function basesLabel(bases: string): string {
   if (bases === "A") return "naval and scout";
