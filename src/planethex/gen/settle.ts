@@ -351,6 +351,34 @@ export const FLAVOURS: readonly Flavour[] = [
   },
 ];
 
+/* Zhodani: the Consulate's tongue as its published names write it, thick with
+   zh, dr, tl, pl and ch and with vowels run together (ie, ia). A head ending in
+   a vowel and a tail starting on a cluster, so the two never pile up. */
+const ZHODANI_HEAD = [
+  "Zho", "Chie", "Dria", "Vie", "Shta", "Zdo", "Ia", "Bri", "Tlia", "Pre",
+  "Kie", "Fla", "Jdie", "Nsho", "Sha", "Zie", "Plie", "Vlo", "Atsa", "Eshe",
+  "Iano", "Obra", "Qie", "Stie", "Tsie", "Ble", "Chte", "Dia", "Enchi", "Fria",
+  "Ozhe", "Lie", "Nie", "Etie", "Abrie", "Iepla",
+];
+const ZHODANI_TAIL = [
+  "pr", "nsh", "dl", "tl", "nch", "ts", "zh", "bl", "vl", "kl",
+  "shtie", "dria", "ntsa", "pla", "stie", "fl", "zdie", "chak", "nzh", "bre",
+  "tlants", "driav", "shav", "plas", "ntiepr", "vrie",
+];
+
+/**
+ * The Zhodani way of naming, for a world in the Consulate's space that the
+ * published map leaves unnamed. Not one of FLAVOURS: nothing rolls it, so no
+ * world this application names by chance changes. An application that knows a
+ * world is Zhodani asks for it by name.
+ */
+export const ZHODANI: Flavour = {
+  key: "zhodani",
+  weight: 0,
+  make: (pick) =>
+    `${ZHODANI_HEAD[pick("zho-head", ZHODANI_HEAD.length)]!}${ZHODANI_TAIL[pick("zho-tail", ZHODANI_TAIL.length)]!}`,
+};
+
 /** Which way this world names its places. Fixed by the seed, as everything is. */
 export function flavourFor(seed: string): Flavour {
   const total = FLAVOURS.reduce((sum, f) => sum + f.weight, 0);
