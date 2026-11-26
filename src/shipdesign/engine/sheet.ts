@@ -17,6 +17,8 @@ import {
   BASIC_SYSTEMS_POWER,
   BAY_SIZES,
   BAY_WEAPONS,
+  AUTOMATED_SECTIONS,
+  AUTOMATION,
   BLACK_GLOBE,
   CANISTERS,
   CANISTERS_PER_TON,
@@ -105,6 +107,7 @@ import {
   TURRET_WEAPONS,
   UNCUSTOMISED,
   WEEKS_PER_MONTH,
+  apportionCrew,
   armourTonnageMultiplier,
   bridgeCost,
   cargoCraneTons,
@@ -1176,8 +1179,25 @@ export function sheet(design: Design): Sheet {
   }
   lines.push({ key: "cargo", section: "Cargo", label: "Cargo", tons: cargoTons });
 
+  // Automation, priced as a share of the hull, drives and plant. An optional
+  // rule from the Companion, not High Guard. ShipSpec 4.10.4.
+  const automation = AUTOMATION[design.automation ?? "standard"];
+  if (automation.costFraction !== 0) {
+    const automated = lines
+      .filter((line) => AUTOMATED_SECTIONS.includes(line.section))
+      .reduce((sum, line) => sum + (line.cost ?? 0), 0);
+    const share = Math.round(automation.costFraction * 100);
+    lines.splice(lines.length - 1, 0, {
+      key: "automation",
+      section: "Automation",
+      label: `${automation.label} (${share > 0 ? "+" : ""}${share}% of hull, drives and power plant)`,
+      cost: cr(automated * automation.costFraction),
+    });
+  }
+  if (automation.effect !== undefined) note(`${automation.label}: ${automation.effect}.`, "4.10.4");
+
   // Step 13: finalise. ShipSpec 4.13.
-  const totalCost = cr(lines.reduce((sum, line) => sum + (line.cost ?? 0), 0));
+  const totalCost =cr(lines.reduce((sum, line) => sum + (line.cost ?? 0), 0));
   const purchaseCost = cr(
     design.standardDesign === true ? totalCost * STANDARD_DESIGN_FACTOR : totalCost * (1 + ARCHITECT_FEE),
   );
@@ -1224,15 +1244,23 @@ export function sheet(design: Design): Sheet {
       middlePassengers: passengers.middle,
     };
     const reduction = crewReductionMultiplier(hullTons);
-    let base = 0;
-    for (const role of Object.keys(CREW_ROLES) as CrewRole[]) {
-      if (role === "medic" || role === "officer") continue;
+    const roles = (Object.keys(CREW_ROLES) as CrewRole[]).filter((role) => role !== "medic" && role !== "officer");
+    const counts = roles.map((role) => {
       const rule = CREW_ROLES[role];
       const raw = rule[column](inputs);
-      const count = rule.reducible ? Math.ceil(raw * reduction) : raw;
+      return rule.reducible ? Math.ceil(raw * reduction) : raw;
+    });
+    // Automation reaches the jobs the large-ship cut does, scaled as one body
+    // and shared out in proportion. ShipSpec 4.10.3, 4.10.4.1.
+    const shareable = roles.flatMap((role, at) => (CREW_ROLES[role].reducible ? [at] : []));
+    const scaled = apportionCrew(shareable.map((at) => counts[at]!), automation.crewFactor);
+    shareable.forEach((at, i) => { counts[at] = scaled[i]!; });
+    let base = 0;
+    roles.forEach((role, at) => {
+      const count = counts[at]!;
       base += count;
-      if (count > 0) crew.push({ role, label: rule.label, count, salary: rule.salary });
-    }
+      if (count > 0) crew.push({ role, label: CREW_ROLES[role].label, count, salary: CREW_ROLES[role].salary });
+    });
     const derived = { crew: base, passengers: passengers.high + passengers.middle + passengers.low };
     const medics = DERIVED_CREW.medic[column](derived);
     if (medics > 0) crew.push({ role: "medic", label: CREW_ROLES.medic.label, count: medics, salary: CREW_ROLES.medic.salary });

@@ -9,6 +9,12 @@
 - A new class in the catalogue: the Gremlin Strike Boat, an 800-ton jump-3 raider built to run down merchants,
   disable them with an ion cannon and board them.
 
+- Another new class: the Swan, the 800-ton jump-3 merchant the Gremlin was converted from, with over 250 tons
+  of hold and staterooms to spare for passengers.
+
+- The ship design engine is brought up to the designer's latest. No catalogue ship changes; the designer's new
+  automation rule and vehicle list come with it, unused by the game for now.
+
 ## 0.5.0
 
 - A computer Empire past halfway to victory grows greedy: it sours on a weaker neighbour up to four times

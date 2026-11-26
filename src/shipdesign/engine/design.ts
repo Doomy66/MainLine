@@ -9,6 +9,7 @@
 import type {
   AdjustableHull,
   ArmourType,
+  AutomationLevel,
   BarbetteWeapon,
   BaySize,
   BayWeapon,
@@ -240,6 +241,11 @@ export interface Design {
   readonly standardDesign?: boolean;
   /** Which column of the Crew Requirements table to read. ShipSpec 4.10.2. */
   readonly military?: boolean;
+  /**
+   * How automated the ship is, from the Companion's optional rule. Absent is
+   * the book's normal, standard automation. ShipSpec 4.10.4.
+   */
+  readonly automation?: AutomationLevel;
   readonly hull: HullChoice;
   readonly armour?: ArmourChoice;
   /** A high-burn thruster: a reaction drive whose Thrust adds to the manoeuvre drive's. ShipSpec 4.3.6. */

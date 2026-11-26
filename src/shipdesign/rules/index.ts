@@ -18,3 +18,5 @@ export * from "./accommodation";
 export * from "./systems";
 export * from "./software";
 export * from "./finalise";
+export * from "./automation";
+export * from "./vehicles";
