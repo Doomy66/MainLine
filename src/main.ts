@@ -33,7 +33,7 @@ function suggestionUrl(): string {
 const PLANETHEX = "https://doomy66.github.io/PlanetHex/";
 const SHIP_DESIGNER = "https://doomy66.github.io/Traveller-Ship-Design/";
 const CHAR_GEN = "https://doomy66.github.io/Traveller-Char-Gen/";
-const TRAVELLER_ONE = "https://github.com/Doomy66/Traveller-One";
+const TRAVELLER_ONE = "https://doomy66.github.io/Traveller-One/";
 const RELEASE_NOTES = "https://github.com/Doomy66/MainLine/blob/main/CHANGELOG.md";
 
 /** The pictures on the title screen's cards, drawn to a 48 grid. */
